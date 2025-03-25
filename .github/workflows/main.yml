@@ -2,7 +2,7 @@ name: Game Builds
 on: [push, workflow_dispatch]
 
 env:
-  HAXE_VERSION: 4.2.5
+  HAXE_VERSION: 4.3.6
 
 jobs:
   build:
