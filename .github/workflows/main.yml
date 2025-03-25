@@ -59,6 +59,7 @@ jobs:
           haxelib install format --quiet
           haxelib install hxp --quiet
           haxe -cp ".github" -D analyzer-optimize -main UpdateHaxelib --interp
+          haxelib run lime rebuild tools -nocolor -verbose -nocffi
           haxelib run lime setup -alias -y -nocffi
 
       - if: ${{ matrix.build == 'debug' }}
