@@ -46,6 +46,12 @@ jobs:
             export/${{ matrix.build }}/${{ matrix.folder }}/obj/
             .haxelib/
 
+      - if: ${{ matrix.compile == 'linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install vlc libvlc-dev libvlccore-dev vlc-bin
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev g++-multilib gcc-multilib libasound2-dev libx11-dev libxext-dev libxi-dev libxrandr-dev libxinerama-dev libpulse-dev libmbedtls-dev libpng-dev libturbojpeg-dev libuv1-dev libvorbis-dev
+
       - name: Setup Haxelib
         run: |
           haxelib setup .haxelib/
@@ -53,22 +59,18 @@ jobs:
           haxelib install format --quiet
           haxelib install hxp --quiet
           haxe -cp ".github" -D analyzer-optimize -main UpdateHaxelib --interp
+          haxelib run lime setup -alias -y -nocffi
 
       - if: ${{ matrix.build == 'debug' }}
         run: haxelib install hxcpp-debug-server --quiet
 
-      - if: ${{ matrix.compile == 'linux' }}
-        run: |
-          sudo apt-get install vlc libvlc-dev libvlccore-dev vlc-bin
-          sudo apt-get install glibc-source
-
       - name: Compile
-        run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -64
+        run: haxelib run lime build ${{ matrix.compile }} -${{ matrix.build }} -64
         timeout-minutes: 120
 
       - name: Compile (Hashlink)
         if: ${{ matrix.compile == 'windows' }}
-        run: haxelib run openfl build ${{ matrix.compile }} hl -${{ matrix.build }} -64
+        run: haxelib run lime build hl -${{ matrix.build }} -64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
