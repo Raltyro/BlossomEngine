@@ -177,6 +177,9 @@ class PlayState extends BLState {
 
 	public var events:PlayEventHandler;
 
+	public var discordRPCAlbum:String;
+	public var discordRPCIcon:String;
+
 	// Cameras
 	public var camGame:PlayCamera;
 	public var camLogic:PlayCamera;
@@ -954,9 +957,14 @@ class PlayState extends BLState {
 			Discord.clearTimestamp();
 		}
 
+		if (discordRPCAlbum == null) discordRPCAlbum = 'album-${song.album}';
+		if (discordRPCIcon == null && dad != null) discordRPCIcon = 'icon-${dad.characterID}';
+
 		Discord.changePresence(
 			'$prefix ${song.title} (${difficulty})',
-			(storyMode ? 'Story Mode' : 'Freeplay')
+			(storyMode ? 'Story Mode' : 'Freeplay'),
+			discordRPCAlbum, null,
+			discordRPCIcon, null
 		);
 	}
 

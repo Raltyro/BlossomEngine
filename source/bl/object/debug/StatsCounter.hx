@@ -34,7 +34,7 @@ class StatsCounter extends DisplayObjectContainer {
 		addChild(drawCounter = new DrawCounter()).visible = showDraw;
 	}
 
-	@:noCompletion override function addChildAt(child:DisplayObject, index:Int):DisplayObject {
+	override function addChildAt(child:DisplayObject, index:Int):DisplayObject {
 		super.addChildAt(child, index);
 
 		var other = __children[index - 1];
@@ -51,12 +51,12 @@ class StatsCounter extends DisplayObjectContainer {
 		return child;
 	}
 
-	@:noCompletion private override function __enterFrame(tickdt) {
+	override function __enterFrame(tickdt) {
 		@:privateAccess if (FlxG.game != null && FlxG.game._lostFocus && FlxG.autoPause)
 			return;
 
-		if ((debounceUpdate += Math.floor(tickdt)) < updateRateDuration) return fpsCounter.__enterFrame(tickdt);
-		super.__enterFrame(tickdt);
+		if ((debounceUpdate += Math.floor(tickdt)) < updateRateDuration) return fpsCounter.__enterFrame(cast tickdt);
+		super.__enterFrame(cast tickdt);
 		debounceUpdate = 0;
 
 		var y:Float = 0;

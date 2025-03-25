@@ -27,7 +27,7 @@ class NativeAudioSource {
 	private static final STREAM_NUM_BUFFERS:Int = 5; // 3 for now, something is fucking up the buffers
 	private static final STREAM_TIMER_FREQUENCY:Int = 100;
 
-	#if (lime >= "8.2.0")
+	#if (lime >= "8.3.0")
 	private static var hasALSoftLatencyExt:Null<Bool>;
 	#end
 
@@ -85,7 +85,7 @@ class NativeAudioSource {
 	}
 
 	public function init():Void {
-		#if (lime >= "8.2.0")
+		#if (lime >= "8.3.0")
 		if (hasALSoftLatencyExt == null) hasALSoftLatencyExt = AL.isExtensionPresent("AL_SOFT_source_latency");
 		#end
 
@@ -471,7 +471,7 @@ class NativeAudioSource {
 	}
 
 	public function getLatency():Float {
-		#if (lime >= "8.2.0")
+		#if (lime >= "8.3.0")
 		if (hasALSoftLatencyExt) {
 			final offsets = AL.getSourcedvSOFT(handle, AL.SEC_OFFSET_LATENCY_SOFT, 2);
 			if (offsets != null) return offsets[1] * 1000;

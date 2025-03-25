@@ -29,7 +29,7 @@ enum abstract DiscordSignalType(String) from String to String {
 }
 
 class Discord {
-	public static final defaultID:String = "1045626896752320575";
+	public static final defaultID:String = "816168432860790794";
 	public static var clientID(default, set):String = defaultID;
 
 	public static var active:Bool = false;
@@ -43,8 +43,8 @@ class Discord {
 	public static function resetPresence() {
 		details = 'Initial';
 		state = null;
-		largeImageKey = 'icon';
-		largeImageText = 'YOU CANT BEAT EM';
+		largeImageKey = 'album-volume1';
+		largeImageText = 'Friday Night Funkin';
 		smallImageKey = '';
 		smallImageText = '';
 		clearTimestamp();
@@ -115,12 +115,12 @@ class Discord {
 	{
 		if (largeImageKey != null) Discord.largeImageKey = largeImageKey;
 		if (largeImageText != null) Discord.largeImageText = largeImageText;
-			
+
 		Discord.details = details;
 		Discord.state = state;
 		Discord.smallImageKey = smallImageKey;
 		Discord.smallImageText = smallImageText;
-		
+
 		updatePresence();
 	}
 
