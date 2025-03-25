@@ -52,7 +52,7 @@ jobs:
           haxelib install hxcpp --quiet
           haxelib install format --quiet
           haxelib install hxp --quiet
-          haxe -cp ".github/workflow_haxelib" -D analyzer-optimize -main Update --interp
+          haxe -cp ".github/UpdateHaxelib" -D analyzer-optimize -main UpdateHaxelib --interp
 
       - if: ${{ matrix.build == 'debug' }}
         run: haxelib install hxcpp-debug-server --quiet

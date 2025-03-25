@@ -12,7 +12,7 @@ typedef Library = {
 	?dir:String;
 }
 
-class Update {
+class UpdateHaxelib {
 	static final libraries:Array<Library> = [
 		{name: "lime", url: "https://github.com/Raltyro/lime", commit: "swordcube-new"},
 		{name: "flixel", url: "https://github.com/swordcubes-grave-of-shite/flixel"},
