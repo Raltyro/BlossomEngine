@@ -64,7 +64,7 @@ jobs:
           haxelib git thx.semver https://github.com/fponticelli/thx.semver bdb191fe7cf745c02a980749906dbf22719e200b --quiet
           haxelib install hxjson5
           haxelib install hxIni
-          haxelib install hxvlc 2.0.0 --quiet
+          haxelib git hxvlc https://github.com/Vortex2Oblivion/hxvlc --quiet
           haxelib install hxdiscord_rpc 1.3.0 --quiet
 
       - if: ${{ matrix.build == 'debug' }}
