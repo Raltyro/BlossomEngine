@@ -11,7 +11,7 @@ class CommandLineHandler {
 				PlayState.playSong(song);
 			case '-songdiff':
 				final song = args[++i];
-				final diff = args[++i];
+				var diff = args[++i];
 				if (!(success = (song != null && diff != null))) break;
 
 				if (diff.charAt(0) == '-') diff = diff.substr(1);
