@@ -8,22 +8,22 @@ typedef Library = {
 	name:String,
 	?version:String,
 	?url:String,
-	?commit:String,
+	?ref:String,
 	?dir:String
 }
 
 class UpdateHaxelib {
 	static final libraries:Array<Library> = [
-		{name: "lime", url: "https://github.com/Raltyro/lime", commit: "swordcube-new"},
 		{name: "flixel", url: "https://github.com/swordcubes-grave-of-shite/flixel"},
-		{name: "openfl", url: "https://github.com/Raltyro/openfl", commit: "swordcube"},
 		{name: "flixel-addons", version: "3.3.2"},
-		{name: "flxanimate", url: "https://github.com/Dot-Stuff/flxanimate"},
 		{name: "polymod", version: "1.8.0"},
 		{name: "hscript", version: "2.6.0"},
+		{name: "flxanimate", url: "https://github.com/Dot-Stuff/flxanimate"},
+		{name: "openfl", url: "https://github.com/Raltyro/openfl", ref: "517a694b5322e951232aa14d733e26286edc256c"},
+		{name: "lime", url: "https://github.com/Raltyro/lime", ref: "6e8d499e108159e14bf93bf85dbe9a0e0d51aa67"},
 		{name: "jsonpath", url: "https://github.com/EliteMasterEric/jsonpath"},
-		{name: "thx.core", url: "https://github.com/fponticelli/thx.core", commit: '76d87418fadd92eb8e1b61f004cff27d656e53dd'},
-		{name: "thx.semver", url: "https://github.com/fponticelli/thx.semver", commit: 'bdb191fe7cf745c02a980749906dbf22719e200b'},
+		{name: "thx.core", url: "https://github.com/fponticelli/thx.core", ref: '76d87418fadd92eb8e1b61f004cff27d656e53dd'},
+		{name: "thx.semver", url: "https://github.com/fponticelli/thx.semver", ref: 'bdb191fe7cf745c02a980749906dbf22719e200b'},
 		{name: "hxjson5"},
 		{name: "hxIni"},
 		{name: "hxvlc", url: "https://github.com/Vortex2Oblivion/hxvlc"},
@@ -44,17 +44,17 @@ class UpdateHaxelib {
 					if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
 					else if (FileSystem.exists('${lib.dir}/dev')) continue;
 
-					Sys.println('Installing "${lib.name}" from git url "${lib.url}" ${lib.commit}');
+					Sys.println('Installing "${lib.name}" from git url "${lib.url}" ${lib.ref}');
 
 					if (FileSystem.exists('${lib.dir}/git')) {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
 						Sys.command('git checkout');
-						Sys.command('git pull origin ${lib.commit}');
+						Sys.command('git pull origin ${lib.ref}');
 					}
 					else {
 						Sys.setCwd('${mainCwd}/${lib.dir}');
 						Sys.command('git clone --recurse-submodules ${lib.url} git');
-						Sys.command('git pull origin ${lib.commit}');
+						Sys.command('git pull origin ${lib.ref}');
 						File.saveContent('.current', 'git');
 					}
 					Sys.setCwd(mainCwd);
