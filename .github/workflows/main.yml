@@ -2,7 +2,7 @@ name: Game Builds
 on: [push, workflow_dispatch]
 
 env:
-  HAXE_VERSION: 4.3.6
+  HAXE_VERSION: 4.3.4
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: krdlab/setup-haxe@v1
+      - uses: krdlab/setup-haxe@v1.5.1
         with:
           haxe-version: ${{ env.HAXE_VERSION }}
 
@@ -64,6 +64,7 @@ jobs:
 
       - name: Compile
         run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -64
+        timeout-minutes: 120
 
       - name: Compile (Hashlink)
         if: ${{ matrix.compile == 'windows' }}
