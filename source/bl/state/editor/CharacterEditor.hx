@@ -992,7 +992,7 @@ F to re-play the current animation", ""));
 		else {
 			Main.statsCounter.visible = true;
 			if (wasInPlayState) FlxG.switchState(PlayState.new.bind(null));
-			else FlxG.switchState(goku.state.MenuGoku.new);
+			else FlxG.switchState(bl.state.menu.MainMenuState.new);
 		}
 	}
 

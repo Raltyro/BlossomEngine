@@ -15,9 +15,6 @@ import bl.input.Controls;
 import bl.input.ColumnInputManager;
 
 @:structInit class Settings {
-	/* Goku */
-	public var jollyMode:Int = 0; // 0 = default, 1 = force to jolly, 2 = no jolly my ears hurts
-
 	/* Gameplay */
 	// General 
 	public var autoPause:Bool = true;
@@ -64,29 +61,15 @@ import bl.input.ColumnInputManager;
 }
 
 class Save {
-	public static var data_dir(default, null):String = "lexicord/goku";
+	public static var data_dir(default, null):String = "raltyro/blossom";
 	public static var setting_path(default, null):String = "settings.ini";
 
 	public static var settings:Settings = {};
 	public static var data:Dynamic;
 
-	inline static function verifyGokuData() {
-		if (data.realJolly = (Date.now().getMonth() == 11)) trace('YOUR COPY OF GOKU IS SUPAH JOLLY MODE');
-		else trace('YOUR COPY OF GOKU IS NOT SUPAH JOLLY MODE');
-
-		data.jolly = settings.jollyMode == 0 ? data.realJolly : settings.jollyMode == 1;
-		data.disc = false; // whats this for -ralty
-
-		data.playedOnChristmas = data.playedOnChristmas ?? false;
-		data.beatEm = data.beatEm ?? false;
-		data.taco = data.taco ?? false;
-		data.gif = data.gif ?? false;
-	}
-
 	public static function load() {
 		loadData();
 		loadSettings();
-		verifyGokuData();
 	}
 
 	public static function loadData():Bool {
