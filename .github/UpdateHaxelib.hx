@@ -27,7 +27,7 @@ class UpdateHaxelib {
 		{name: "hxjson5"},
 		{name: "hxIni"},
 		{name: "hxvlc", url: "https://github.com/Vortex2Oblivion/hxvlc"},
-		{name: "hxdiscord_rpc", version: "1.3.0"},
+		{name: "hxdiscord_rpc", version: "1.3.0"}
 	];
 
 	public static function main() {
@@ -39,7 +39,7 @@ class UpdateHaxelib {
 
 			for (lib in libraries) {
 				if (lib.url != null) {
-					if (lib.dir == null) lib.dir = lib.name;
+					if (lib.dir == null) lib.dir = lib.name.replace('.', ',');
 					if (lib.ref == null) lib.ref = '';
 
 					if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
@@ -54,10 +54,11 @@ class UpdateHaxelib {
 					}
 					else {
 						Sys.setCwd('${mainCwd}/${lib.dir}');
-						Sys.command('git clone --recurse-submodules ${lib.url} git');
+						Sys.command('git clone --recurse-submodules "${lib.url}" git');
+						Sys.setCwd('${mainCwd}/${lib.dir}/git');
 						if (lib.ref == null) Sys.command('git pull origin'); else Sys.command('git pull origin ${lib.ref}');
-						File.saveContent('.current', 'git');
 					}
+					File.saveContent('${mainCwd}/${lib.dir}/.current', 'git');
 					Sys.setCwd(mainCwd);
 				}
 				else {
@@ -65,7 +66,7 @@ class UpdateHaxelib {
 					var vers = lib.version != null ? lib.version : "";          
 
 					Sys.command('haxelib install ${lib.name} ${vers} --quiet');
-					if (lib.version != null) File.saveContent('${lib.name}/.current', vers);
+					if (lib.version != null) File.saveContent('${mainCwd}/${lib.dir}/.current', vers);
 				}
 			}
 		}
