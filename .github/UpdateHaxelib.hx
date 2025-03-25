@@ -5,11 +5,11 @@ import sys.FileSystem;
 using StringTools;
 
 typedef Library = {
-	name:String;
-	?version:String;
-	?url:String;
-	?commit:String;
-	?dir:String;
+	name:String,
+	?version:String,
+	?url:String,
+	?commit:String,
+	?dir:String
 }
 
 class UpdateHaxelib {
