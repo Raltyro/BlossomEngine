@@ -40,6 +40,7 @@ class UpdateHaxelib {
 			for (lib in libraries) {
 				if (lib.url != null) {
 					if (lib.dir == null) lib.dir = lib.name;
+					if (lib.ref == null) lib.ref = '';
 
 					if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
 					else if (FileSystem.exists('${lib.dir}/dev')) continue;
@@ -49,12 +50,12 @@ class UpdateHaxelib {
 					if (FileSystem.exists('${lib.dir}/git')) {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
 						Sys.command('git checkout');
-						Sys.command('git pull origin ${lib.ref}');
+						if (lib.ref == null) Sys.command('git pull origin ${lib.ref}'); else Sys.command('git pull origin');
 					}
 					else {
 						Sys.setCwd('${mainCwd}/${lib.dir}');
 						Sys.command('git clone --recurse-submodules ${lib.url} git');
-						Sys.command('git pull origin ${lib.ref}');
+						if (lib.ref == null) Sys.command('git pull origin ${lib.ref}'); else Sys.command('git pull origin');
 						File.saveContent('.current', 'git');
 					}
 					Sys.setCwd(mainCwd);
