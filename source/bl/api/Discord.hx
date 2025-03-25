@@ -44,7 +44,7 @@ class Discord {
 		details = 'Initial';
 		state = null;
 		largeImageKey = 'album-volume1';
-		largeImageText = 'Friday Night Funkin';
+		largeImageText = "Friday Night Funkin'";
 		smallImageKey = '';
 		smallImageText = '';
 		clearTimestamp();

@@ -904,15 +904,13 @@ class PlayState extends BLState {
 	override function onFocus() {
 		lostFocus = false;
 		updateDiscordPresence();
-
-		columnInputManager.paused = false;
 	}
 
 	override function onFocusLost() {
 		lostFocus = true;
 		updateDiscordPresence();
 
-		columnInputManager.paused = true;
+		if (Save.settings.lostFocusPause) gotoPause();
 	}
 
 	override function destroy() {
@@ -945,7 +943,7 @@ class PlayState extends BLState {
 		if (startingSong) prefix = 'Starting on ';
 		else {
 			if (dead) prefix = 'Game Over on ';
-			else if (paused || lostFocus) prefix = 'Paused on ';
+			else if (paused) prefix = 'Paused on ';
 			isPlaying = timePosition > 0 && timePosition < inst.length;
 		}
 

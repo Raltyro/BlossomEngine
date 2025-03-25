@@ -23,6 +23,7 @@ import bl.input.ColumnInputManager;
 	public var ghostTap:Bool = false;
 	public var timeType:Int = 0;
 	public var judgmentWorldSpace:Bool = true;
+	public var lostFocusPause:Bool = false;
 
 	// Audio
 	public var hitSound:Float = 0;
@@ -43,7 +44,6 @@ import bl.input.ColumnInputManager;
 	// Window
 	public var fullscreen:Bool = false;
 	public var framerate:Int = 0;
-	public var framerateLostFocus:Int = 8;
 
 	// Stats Debug
 	public var showFPS:Bool = #if debug true #else false #end;
@@ -101,5 +101,18 @@ class Save {
 
 		if (settings.columnButtonBinds == null)
 			settings.columnButtonBinds = [FlxInputDeviceID.ALL => ColumnInputManager.getDefaultColumnButtonBinds()];
+
+		FlxG.autoPause = settings.autoPause;
+
+		if (settings.framerate <= 0) settings.framerate = Main.DEFAULT_FRAMERATE;
+		else Main.framerate = settings.framerate;
+
+		FlxSprite.defaultAntialiasing = settings.antialiasing;
+
+		Main.statsCounter.fpsCounter.visible = settings.showFPS;
+		Main.statsCounter.flixelCounter.visible = settings.showState;
+		Main.statsCounter.memoryCounter.visible = settings.showMemory;
+		Main.statsCounter.memoryCounter.showPeak = settings.showMemoryPeak;
+		Main.statsCounter.drawCounter.visible = settings.showDraws;
 	}
 }

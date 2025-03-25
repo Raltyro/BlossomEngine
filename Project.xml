@@ -58,7 +58,7 @@
 
 	<section if="BASE_GAME_ASSETS">
 		<assets path="assets/base_game/preload" rename="assets"/>
-		<assets path="assets/base_game/videos" rename="videos" unless="NO_VIDEOS"/>
+		<assets path="assets/base_game/videos" rename="assets/videos" unless="NO_VIDEOS"/>
 		<assets path="assets/base_game/shared" rename="assets/shared" library="shared"/>
 		<assets path="assets/base_game/songs" rename="assets/songs" library="songs"/>
 		<!--<assets path="assets/base_game/skins" rename="assets/skins" library="skins"/>-->

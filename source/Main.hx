@@ -65,7 +65,7 @@ class Main extends Sprite {
 
 	public static var current:Main;
 
-	public static var framerate(get,set):Float;
+	public static var framerate(get, set):Float;
 	static function set_framerate(cap:Float):Float {
 		if (FlxG.game != null) {
 			var _framerate:Int = Std.int(cap);
@@ -188,7 +188,6 @@ class Main extends Sprite {
 		flixel.FlxObject.defaultMoves = false;
 
 		FlxG.fixedTimestep = false;
-		#if debug FlxG.autoPause = false; #end
 		FlxG.keys.preventDefaultKeys = [TAB];
 		FlxG.sound.volumeUpKeys = [];
 		FlxG.sound.volumeDownKeys = [];
@@ -196,23 +195,17 @@ class Main extends Sprite {
 
 		Controls.instance = new Controls();
 
-		Save.load();
-		flixel.FlxSprite.defaultAntialiasing = Save.settings.antialiasing;
-
-		if (Save.settings.framerate <= 0) Save.settings.framerate = DEFAULT_FRAMERATE;
-		else framerate = Save.settings.framerate;
-
-		if (Save.settings.framerateLostFocus <= 0) Save.settings.framerateLostFocus = FlxG.game.focusLostFramerate;
-		else FlxG.game.focusLostFramerate = Save.settings.framerateLostFocus;
-
 		if (statsCounter != null) {
 			current.removeChild(statsCounter);
 			@:privateAccess statsCounter.__cleanup();
 		}
 		current.addChild(statsCounter = new StatsCounter(3, 3));
 
-		if (Sys.args().contains('-livereload')) bl.mod.PolymodHandler.useSourceAssets = true;
-		bl.mod.PolymodHandler.loadMods();
+		// maybe dont do this? base_game assets doesnt work
+		if (Sys.args().contains('-livereload')) {
+			bl.mod.PolymodHandler.useSourceAssets = true;
+			bl.mod.PolymodHandler.loadMods();
+		}
 
 		#if FLX_DEBUG
 		if (FlxG.game.debugger != null) {
@@ -238,6 +231,8 @@ class Main extends Sprite {
 			FlxG.game.debugger.console.registerObject('gl', openfl.display.OpenGLRenderer);
 		}
 		#end
+
+		Save.load();
 	}
 
 	private function onClose() {
