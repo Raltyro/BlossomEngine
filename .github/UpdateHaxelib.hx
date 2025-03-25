@@ -43,7 +43,6 @@ class UpdateHaxelib {
 					if (lib.ref == null) lib.ref = '';
 
 					if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
-					else if (FileSystem.exists('${lib.dir}/dev')) continue;
 
 					Sys.println('Installing "${lib.name}" from git url "${lib.url}" ${lib.ref}');
 
@@ -58,7 +57,8 @@ class UpdateHaxelib {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
 						if (lib.ref == null) Sys.command('git pull origin'); else Sys.command('git pull origin ${lib.ref}');
 					}
-					File.saveContent('${mainCwd}/${lib.dir}/.current', 'git');
+					Sys.setCwd('${mainCwd}/${lib.dir}');
+					File.saveContent('.current', 'git');
 					Sys.setCwd(mainCwd);
 				}
 				else {
