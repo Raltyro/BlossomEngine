@@ -38,13 +38,12 @@ class UpdateHaxelib {
 			Sys.println("Preparing installation...");
 
 			for (lib in libraries) {
+				if (lib.dir == null) lib.dir = lib.name.replace('.', ',');
 				if (lib.url != null) {
-					if (lib.dir == null) lib.dir = lib.name.replace('.', ',');
 					if (lib.ref == null) lib.ref = '';
-
 					if (!FileSystem.exists(lib.dir)) FileSystem.createDirectory(lib.dir);
 
-					Sys.println('Installing "${lib.name}" from git url "${lib.url}" ${lib.ref}');
+					Sys.println('Installing "${lib.name}" from "${lib.url}" ${lib.ref}');
 
 					if (FileSystem.exists('${lib.dir}/git')) {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
@@ -58,7 +57,7 @@ class UpdateHaxelib {
 						if (lib.ref == null) Sys.command('git pull origin'); else Sys.command('git pull origin ${lib.ref}');
 					}
 					Sys.setCwd('${mainCwd}/${lib.dir}');
-					File.saveContent('.current', 'git');
+					File.saveContent('${mainCwd}/${lib.dir}/.current', 'git');
 					Sys.setCwd(mainCwd);
 				}
 				else {
@@ -66,7 +65,7 @@ class UpdateHaxelib {
 					var vers = lib.version != null ? lib.version : "";          
 
 					Sys.command('haxelib install ${lib.name} ${vers} --quiet');
-					if (lib.version != null) File.saveContent('${mainCwd}/${lib.dir}/.current', vers);
+					if (lib.version != null) File.saveContent('${mainCwd}/${lib.dir}/.current', lib.version);
 				}
 			}
 		}
