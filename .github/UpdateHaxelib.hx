@@ -48,11 +48,13 @@ class UpdateHaxelib {
 
 					if (FileSystem.exists('${lib.dir}/git')) {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
+						Sys.command('git checkout');
 						Sys.command('git pull origin ${lib.commit}');
 					}
 					else {
 						Sys.setCwd('${mainCwd}/${lib.dir}');
-						Sys.command('git clone --recurse-submodules ${lib.url} ${lib.commit} git');
+						Sys.command('git clone --recurse-submodules ${lib.url} git');
+						Sys.command('git pull origin ${lib.commit}');
 						File.saveContent('.current', 'git');
 					}
 					Sys.setCwd(mainCwd);
