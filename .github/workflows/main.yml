@@ -58,7 +58,11 @@ jobs:
         run: haxelib install hxcpp-debug-server --quiet
 
       - if: ${{ matrix.compile == 'linux' }}
-        run: sudo apt-get install vlc libvlc-dev libvlccore-dev vlc-bin
+        run: |
+          sudo apt-get install vlc libvlc-dev libvlccore-dev vlc-bin
+          sudo apt-get install glibc-source
+          sudo apt-get install libidn12
+          sudo apt-get install libidn-dev
 
       - name: Compile
         run: haxelib run openfl build ${{ matrix.compile }} -${{ matrix.build }} -64
