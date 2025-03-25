@@ -1,3 +1,1 @@
-# Vs Goku
-
-Faggot
+# Funkin' Blossom
