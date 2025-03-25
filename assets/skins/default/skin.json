@@ -1,0 +1,129 @@
+{
+	"name": "Default",
+	"creator": "Raltyro, Funkin' Crew",
+	"description": "Gettin Freaky on Friday Night",
+	"holdOverReceptors": true,
+	"missSounds": ["miss1", "miss2", "miss3"],
+	"sprites": {
+		"num0": {"image": "nums", "animations": [{"name":"", "id":"num0"}]},
+		"num1": {"image": "nums", "animations": [{"name":"", "id":"num1"}]},
+		"num2": {"image": "nums", "animations": [{"name":"", "id":"num2"}]},
+		"num3": {"image": "nums", "animations": [{"name":"", "id":"num3"}]},
+		"num4": {"image": "nums", "animations": [{"name":"", "id":"num4"}]},
+		"num5": {"image": "nums", "animations": [{"name":"", "id":"num5"}]},
+		"num6": {"image": "nums", "animations": [{"name":"", "id":"num6"}]},
+		"num7": {"image": "nums", "animations": [{"name":"", "id":"num7"}]},
+		"num8": {"image": "nums", "animations": [{"name":"", "id":"num8"}]},
+		"num9": {"image": "nums", "animations": [{"name":"", "id":"num9"}]},
+		"numnegative": {"image": "nums", "animations": [{"name":"", "id":"numnegative", "offset": [0, -33]}]}
+	},
+	"4k": {
+		"receptor": {
+			"image": "notes",
+			"animations": [
+				{"name": "static", "id": "note", "fps": 24},
+				{"name": "press", "id": "press", "loop": false, "offset": [-3, -2], "fps": 24,
+					"colors": [
+						[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+						[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+						[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+						[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+					]
+				},
+				{"name": "confirm", "id": "confirm0", "loop": false, "offset": [10, 10], "fps": 24},
+				{"name": "confirm-hold", "id": "confirm0", "loop": true, "offset": [10, 10], "fps": 24, "indices": [0, 1, 2]}
+			],
+			"offset": [78, 77],
+			"scale": 0.7,
+			"angles": [270, 180, 0, 90],
+			"color": [0xFF87A3AD, 0xFFFFFFFF, 0xFF000000]
+		},
+		"glow": {
+			"image": "notes",
+			"animations": [
+				{"name": "confirm", "id": "confirm glow", "loop": false, "fps": 24},
+				{"name": "confirm-hold", "id": "confirm glow", "loop": true, "fps": 24, "indices": [0, 1, 2]}
+			],
+			"offset": [119, 118],
+			"scale": 0.7,
+			"angles": [270, 180, 0, 90],
+			"colors": [
+				[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+				[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+				[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+				[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+			],
+			"blend": "add"
+		},
+		"splash": {
+			"image": "notes",
+			"animations": [
+				{"name": "0", "id": "splash0", "loop": false, "fps": 24},
+				{"name": "1", "id": "splash1", "loop": false, "fps": 24, "offset": [7, -15]},
+			],
+			"offset": [134, 153],
+			"scale": 0.7,
+			"colors": [
+				[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+				[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+				[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+				[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+			],
+			"blend": "add"
+		},
+		"holdglow": {
+			"image": "hold-glow",
+			"animations": [
+				{"name": "start", "id": "sustain cover start", "loop": false, "fps": 24},
+				{"name": "loop", "id": "sustain cover0", "loop": true, "fps": 24, "offset": [31, 19]},
+				{"name": "end", "id": "sustain cover end", "loop": false, "fps": 24, "offset": [79, 66]}
+			],
+			"offset": [49, 49],
+			"scale": 0.7,
+			"colors": [
+				[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+				[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+				[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+				[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+			],
+			"blend": "add"
+		},
+		"note": {
+			"image": "notes",
+			"animations": [{"name":"", "id":"note", "fps": 24}],
+			"offset": [78, 77],
+			"scale": 0.7,
+			"angles": [270, 180, 0, 90],
+			"colors": [
+				[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+				[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+				[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+				[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+			]
+		},
+		"hold": {
+			"image": "notes-hold",
+			"animations": [{"name":"", "id":"hold piece", "fps": 24}],
+			"offset": [26, 0],
+			"scale": 0.7,
+			"colors": [
+				[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+				[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+				[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+				[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+			]
+		},
+		"holdbottom": {
+			"image": "notes-hold",
+			"animations": [{"name":"", "id":"hold end", "fps": 24}],
+			"offset": [26, 0],
+			"scale": 0.7,
+			"colors": [
+				[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
+				[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
+				[0xFF12FA05, 0xFFFFFFFF, 0xFF0A4447],
+				[0xFFF9393F, 0xFFFFFFFF, 0xFF651038]
+			]
+		}
+	}
+}

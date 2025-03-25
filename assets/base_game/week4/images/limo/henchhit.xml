@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Created with Funkin Packer v0.1.3 https://neeeoo.github.io/funkin-packer/
+-->
+<TextureAtlas imagePath="henchhit.png" width="595" height="692">
+	<SubTexture name="hench arm 10000" x="266" y="381" width="92" height="141" frameX="-24" frameY="-0" frameWidth="140" frameHeight="141"/>
+	<SubTexture name="hench arm 20000" x="266" y="561" width="121" height="131" frameX="-7" frameY="-0" frameWidth="134" frameHeight="131"/>
+	<SubTexture name="hench head 10000" x="435" y="0" width="160" height="214" frameX="-38" frameY="-0" frameWidth="238" frameHeight="219"/>
+	<SubTexture name="hench head 20000" x="435" y="327" width="157" height="233" frameX="-39" frameY="-2" frameWidth="236" frameHeight="236"/>
+	<SubTexture name="hench hit 10000" x="0" y="0" width="434" height="380" frameX="-0" frameY="-0" frameWidth="434" frameHeight="380"/>
+	<SubTexture name="hench hit 20000" x="0" y="381" width="265" height="303" frameX="-0" frameY="-0" frameWidth="265" frameHeight="304"/>
+	<SubTexture name="hench leg 10000" x="435" y="215" width="158" height="111" frameX="-4" frameY="-28" frameWidth="165" frameHeight="166"/>
+	<SubTexture name="hench leg 20000" x="388" y="561" width="143" height="126" frameX="-0" frameY="-14" frameWidth="149" frameHeight="153"/>
+</TextureAtlas>

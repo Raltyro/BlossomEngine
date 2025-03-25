@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Created with Funkin Packer v0.1.3 https://neeeoo.github.io/funkin-packer/
+-->
+<TextureAtlas imagePath="checkBox.png" width="499" height="652">
+	<SubTexture name="Check Box Deselect0000" x="255" y="336" width="142" height="164" frameX="-16" frameY="-35" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0001" x="255" y="336" width="142" height="164" frameX="-16" frameY="-35" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0002" x="244" y="190" width="176" height="144" frameX="-0" frameY="-60" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0003" x="244" y="190" width="176" height="144" frameX="-0" frameY="-60" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0004" x="0" y="0" width="113" height="196" frameX="-24" frameY="-0" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0005" x="244" y="0" width="125" height="188" frameX="-18" frameY="-11" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0006" x="244" y="0" width="125" height="188" frameX="-18" frameY="-11" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0007" x="0" y="373" width="131" height="174" frameX="-19" frameY="-25" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0008" x="0" y="373" width="131" height="174" frameX="-19" frameY="-25" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0009" x="396" y="502" width="102" height="142" frameX="-37" frameY="-57" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Deselect0010" x="123" y="549" width="102" height="103" frameX="-37" frameY="-96" frameWidth="176" frameHeight="204"/>
+	<SubTexture name="Check Box Selected0000" x="133" y="373" width="120" height="174" frameX="-0" frameY="-0" frameWidth="120" frameHeight="174"/>
+	<SubTexture name="Check Box Selecting0000" x="0" y="549" width="121" height="82" frameX="-15" frameY="-133" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0001" x="0" y="549" width="121" height="82" frameX="-15" frameY="-133" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0002" x="371" y="0" width="128" height="180" frameX="-3" frameY="-45" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0003" x="115" y="0" width="127" height="193" frameX="-0" frameY="-0" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0004" x="115" y="0" width="127" height="193" frameX="-0" frameY="-0" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0005" x="255" y="502" width="139" height="146" frameX="-1" frameY="-62" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0006" x="255" y="502" width="139" height="146" frameX="-1" frameY="-62" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0007" x="115" y="195" width="121" height="176" frameX="-11" frameY="-29" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Selecting0008" x="115" y="195" width="121" height="176" frameX="-11" frameY="-29" frameWidth="140" frameHeight="225"/>
+	<SubTexture name="Check Box Unselected0000" x="0" y="198" width="102" height="103" frameX="-0" frameY="-0" frameWidth="102" frameHeight="103"/>
+</TextureAtlas>

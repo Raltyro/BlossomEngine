@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="notes-hold.png">
+	<SubTexture name="hold end0000" x="0" y="0" width="53" height="64"/>
+	<SubTexture name="hold piece0000" x="54" y="0" width="53" height="64"/>
+</TextureAtlas>

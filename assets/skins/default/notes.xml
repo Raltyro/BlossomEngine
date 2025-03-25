@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TextureAtlas imagePath="notes.png" width="798" height="1021">
+	<SubTexture name="confirm0000" x="388" y="518" width="177" height="174" frameX="-0" frameY="-0" frameWidth="177" frameHeight="174"/>
+	<SubTexture name="confirm0001" x="388" y="518" width="177" height="174" frameX="-0" frameY="-0" frameWidth="177" frameHeight="174"/>
+	<SubTexture name="confirm0002" x="388" y="693" width="171" height="168" frameX="-3" frameY="-3" frameWidth="177" frameHeight="174"/>
+	<SubTexture name="confirm0003" x="388" y="693" width="171" height="168" frameX="-3" frameY="-3" frameWidth="177" frameHeight="174"/>
+	<SubTexture name="confirm glow0000" x="0" y="518" width="212" height="213" rotated="true" frameX="-12" frameY="-18" frameWidth="240" frameHeight="237"/>
+	<SubTexture name="confirm glow0001" x="599" y="0" width="199" height="196" frameX="-19" frameY="-19" frameWidth="240" frameHeight="237"/>
+	<SubTexture name="confirm glow0002" x="560" y="743" width="228" height="226" rotated="true" frameX="-6" frameY="-3" frameWidth="240" frameHeight="237"/>
+	<SubTexture name="confirm glow0003" x="560" y="743" width="228" height="226" rotated="true" frameX="-6" frameY="-3" frameWidth="240" frameHeight="237"/>
+	<SubTexture name="note0000" x="230" y="724" width="157" height="154" frameX="-0" frameY="-0" frameWidth="157" frameHeight="154"/>
+	<SubTexture name="press0000" x="230" y="879" width="146" height="142" frameX="-3" frameY="-4" frameWidth="152" frameHeight="150"/>
+	<SubTexture name="press0001" x="230" y="879" width="146" height="142" frameX="-3" frameY="-4" frameWidth="152" frameHeight="150"/>
+	<SubTexture name="press0002" x="388" y="862" width="150" height="152" rotated="true" frameX="-0" frameY="-0" frameWidth="152" frameHeight="150"/>
+	<SubTexture name="press0003" x="388" y="862" width="150" height="152" rotated="true" frameX="-0" frameY="-0" frameWidth="152" frameHeight="150"/>
+	<SubTexture name="splash00000" x="599" y="197" width="192" height="275" frameX="-33" frameY="-12" frameWidth="268" frameHeight="306"/>
+	<SubTexture name="splash00001" x="574" y="473" width="218" height="269" frameX="-26" frameY="-22" frameWidth="268" frameHeight="306"/>
+	<SubTexture name="splash00002" x="303" y="0" width="295" height="255" rotated="true" frameX="-5" frameY="-7" frameWidth="268" frameHeight="306"/>
+	<SubTexture name="splash00003" x="0" y="0" width="302" height="265" rotated="true" frameX="-0" frameY="-1" frameWidth="268" frameHeight="306"/>
+	<SubTexture name="splash10000" x="213" y="518" width="174" height="205" frameX="-44" frameY="-41" frameWidth="282" frameHeight="275"/>
+	<SubTexture name="splash10001" x="0" y="266" width="231" height="242" frameX="-19" frameY="-20" frameWidth="282" frameHeight="275"/>
+	<SubTexture name="splash10002" x="303" y="256" width="270" height="261" frameX="-0" frameY="-11" frameWidth="282" frameHeight="275"/>
+	<SubTexture name="splash10003" x="0" y="743" width="229" height="262" frameX="-50" frameY="-0" frameWidth="282" frameHeight="275"/>
+</TextureAtlas>

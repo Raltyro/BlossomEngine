@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://lime.software/project/1.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://lime.software/project/1.0.2 http://lime.software/xsd/project-1.0.2.xsd">
+	<define name="HXCPP_M32" if="32bit || 32"/>
+	<define name="32bit" if="HXCPP_M32"/>
+	<define name="32bits" if="32bit"/>
+	<define name="64" unless="32bit"/>
+	<!--<haxeflag name="-dce no"/>-->
+
+	<!-- ___________________________ Blossom Settings ___________________________ -->
+
+	<!--Compile with Base Game Assets-->
+	<define name="BASE_GAME_ASSETS"/>
+
+	<!--Disable Camera Buffers unless needed-->
+	<!--<define name="CAMERA_NO_BUFFER"/>-->
+
+	<!--Disable Videos-->
+	<define name="NO_VIDEOS" unless="cpp"/>
+
+	<!--Disable Discord RPC-->
+	<define name="NO_DISCORD" unless="cpp"/>
+
+	<!--Register your characters, stages, etc-->
+	<haxeflag name="--macro" value="include('funkin.character')"/>
+	<haxeflag name="--macro" value="include('funkin.event')"/>
+	<haxeflag name="--macro" value="include('funkin.stage')"/>
+	<haxeflag name="--macro" value="include('funkin.song')"/>
+
+	<!-- _________________________ Application Settings _________________________ -->
+
+	<app title="Funkin' Blossom" file="Blossom" packageName="com.raltyro.funkinblossom" package="com.raltyro.funkinblossom" version="BETA" company="raltyro"/>
+	<set name="SWF_VERSION" value="11.8"/> <!--Minimum without FLX_NO_GAMEPAD: 11.8, without FLX_NO_NATIVE_CURSOR: 11.2-->
+	<app preloader="flixel.system.FlxBasePreloader"/>
+
+	<window hardware="true" type="opengles" colorDepth="32" background="" fps="0" orientation="landscape"/>
+	<window unless="desktop" width="0" height="0" vsync="true"/>
+
+	<window if="desktop" width="1280" height="720" fullscreen="false" resizable="true" vsync="false" allowHighDPI="true"/>
+	<window if="mobile" fullscreen="true" resizable="false"/>
+	<!--<window if="switch" fullscreen="true" resizable="true"/>-->
+
+	<!-- _____________________________ Path Settings ____________________________ -->
+
+	<set name="BUILD_DIR" value="export/debug" if="debug"/>
+	<set name="BUILD_DIR" value="export/release" unless="debug"/>
+	<set name="BUILD_DIR" value="export/32bit" if="32bit"/>
+
+	<app main="Main"/>
+	<classpath name="source"/>
+	<classpath name="sourceInternal"/>
+
+	<!-- ____________________________ Assets Settings ___________________________ -->
+
+	<!-- Libraries -->
+	<library name="shared" preload="true"/>
+	<library name="songs" preload="true"/>
+	<library name="skins" preload="true"/>
+
+	<section if="BASE_GAME_ASSETS">
+		<assets path="assets/base_game/preload" rename="assets"/>
+		<assets path="assets/base_game/videos" rename="videos" unless="NO_VIDEOS"/>
+		<assets path="assets/base_game/shared" rename="assets/shared" library="shared"/>
+		<assets path="assets/base_game/songs" rename="assets/songs" library="songs"/>
+		<!--<assets path="assets/base_game/skins" rename="assets/skins" library="skins"/>-->
+
+		<library name="week1" preload="true"/>
+		<library name="week2" preload="true"/>
+		<library name="week3" preload="true"/>
+		<library name="week4" preload="true"/>
+		<library name="week5" preload="true"/>
+		<library name="week6" preload="true"/>
+		<library name="week7" preload="true"/>
+		<library name="weekend1" preload="true"/>
+
+		<assets path="assets/base_game/week1" rename="assets/week1" library="week1"/>
+		<assets path="assets/base_game/week2" rename="assets/week2" library="week2"/>
+		<assets path="assets/base_game/week3" rename="assets/week3" library="week3"/>
+		<assets path="assets/base_game/week4" rename="assets/week4" library="week4"/>
+		<assets path="assets/base_game/week5" rename="assets/week5" library="week5"/>
+		<assets path="assets/base_game/week6" rename="assets/week6" library="week6"/>
+		<assets path="assets/base_game/week7" rename="assets/week7" library="week7"/>
+		<assets path="assets/base_game/weekend1" rename="assets/weekend1" library="weekend1"/>
+	</section>
+
+	<assets path="assets/preload" rename="assets"/>
+	<assets path="assets/videos" unless="NO_VIDEOS"/>
+	<assets path="assets/shared" library="shared"/>
+	<assets path="assets/songs" library="songs"/>
+	<assets path="assets/skins" library="skins"/>
+
+	<assets path='art/icons/icon512.png' rename='icon.png' if="linux"/>
+	<icon path="art/icons/icon16.png" size="16" priority='99'/>
+	<icon path="art/icons/icon24.png" size="24" priority='99'/>
+	<icon path="art/icons/icon32.png" size="32" priority='99'/>
+	<icon path="art/icons/icon128.png" size="128" priority='99'/>
+	<icon path="art/icons/icon256.png" size="256" priority='99'/>
+	<icon path="art/icons/icon512.png" size="512" priority='99'/>
+	<icon path="art/icons/iconOG.png" priority='99'/>
+
+	<!-- _______________________________ Libraries ______________________________ -->
+
+	<haxelib name="lime" version="8.2.2"/>
+	<haxelib name="openfl" version="9.4.1"/>
+	<haxelib name="flixel" version="6.0.0"/>
+
+	<haxelib name="flixel-addons" version="3.3.2"/>
+	<haxelib name="flxanimate"/>
+
+	<haxelib name="polymod"/>
+	<haxelib name="hscript"/> <define name="hscriptPos"/>
+
+	<haxelib name="hxjson5"/>
+	<haxelib name="hxIni"/>
+
+	<haxelib name="hxvlc" version="2.0.0" unless="NO_VIDEOS"/>
+	<haxelib name="hxdiscord_rpc" version="1.3.0" if="desktop" unless="NO_DISCORD"/>
+
+	<!-- _______________________________ Haxedefines ____________________________ -->
+
+	<!-- This macro allows addition of new functionality and fixes to existing codes. -->
+	<haxeflag name="--macro" value="macro.HashLinkFixMacro.init()" if="hl"/>
+	<haxeflag name="--macro" value="macro.InternalBuildMacro.init()"/>
+
+	<!-- Disable the Flixel core focus lost screen -->
+	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/>
+
+	<!-- Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode! -->
+	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
+
+	<!-- Debugs -->
+	<haxedef name="HXCPP_CHECK_POINTER"/>
+	<haxedef name="HXCPP_STACK_LINE"/>
+	<!-- <haxedef name="HXCPP_STACK_TRACE"/> -->
+	<haxedef name="HXCPP_CATCH_SEGV"/>
+	<haxedef name="HXCPP_DEBUG_LINK" if="debug"/>
+
+	<!-- Disable Discord IO Thread -->
+	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="desktop"/>
+	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux"/>
+
+	<!-- <haxedef name="message.reporting" value="pretty"/> --> <!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
+	<haxedef name="openfl_dpi_aware" if="openfl_dpi_aware"/>
+	<haxedef name="openfl_enable_experimental_update_queue"/>
+	<haxedef name="openfl-enable-handle-error"/>
+	<haxedef name='no-deprecation-warnings'/>
+	<haxedef name="gl_stats" if="debug || cpp"/>
+</project>

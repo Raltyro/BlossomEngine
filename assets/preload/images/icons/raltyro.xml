@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TextureAtlas imagePath="raltyro.png" width="450" height="150">
+	<SubTexture name="idle0000" x="0" y="0" width="150" height="150"/>
+	<SubTexture name="winning0000" x="300" y="0" width="150" height="150"/>
+	<SubTexture name="losing0000" x="150" y="0" width="150" height="150"/>
+</TextureAtlas>

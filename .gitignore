@@ -1,0 +1,16 @@
+export/
+.haxelib/
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+*.code-workspace
+*.sublime-workspace
+*.DS_Store
+
+.history
+.ionide
+
+temporary

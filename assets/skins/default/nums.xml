@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TextureAtlas imagePath="nums.png" width="91" height="1167">
+	<SubTexture name="num00" x="0" y="0" width="91" height="111"/>
+	<SubTexture name="num10" x="0" y="111" width="91" height="111"/>
+	<SubTexture name="num20" x="0" y="222" width="91" height="111"/>
+	<SubTexture name="num30" x="0" y="333" width="91" height="111"/>
+	<SubTexture name="num40" x="0" y="444" width="91" height="111"/>
+	<SubTexture name="num50" x="0" y="555" width="91" height="111"/>
+	<SubTexture name="num60" x="0" y="666" width="91" height="111"/>
+	<SubTexture name="num70" x="0" y="777" width="91" height="111"/>
+	<SubTexture name="num80" x="0" y="888" width="91" height="111"/>
+	<SubTexture name="num90" x="0" y="999" width="91" height="111"/>
+	<SubTexture name="numnegative0" x="0" y="1110" width="88" height="57"/>
+</TextureAtlas>
