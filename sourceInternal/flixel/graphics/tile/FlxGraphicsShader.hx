@@ -56,7 +56,9 @@ class FlxGraphicsShader extends GraphicsShader
 		}
 	", true)
 	@:glFragmentHeader("
+		#ifdef GL_KHR_blend_equation_advanced
 		layout(blend_support_all_equations) out;
+		#endif
 
 		varying float openfl_Alphav;
 		varying vec4 openfl_ColorMultiplierv;

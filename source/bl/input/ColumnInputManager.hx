@@ -28,8 +28,7 @@ class ColumnInputManager implements IFlxDestroyable {
 			case 1: [[SPACE, G]];
 			case 2: [[LEFT, A, DOWN, S], [UP, W, RIGHT, D, K, L]];
 			case 3: [[LEFT, A, DOWN, S], [SPACE, G], [UP, W, RIGHT, D, K, L]];
-			//case 4: [[LEFT, A], [DOWN, S], [UP, W, K], [RIGHT, D, L]];
-			case 4: [[Z], [X], [K], [O]];
+			case 4: [[LEFT, A], [DOWN, S], [UP, W, K], [RIGHT, D, L]];
 			case 5: [[LEFT, A], [DOWN, S], [SPACE, G], [UP, W, K], [RIGHT, D, L]];
 			case 6: [[A], [S], [D], [J], [K], [L]];
 			case 7: [[A], [S], [D], [SPACE, G], [J], [K], [L]];
