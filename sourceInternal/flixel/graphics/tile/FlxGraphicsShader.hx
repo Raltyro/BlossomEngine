@@ -4,7 +4,7 @@ import openfl.display.GraphicsShader;
 
 class FlxGraphicsShader extends GraphicsShader
 {
-	@:glFragmentExtensions([{name: "GL_KHR_blend_equation_advanced", behavior: "enable"}])
+	//@:glFragmentExtensions([{name: "GL_KHR_blend_equation_advanced", behavior: "enable"}])
 	@:glVertexDontOverride
 	@:glFragmentDontOverride
 	@:glVertexHeader("
@@ -56,10 +56,6 @@ class FlxGraphicsShader extends GraphicsShader
 		}
 	", true)
 	@:glFragmentHeader("
-		#ifdef GL_KHR_blend_equation_advanced
-		layout(blend_support_all_equations) out;
-		#endif
-
 		varying float openfl_Alphav;
 		varying vec4 openfl_ColorMultiplierv;
 		varying vec4 openfl_ColorOffsetv;

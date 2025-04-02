@@ -8,7 +8,7 @@ import openfl.utils.ByteArray;
 #end
 class GraphicsShader extends Shader
 {
-	@:glFragmentExtensions([{name: "GL_KHR_blend_equation_advanced", behavior: "enable"}])
+	//@:glFragmentExtensions([{name: "GL_KHR_blend_equation_advanced", behavior: "enable"}])
 	@:glVertexHeader("
 		attribute float openfl_Alpha;
 		attribute vec4 openfl_ColorMultiplier;
@@ -43,10 +43,6 @@ class GraphicsShader extends Shader
 		}
 	")
 	@:glFragmentHeader("
-		#ifdef GL_KHR_blend_equation_advanced
-		layout(blend_support_all_equations) out;
-		#endif
-
 		varying float openfl_Alphav;
 		varying vec4 openfl_ColorMultiplierv;
 		varying vec4 openfl_ColorOffsetv;
