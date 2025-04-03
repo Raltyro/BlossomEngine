@@ -297,8 +297,7 @@ class InternalBuildMacro {
 					case EBlock(exprs):
 						exprs.push(macro
 							if (hasKHRBlendAdvancedExt == null) {
-								hasKHRBlendAdvancedExt = gl.getSupportedExtensions().contains("KHR_blend_equation_advanced_coherent");
-								if (hasKHRBlendAdvancedExt) gl.enable(0x9285); // BLEND_ADVANCED_COHERENT_KHR
+								hasKHRBlendAdvancedExt = gl.getSupportedExtensions().contains("KHR_blend_equation_advanced");
 							}
 						);
 					default:

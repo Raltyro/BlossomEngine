@@ -4,7 +4,6 @@ import openfl.display.GraphicsShader;
 
 class FlxGraphicsShader extends GraphicsShader
 {
-	//@:glFragmentExtensions([{name: "GL_KHR_blend_equation_advanced", behavior: "enable"}])
 	@:glVertexDontOverride
 	@:glFragmentDontOverride
 	@:glVertexHeader("
@@ -27,7 +26,7 @@ class FlxGraphicsShader extends GraphicsShader
 		attribute vec4 colorMultiplier;
 		attribute vec4 colorOffset;
 		uniform bool hasColorTransform;
-	", true)
+	")
 	@:glVertexBody("
 		openfl_Alphav = openfl_Alpha * alpha;
 		openfl_TextureCoordv = openfl_TextureCoord;
@@ -54,7 +53,7 @@ class FlxGraphicsShader extends GraphicsShader
 		void main(void) {
 			#pragma body
 		}
-	", true)
+	")
 	@:glFragmentHeader("
 		varying float openfl_Alphav;
 		varying vec4 openfl_ColorMultiplierv;
@@ -86,7 +85,7 @@ class FlxGraphicsShader extends GraphicsShader
 
 			return apply_flixel_transform(color);
 		}
-	", true)
+	")
 	@:glFragmentBody("
 		gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
 		if (gl_FragColor.a == 0.0) discard;
@@ -96,7 +95,7 @@ class FlxGraphicsShader extends GraphicsShader
 		void main(void) {
 			#pragma body
 		}
-	", true)
+	")
 	public function new() {
 		super();
 	}

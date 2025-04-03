@@ -2,6 +2,7 @@ package openfl.display;
 
 #if !flash
 import openfl.display._internal.ShaderBuffer;
+import openfl.display.OpenGLRenderer;
 import openfl.display3D.Context3D;
 import openfl.display3D.Program3D;
 import openfl.display3D._internal.GLProgram;
@@ -122,6 +123,136 @@ import openfl.utils._internal.Log;
 #end
 class Shader
 {
+	private static inline function getDefaultGLVersion():String
+	{
+		// Specify the default glVersion.
+		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
+		return #if (android) "100" #elseif (web) "100" #elseif (mac) "120" #else "100" #end;
+	}
+
+	/**
+	 * Attempt to migrate GLSL code from the current (old) GLSL shader format to the specified (newer) one.
+	 * @param source The source to convert.
+	 * @param version The version to convert to.
+	 * @param isFragment Whether the source is a fragment shader. False if it is a vertex shader.
+	 * @return The converted source.
+	 */
+	private static function processGLSLText(source:String, glVersion:String, isFragment:Bool, ?header:String, ?body:String)
+	{
+		if (header != null) source = StringTools.replace(source, "#pragma header", buildGLSLHeaders(glVersion) + header);
+		if (body != null) source = StringTools.replace(source, "#pragma body", body);
+		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment);
+
+		// No processing needed on "compatibility" profile
+		if (StringTools.endsWith(glVersion, " compatibility")) return source;
+		if (StringTools.endsWith(glVersion, " core")) return processGLSLText(source, StringTools.replace(glVersion, " core", ""), isFragment);
+
+		// Recall: Attribute values are per-vertex, varying values are per-fragment
+		// Thus, an `out` value in the vertex shader is an `in` value in the fragment shader
+		var attributeKeyword:EReg = ~/attribute ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/g; // g to match all
+		var varyingKeyword:EReg = ~/varying ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/g; // g to match all
+
+		var texture2DKeyword:EReg = ~/texture2D/g;
+		var glFragColorKeyword:EReg = ~/gl_FragColor/g;
+
+		switch (glVersion)
+		{
+			default:
+				// Don't make any changes to undefined versions.
+				return source;
+
+			case "100", "110", "120", "130", "140", "150":
+				return source;
+
+			case "300 es":
+				var result = source;
+				// Migrate, replacing "attribute" with "in" and "varying" with "out".
+				if (isFragment)
+				{
+					result = varyingKeyword.replace(result, "in $1 $2");
+				}
+				else
+				{
+					result = attributeKeyword.replace(result, "in $1 $2");
+					result = varyingKeyword.replace(result, "out $1 $2");
+				}
+				result = texture2DKeyword.replace(result, "texture");
+				result = glFragColorKeyword.replace(result, "fragColor");
+				return result;
+
+			case "310 es", "320 es":
+				var result = processGLSLText(source, "300 es", isFragment);
+				return result;
+
+			case "330":
+				#if desktop
+				var result = processGLSLText(source, "300 es", isFragment);
+				#else
+				var result = source;
+				#end
+				return result;
+
+			case "400", "410", "420", "430", "440", "450", "460":
+				var result = processGLSLText(source, "330", isFragment);
+				return result;
+		}
+	}
+
+	private static function buildGLSLHeaders(glVersion:String):String
+	{
+		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return "";
+		if (StringTools.endsWith(glVersion, " core")) return buildGLSLHeaders(StringTools.replace(glVersion, " core", ""));
+
+		return switch (glVersion)
+		{
+			#if desktop
+			case "300 es": "layout (location = 0) out vec4 fragColor;\n";
+			#else
+			case "300 es": "out vec4 fragColor;\n";
+			#end
+
+			case "310 es", "320 es", "330", "400", "410", "420", "430", "440", "450", "460":
+				buildGLSLHeaders("300 es");
+
+			// Don't add any default headers to undefined versions
+			default: "";
+		};
+	}
+
+	private static function buildGLSLExtensions(glExtensions:Array<{name:String, behavior:String}>, glVersion:String,
+			isFragment:Bool):Array<{name:String, behavior:String}>
+	{
+		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return glExtensions;
+		if (StringTools.endsWith(glVersion, " core")) return buildGLSLExtensions(glExtensions, StringTools.replace(glVersion, " core", ""), isFragment);
+
+		switch (glVersion)
+		{
+			// Don't add any extensions to undefined versions
+			default:
+				return glExtensions;
+
+			#if desktop
+			case "300 es", "310 es", "320 es", "330":
+				var hasSeparateShaderObjects = false;
+				for (extension in glExtensions)
+				{
+					if (extension.name == "GL_ARB_separate_shader_objects") hasSeparateShaderObjects = true;
+					if (extension.name == "GL_EXT_separate_shader_objects") hasSeparateShaderObjects = true;
+				}
+
+				if (!hasSeparateShaderObjects)
+				{
+					#if linux
+					return glExtensions.concat([{name: "GL_EXT_separate_shader_objects", behavior: "require"}]);
+					#else
+					return glExtensions.concat([{name: "GL_ARB_separate_shader_objects", behavior: "require"}]);
+					#end
+				}
+				return glExtensions;
+			#end
+		}
+	}
+
 	/**
 		The raw shader bytecode for this Shader instance.
 	**/
@@ -149,6 +280,12 @@ class Shader
 	public var glVersion(get, set):String;
 
 	/**
+		The raw of this GLSL Version used before being applied to compile with GLSL.
+	**/
+	public var glVersionRaw(get, never):Null<String>;
+
+
+	/**
 		Provides additional `#extension` directives to insert in the vertex and fragment shaders.
 
 		Example:
@@ -165,17 +302,17 @@ class Shader
 	/**
 		The default GLSL vertex header, before being applied to the vertex source.
 	**/
-	public var glFragmentHeaderRaw(get, null):String;
+	public var glFragmentHeaderRaw(get, never):String;
 
 	/**
 		The default GLSL vertex body, before being applied to the vertex source.
 	**/
-	public var glFragmentBodyRaw(get, null):String;
+	public var glFragmentBodyRaw(get, never):String;
 
 	/**
 		The default GLSL fragment source, before `#pragma` values are replaced.
 	**/
-	public var glFragmentSourceRaw(get, null):String;
+	public var glFragmentSourceRaw(get, never):String;
 
 	/**
 		Get or set the fragment source used when compiling with GLSL.
@@ -194,17 +331,17 @@ class Shader
 	/**
 		The default GLSL vertex header, before being applied to the vertex source.
 	**/
-	public var glVertexHeaderRaw(get, null):String;
+	public var glVertexHeaderRaw(get, never):String;
 
 	/**
 		The default GLSL vertex body, before being applied to the vertex source.
 	**/
-	public var glVertexBodyRaw(get, null):String;
+	public var glVertexBodyRaw(get, never):String;
 
 	/**
 		The default GLSL vertex source, before `#pragma` values are replaced.
 	**/
-	public var glVertexSourceRaw(get, null):String;
+	public var glVertexSourceRaw(get, never):String;
 
 	/**
 		Get or set the vertex source used when compiling with GLSL.
@@ -269,6 +406,7 @@ class Shader
 	@:noCompletion private var __data:ShaderData;
 	@:noCompletion private var __glVertexExtensions:Array<{name:String, behavior:String}>;
 	@:noCompletion private var __glFragmentExtensions:Array<{name:String, behavior:String}>;
+	@:noCompletion private var __glVersionRaw:String;
 	@:noCompletion private var __glVersion:String;
 	@:noCompletion private var __glFragmentHeaderRaw:String;
 	@:noCompletion private var __glFragmentBodyRaw:String;
@@ -606,7 +744,7 @@ class Shader
 	{
 		var extensions = "";
 
-		var extList = (isFragment ? __glFragmentExtensions : __glVertexExtensions);
+		var extList = buildGLSLExtensions(isFragment ? __glFragmentExtensions : __glVertexExtensions, __glVersion, isFragment);
 		for (ext in extList)
 		{
 			extensions += "#extension " + ext.name + " : " + ext.behavior + "\n";
@@ -615,22 +753,19 @@ class Shader
 		// #version must be the first directive and cannot be repeated,
 		// while #extension directives must be before any non-preprocessor tokens.
 
-		return "#version "
-			+ __glVersion
-			+ "
-      "
-			+ extensions
-			+ "
-				#ifdef GL_ES
-				"
-			+ (precisionHint == FULL ? "#ifdef GL_FRAGMENT_PRECISION_HIGH
-					precision highp float;
-				#else
-					precision mediump float;
-				#endif" : "precision lowp float;")
-			+ "
-				#endif
-				";
+		var result = extensions + "\n#ifdef GL_ES\n" + (
+			precisionHint == FULL ?
+			"#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n" :
+			"precision lowp float;\n"
+		) + "#endif\n";
+		if (__glVersion != null && __glVersion != "") result = "#version " + __glVersion + "\n" + result;
+
+		if (OpenGLRenderer.hasKHRBlendAdvancedExt && isFragment)
+		{
+			result += "#ifdef GL_KHR_blend_equation_advanced\n#extension GL_KHR_blend_equation_advanced : enable\nlayout(blend_support_all_equations) out;\n#endif\n";
+		}
+
+		return result;
 	}
 
 	@:noCompletion private function __initGL():Void
@@ -1090,29 +1225,34 @@ class Shader
 		return __data = cast value;
 	}
 
-	@:noCompletion private function get_glFragmentHeaderRaw():String
+	@:noCompletion private function get_glVersionRaw():Null<String>
 	{
-		return __glFragmentHeaderRaw;
-	}
-
-	@:noCompletion private function get_glFragmentBodyRaw():String
-	{
-		return __glFragmentBodyRaw;
-	}
-
-	@:noCompletion private function get_glFragmentSourceRaw():String
-	{
-		return __glFragmentSourceRaw;
-	}
-
-	@:noCompletion private function get_glFragmentSource():String
-	{
-		return __glFragmentSource;
+		return __glVersionRaw;
 	}
 
 	@:noCompletion private function get_glVersion():String
 	{
 		return __glVersion;
+	}
+
+	@:noCompletion private function set_glVersion(value:Null<String>):String
+	{
+		__glVersionRaw = value;
+		if (value == null || value == "") value = getDefaultGLVersion();
+		if (value != __glVersion)
+		{
+			__glSourceDirty = true;
+			if (__glVertexSourceRaw != null)
+			{
+				__glVertexSource = processGLSLText(__glVertexSourceRaw, value, false, __glVertexHeaderRaw, __glVertexBodyRaw);
+			}
+			if (__glFragmentSourceRaw != null)
+			{
+				__glFragmentSource = processGLSLText(__glFragmentSourceRaw, value, true, __glFragmentHeaderRaw, __glFragmentBodyRaw);
+			}
+		}
+
+		return __glVersion = value;
 	}
 
 	@:noCompletion private function get_glVertexExtensions():Array<{name:String, behavior:String}>
@@ -1123,26 +1263,6 @@ class Shader
 	@:noCompletion private function get_glFragmentExtensions():Array<{name:String, behavior:String}>
 	{
 		return __glFragmentExtensions;
-	}
-
-	@:noCompletion private function set_glFragmentSource(value:String):String
-	{
-		if (value != __glFragmentSource)
-		{
-			__glSourceDirty = true;
-		}
-
-		return __glFragmentSource = value;
-	}
-
-	@:noCompletion private function set_glVersion(value:String):String
-	{
-		if (value != __glVersion)
-		{
-			__glSourceDirty = true;
-		}
-
-		return __glVersion = value;
 	}
 
 	@:noCompletion private function set_glVertexExtensions(value:Array<{name:String, behavior:String}>):Array<{name:String, behavior:String}>
@@ -1163,6 +1283,38 @@ class Shader
 		}
 
 		return __glFragmentExtensions = value;
+	}
+
+	@:noCompletion private function get_glFragmentHeaderRaw():String
+	{
+		return __glFragmentHeaderRaw;
+	}
+
+	@:noCompletion private function get_glFragmentBodyRaw():String
+	{
+		return __glFragmentBodyRaw;
+	}
+
+	@:noCompletion private function get_glFragmentSourceRaw():String
+	{
+		return __glFragmentSourceRaw;
+	}
+
+	@:noCompletion private function get_glFragmentSource():String
+	{
+		return __glFragmentSource;
+	}
+
+	@:noCompletion private function set_glFragmentSource(value:String):String
+	{
+		__glFragmentSourceRaw = value;
+		if (value != null) value = processGLSLText(value, __glVersion, true, __glFragmentHeaderRaw, __glFragmentBodyRaw);
+		if (value != __glFragmentSource)
+		{
+			__glSourceDirty = true;
+		}
+
+		return __glFragmentSource = value;
 	}
 
 	@:noCompletion private function get_glVertexHeaderRaw():String
@@ -1187,6 +1339,8 @@ class Shader
 
 	@:noCompletion private function set_glVertexSource(value:String):String
 	{
+		__glVertexSourceRaw = value;
+		if (value != null) value = processGLSLText(value, __glVersion, false, __glVertexHeaderRaw, __glVertexBodyRaw);
 		if (value != __glVertexSource)
 		{
 			__glSourceDirty = true;

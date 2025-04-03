@@ -32,9 +32,7 @@ class ShaderMacro
 		var glVertexExtensions = [];
 
 		var glFragmentSource = null;
-		var glFragmentSourceRaw = "";
 		var glVertexSource = null;
-		var glVertexSourceRaw = "";
 
 		for (field in fields)
 		{
@@ -67,74 +65,25 @@ class ShaderMacro
 
 			for (meta in field.meta)
 			{
-				/**
-					`@:glFragmentSource`, `@:glVertexSource`, `@:glFragmentHeader`, `@:glFragmentBody`, `@:glVertexHeader`, `@:glVertexBody`
-					all have a second argument which, if true, will use `processGLSLText` to convert the text to be compatible with the current GLSL version.
-					Defaults to false to prevent converting user-defined GLSL.
-				**/
-				var shouldProcess = meta.params.length > 1 && cast(meta.params[1].getValue(), Bool);
-
 				switch (meta.name)
 				{
 					case "glFragmentSource", ":glFragmentSource":
-						if (shouldProcess)
-						{
-							glFragmentSource = processGLSLText(meta.params[0].getValue(), glVersion, true);
-						}
-						else
-						{
-							glFragmentSource = meta.params[0].getValue();
-						}
+						glFragmentSource = meta.params[0].getValue();
 
 					case "glVertexSource", ":glVertexSource":
-						if (shouldProcess)
-						{
-							glVertexSource = processGLSLText(meta.params[0].getValue(), glVersion, false);
-						}
-						else
-						{
-							glVertexSource = meta.params[0].getValue();
-						}
+						glVertexSource = meta.params[0].getValue();
 
 					case "glFragmentHeader", ":glFragmentHeader":
-						if (shouldProcess)
-						{
-							glFragmentHeader += processGLSLText(meta.params[0].getValue(), glVersion, true);
-						}
-						else
-						{
-							glFragmentHeader += meta.params[0].getValue();
-						}
+						glFragmentHeader += meta.params[0].getValue();
 
 					case "glFragmentBody", ":glFragmentBody":
-						if (shouldProcess)
-						{
-							glFragmentBody += processGLSLText(meta.params[0].getValue(), glVersion, true);
-						}
-						else
-						{
-							glFragmentBody += meta.params[0].getValue();
-						}
+						glFragmentBody += meta.params[0].getValue();
 
 					case "glVertexHeader", ":glVertexHeader":
-						if (shouldProcess)
-						{
-							glVertexHeader += processGLSLText(meta.params[0].getValue(), glVersion, false);
-						}
-						else
-						{
-							glVertexHeader += meta.params[0].getValue();
-						}
+						glVertexHeader += meta.params[0].getValue();
 
 					case "glVertexBody", ":glVertexBody":
-						if (shouldProcess)
-						{
-							glVertexBody += processGLSLText(meta.params[0].getValue(), glVersion, false);
-						}
-						else
-						{
-							glVertexBody += meta.params[0].getValue();
-						}
+						glVertexBody += meta.params[0].getValue();
 
 					default:
 				}
@@ -185,87 +134,38 @@ class ShaderMacro
 
 				for (meta in field.meta.get())
 				{
-					/**
-						`@:glFragmentSource`, `@:glVertexSource`, `@:glFragmentHeader`, `@:glFragmentBody`, `@:glVertexHeader`, `@:glVertexBody`
-						all have a second argument which, if true, will use `processGLSLText` to convert the text to be compatible with the current GLSL version.
-						Defaults to false to prevent converting user-defined GLSL.
-					**/
-					var shouldProcess = meta.params.length > 1 && cast(meta.params[1].getValue(), Bool);
-
 					switch (meta.name)
 					{
 						case "glFragmentSource", ":glFragmentSource":
 							if (glFragmentSource == null)
 							{
-								if (shouldProcess)
-								{
-									glFragmentSource = processGLSLText(meta.params[0].getValue(), glVersion, true);
-								}
-								else
-								{
-									glFragmentSource = meta.params[0].getValue();
-								}
+								glFragmentSource = meta.params[0].getValue();
 							}
 
 						case "glVertexSource", ":glVertexSource":
 							if (glVertexSource == null)
 							{
-								if (shouldProcess)
-								{
-									glVertexSource = processGLSLText(meta.params[0].getValue(), glVersion, false);
-								}
-								else
-								{
-									glVertexSource = meta.params[0].getValue();
-								}
+								glVertexSource = meta.params[0].getValue();
 							}
 
 						case "glFragmentHeader", ":glFragmentHeader":
 							if (!glFragmentDontOverride) {
-								if (shouldProcess)
-								{
-									glFragmentHeader = processGLSLText(meta.params[0].getValue(), glVersion, true) + "\n" + glFragmentHeader;
-								}
-								else
-								{
-									glFragmentHeader = meta.params[0].getValue() + "\n" + glFragmentHeader;
-								}
+								glFragmentHeader = meta.params[0].getValue() + "\n" + glFragmentHeader;
 							}
 
 						case "glFragmentBody", ":glFragmentBody":
 							if (!glFragmentDontOverride) {
-								if (shouldProcess)
-								{
-									glFragmentBody = processGLSLText(meta.params[0].getValue(), glVersion, true) + "\n" + glFragmentBody;
-								}
-								else
-								{
-									glFragmentBody = meta.params[0].getValue() + "\n" + glFragmentBody;
-								}
+								glFragmentBody = meta.params[0].getValue() + "\n" + glFragmentBody;
 							}
 
 						case "glVertexHeader", ":glVertexHeader":
 							if (!glVertexDontOverride) {
-								if (shouldProcess)
-								{
-									glVertexHeader = processGLSLText(meta.params[0].getValue(), glVersion, false) + "\n" + glVertexHeader;
-								}
-								else
-								{
-									glVertexHeader = meta.params[0].getValue() + "\n" + glVertexHeader;
-								}
+								glVertexHeader = meta.params[0].getValue() + "\n" + glVertexHeader;
 							}
 
 						case "glVertexBody", ":glVertexBody":
 							if (!glVertexDontOverride) {
-								if (shouldProcess)
-								{
-									glVertexBody = processGLSLText(meta.params[0].getValue(), glVersion, false) + "\n" + glVertexBody;
-								}
-								else
-								{
-									glVertexBody = meta.params[0].getValue() + "\n" + glVertexBody;
-								}
+								glVertexBody = meta.params[0].getValue() + "\n" + glVertexBody;
 							}
 
 						default:
@@ -279,30 +179,8 @@ class ShaderMacro
 			parent = parent.superClass != null ? parent.superClass.t.get() : null;
 		}
 
-		if (glVersion == null)
-		{
-			glVersion = getDefaultGLVersion();
-		}
-
-		glVertexExtensions = buildGLSLExtensions(glVertexExtensions, glVersion, false);
-		glFragmentExtensions = buildGLSLExtensions(glFragmentExtensions, glVersion, true);
-
 		if (glVertexSource != null || glFragmentSource != null)
 		{
-			if (glFragmentSource != null && glFragmentHeader != null && glFragmentBody != null)
-			{
-				glFragmentSourceRaw = glFragmentSource;
-				glFragmentSource = StringTools.replace(glFragmentSource, "#pragma header", buildGLSLHeaders(glVersion) + glFragmentHeader);
-				glFragmentSource = StringTools.replace(glFragmentSource, "#pragma body", glFragmentBody);
-			}
-
-			if (glVertexSource != null && glVertexHeader != null && glVertexBody != null)
-			{
-				glVertexSourceRaw = glVertexSource;
-				glVertexSource = StringTools.replace(glVertexSource, "#pragma header", buildGLSLHeaders(glVersion) + glVertexHeader);
-				glVertexSource = StringTools.replace(glVertexSource, "#pragma body", glVertexBody);
-			}
-
 			var shaderDataFields = new Array<Field>();
 			var uniqueFields = [];
 
@@ -310,6 +188,21 @@ class ShaderMacro
 			processFields(glVertexSource, "in", shaderDataFields, pos); // For higher GLSL versions
 			processFields(glVertexSource, "uniform", shaderDataFields, pos);
 			processFields(glFragmentSource, "uniform", shaderDataFields, pos);
+
+			if (glVertexSource.indexOf('#pragma header') != -1) {
+				processFields(glVertexHeader, "attribute", shaderDataFields, pos);
+				processFields(glVertexHeader, "in", shaderDataFields, pos); // For higher GLSL versions
+				processFields(glVertexHeader, "uniform", shaderDataFields, pos);
+			}
+
+			if (glVertexSource.indexOf('#pragma body') != -1) {
+				processFields(glVertexBody, "attribute", shaderDataFields, pos);
+				processFields(glVertexBody, "in", shaderDataFields, pos); // For higher GLSL versions
+				processFields(glVertexBody, "uniform", shaderDataFields, pos);
+			}
+
+			if (glFragmentSource.indexOf('#pragma header') != -1) processFields(glFragmentHeader, "uniform", shaderDataFields, pos);
+			if (glFragmentSource.indexOf('#pragma body') != -1) processFields(glFragmentBody, "uniform", shaderDataFields, pos);
 
 			if (shaderDataFields.length > 0)
 			{
@@ -367,7 +260,7 @@ class ShaderMacro
 						{
 							block.unshift(macro if (__glVertexSource == null)
 							{
-								__glVertexSource = $v{glVertexSource};
+								glVertexSource = $v{glVertexSource};
 							});
 						}
 
@@ -375,39 +268,7 @@ class ShaderMacro
 						{
 							block.unshift(macro if (__glFragmentSource == null)
 							{
-								__glFragmentSource = $v{glFragmentSource};
-							});
-						}
-
-						if (glVertexSourceRaw != null)
-						{
-							block.unshift(macro if (__glVertexSourceRaw == null)
-							{
-								__glVertexSourceRaw = $v{glVertexSourceRaw};
-							});
-						}
-
-						if (glFragmentSourceRaw != null)
-						{
-							block.unshift(macro if (__glFragmentSourceRaw == null)
-							{
-								__glFragmentSourceRaw = $v{glFragmentSourceRaw};
-							});
-						}
-
-						if (glVertexBody != null)
-						{
-							block.unshift(macro if (__glVertexBodyRaw == null)
-							{
-								__glVertexBodyRaw = $v{glVertexBody};
-							});
-						}
-
-						if (glFragmentBody != null)
-						{
-							block.unshift(macro if (__glFragmentBodyRaw == null)
-							{
-								__glFragmentBodyRaw = $v{glFragmentBody};
+								glFragmentSource = $v{glFragmentSource};
 							});
 						}
 
@@ -427,11 +288,27 @@ class ShaderMacro
 							});
 						}
 
+						if (glVertexBody != null)
+						{
+							block.unshift(macro if (__glVertexBodyRaw == null)
+							{
+								__glVertexBodyRaw = $v{glVertexBody};
+							});
+						}
+
+						if (glFragmentBody != null)
+						{
+							block.unshift(macro if (__glFragmentBodyRaw == null)
+							{
+								__glFragmentBodyRaw = $v{glFragmentBody};
+							});
+						}
+
 						if (glVertexExtensions != null)
 						{
 							block.unshift(macro if (__glVertexExtensions == null)
 							{
-								__glVertexExtensions = $v{glVertexExtensions};
+								glVertexExtensions = $v{glVertexExtensions};
 							});
 						}
 
@@ -439,17 +316,14 @@ class ShaderMacro
 						{
 							block.unshift(macro if (__glFragmentExtensions == null)
 							{
-								__glFragmentExtensions = $v{glFragmentExtensions};
+								glFragmentExtensions = $v{glFragmentExtensions};
 							});
 						}
 
-						if (glVersion != null)
+						block.unshift(macro if (__glVersion == null)
 						{
-							block.unshift(macro if (__glVersion == null)
-							{
-								__glVersion = $v{glVersion};
-							});
-						}
+							glVersion = $v{glVersion};
+						});
 
 						block.push(Context.parse("__initGL ()", pos));
 
@@ -462,134 +336,6 @@ class ShaderMacro
 		}
 
 		return fields;
-	}
-
-	private static inline function getDefaultGLVersion():String
-	{
-		// Specify the default glVersion.
-		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
-		return #if (android) "100" #elseif (web) "100" #elseif (mac) "120" #else "100" #end;
-	}
-
-	/**
-	 * Attempt to migrate GLSL code from the current (old) GLSL shader format to the specified (newer) one.
-	 * @param source The source to convert.
-	 * @param version The version to convert to.
-	 * @param isFragment Whether the source is a fragment shader. False if it is a vertex shader.
-	 * @return The converted source.
-	 */
-	private static function processGLSLText(source:String, glVersion:String, isFragment:Bool)
-	{
-		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment);
-
-		// No processing needed on "compatibility" profile
-		if (StringTools.endsWith(glVersion, " compatibility")) return source;
-		if (StringTools.endsWith(glVersion, " core")) return processGLSLText(source, StringTools.replace(glVersion, " core", ""), isFragment);
-
-		// Recall: Attribute values are per-vertex, varying values are per-fragment
-		// Thus, an `out` value in the vertex shader is an `in` value in the fragment shader
-		var attributeKeyword:EReg = ~/attribute ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/g; // g to match all
-		var varyingKeyword:EReg = ~/varying ([A-Za-z0-9]+) ([A-Za-z0-9_]+)/g; // g to match all
-
-		var texture2DKeyword:EReg = ~/texture2D/g;
-		var glFragColorKeyword:EReg = ~/gl_FragColor/g;
-
-		switch (glVersion)
-		{
-			default:
-				// Don't make any changes to undefined versions.
-				return source;
-
-			case "100", "110", "120", "130", "140", "150":
-				return source;
-
-			case "300 es":
-				var result = source;
-				// Migrate, replacing "attribute" with "in" and "varying" with "out".
-				if (isFragment)
-				{
-					result = varyingKeyword.replace(result, "in $1 $2");
-				}
-				else
-				{
-					result = attributeKeyword.replace(result, "in $1 $2");
-					result = varyingKeyword.replace(result, "out $1 $2");
-				}
-				result = texture2DKeyword.replace(result, "texture");
-				result = glFragColorKeyword.replace(result, "fragColor");
-				return result;
-
-			case "310 es", "320 es":
-				var result = processGLSLText(source, "300 es", isFragment);
-				return result;
-
-			case "330":
-				#if desktop
-				var result = processGLSLText(source, "300 es", isFragment);
-				#else
-				var result = source;
-				#end
-				return result;
-
-			case "400", "410", "420", "430", "440", "450", "460":
-				var result = processGLSLText(source, "330", isFragment);
-				return result;
-		}
-	}
-
-	private static function buildGLSLHeaders(glVersion:String):String
-	{
-		if (StringTools.endsWith(glVersion, " compatibility")) return "";
-		if (StringTools.endsWith(glVersion, " core")) return buildGLSLHeaders(StringTools.replace(glVersion, " core", ""));
-
-		return switch (glVersion)
-		{
-			#if desktop
-			case "300 es": "layout (location = 0) out vec4 fragColor;\n";
-			#else
-			case "300 es": "out vec4 fragColor;\n";
-			#end
-
-			case "310 es", "320 es", "330", "400", "410", "420", "430", "440", "450", "460":
-				buildGLSLHeaders("300 es");
-
-			// Don't add any default headers to undefined versions
-			default: "";
-		};
-	}
-
-	private static function buildGLSLExtensions(glExtensions:Array<{name:String, behavior:String}>, glVersion:String,
-			isFragment:Bool):Array<{name:String, behavior:String}>
-	{
-		if (StringTools.endsWith(glVersion, " compatibility")) return glExtensions;
-		if (StringTools.endsWith(glVersion, " core")) return buildGLSLExtensions(glExtensions, StringTools.replace(glVersion, " core", ""), isFragment);
-
-		switch (glVersion)
-		{
-			// Don't add any extensions to undefined versions
-			default:
-				return glExtensions;
-
-			#if desktop
-			case "300 es", "310 es", "320 es", "330":
-				var hasSeparateShaderObjects = false;
-				for (extension in glExtensions)
-				{
-					if (extension.name == "GL_ARB_separate_shader_objects") hasSeparateShaderObjects = true;
-					if (extension.name == "GL_EXT_separate_shader_objects") hasSeparateShaderObjects = true;
-				}
-
-				if (!hasSeparateShaderObjects)
-				{
-					#if linux
-					return glExtensions.concat([{name: "GL_EXT_separate_shader_objects", behavior: "require"}]);
-					#else
-					return glExtensions.concat([{name: "GL_ARB_separate_shader_objects", behavior: "require"}]);
-					#end
-				}
-				return glExtensions;
-			#end
-		}
 	}
 
 	private static function processFields(source:String, storageType:String, fields:Array<Field>, pos:Position):Void
