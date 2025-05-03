@@ -127,7 +127,7 @@ class Shader
 	{
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
-		return #if (android) "100" #elseif (web) "100" #elseif (mac) "120" #else "100" #end;
+		return #if lime_opengles "100" #elseif "120" #end;
 	}
 
 	/**
