@@ -749,7 +749,7 @@ class Shader
 		var canInjectBlendAdvancedExt = OpenGLRenderer.hasKHRBlendAdvancedExt && isFragment && 
 			ver != "100" && ver != "110" && ver != "120" && ver != "130" && ver != "140" && ver != "150";
 
-		if (canInjectBlendAdvancedExt) result += "#ifdef GL_KHR_blend_equation_advanced\n#extension GL_KHR_blend_equation_advanced : enable\n";
+		if (canInjectBlendAdvancedExt) result += "#extension GL_KHR_blend_equation_advanced : enable\n";
 
 		var extList = buildGLSLExtensions(isFragment ? __glFragmentExtensions : __glVertexExtensions, __glVersion, isFragment);
 		for (ext in extList)
