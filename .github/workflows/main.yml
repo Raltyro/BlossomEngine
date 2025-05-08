@@ -94,6 +94,8 @@ jobs:
           path: |
             export/${{ matrix.build }}/${{ matrix.folder }}/bin
             !export/${{ matrix.build }}/${{ matrix.folder }}/bin/assets
+            !export/${{ matrix.build }}/${{ matrix.folder }}/bin/manifest
+            !export/${{ matrix.build }}/${{ matrix.folder }}/bin/plugins
 
       - name: Uploading new cache
         uses: actions/cache@v4.2.3
