@@ -13,7 +13,7 @@ jobs:
         build: [release, debug]
         include:
           - compile: linux
-            os: ubuntu-20.04
+            os: ubuntu-latest
             folder: linux
 
           - compile: mac
