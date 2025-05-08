@@ -87,6 +87,14 @@ jobs:
           path: export/${{ matrix.build }}/hl/bin
           if-no-files-found: error
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.compile }}-${{ matrix.build }}-no-assets
+          path: |
+            export/${{ matrix.build }}/${{ matrix.folder }}/bin
+            !export/${{ matrix.build }}/${{ matrix.folder }}/bin/assets
+
       - name: Uploading new cache
         uses: actions/cache@v4.2.3
         with:
