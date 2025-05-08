@@ -128,7 +128,7 @@ class Shader
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
 		//return #if lime_opengles "100" #elseif "120" #end;
-		return "200";
+		return "300 es";
 	}
 
 	/**
