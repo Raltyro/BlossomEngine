@@ -743,28 +743,31 @@ class Shader
 
 	@:noCompletion private function __buildSourcePrefix(isFragment:Bool):String
 	{
-		var extensions = "";
+		var result = "";
+
+		var ver = StringTools.replace(StringTools.replace(__glVersion, " core", ""), " compatibility", "");
+		var canInjectBlendAdvancedExt = OpenGLRenderer.hasKHRBlendAdvancedExt && isFragment && 
+			ver != "100" && ver != "110" && ver != "120" && ver != "130" && ver != "140" && ver != "150";
+
+		if (canInjectBlendAdvancedExt) result += "#ifdef GL_KHR_blend_equation_advanced\n#extension GL_KHR_blend_equation_advanced : enable\n";
 
 		var extList = buildGLSLExtensions(isFragment ? __glFragmentExtensions : __glVertexExtensions, __glVersion, isFragment);
 		for (ext in extList)
 		{
-			extensions += "#extension " + ext.name + " : " + ext.behavior + "\n";
+			result += "#extension " + ext.name + " : " + ext.behavior + "\n";
 		}
 
 		// #version must be the first directive and cannot be repeated,
 		// while #extension directives must be before any non-preprocessor tokens.
 
-		var result = extensions + "\n#ifdef GL_ES\n" + (
+		result += "\n#ifdef GL_ES\n" + (
 			precisionHint == FULL ?
 			"#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n" :
 			"precision lowp float;\n"
 		) + "#endif\n";
 		if (__glVersion != null && __glVersion != "") result = "#version " + __glVersion + "\n" + result;
 
-		if (OpenGLRenderer.hasKHRBlendAdvancedExt && isFragment)
-		{
-			result += "#ifdef GL_KHR_blend_equation_advanced\n#extension GL_KHR_blend_equation_advanced : enable\nlayout(blend_support_all_equations) out;\n#endif\n";
-		}
+		if (canInjectBlendAdvancedExt) result += "#ifdef GL_KHR_blend_equation_advanced\nlayout(blend_support_all_equations) out;\n#endif\n";
 
 		return result;
 	}
