@@ -47,7 +47,6 @@
 
 	<app main="Main"/>
 	<classpath name="source"/>
-	<classpath name="sourceInternal"/>
 
 	<!-- ____________________________ Assets Settings ___________________________ -->
 
@@ -99,15 +98,15 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="lime"/><!--version="8.2.2"/>-->
-	<haxelib name="openfl"/><!--version="9.4.1"/>-->
-	<haxelib name="flixel"/><!--version="6.0.0"/>-->
+	<haxelib name="lime"/>
+	<haxelib name="openfl"/>
+	<haxelib name="flixel"/>
 
-	<haxelib name="flixel-addons" version="3.3.2"/>
+	<haxelib name="flixel-addons"/>
 	<haxelib name="flxanimate"/>
 
 	<haxelib name="polymod"/>
-	<haxelib name="hscript"/> <define name="hscriptPos"/>
+	<haxelib name="hscript"/>
 
 	<haxelib name="hxjson5"/>
 	<haxelib name="hxIni"/>
@@ -121,6 +120,8 @@
 	<haxeflag name="--macro" value="macro.HashLinkFixMacro.init()" if="hl"/>
 	<haxeflag name="--macro" value="macro.InternalBuildMacro.init()"/>
 
+	<haxedef name="hscriptPos"/>
+
 	<!-- Disable the Flixel core focus lost screen -->
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/>
 
@@ -128,20 +129,17 @@
 	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
 
 	<!-- Debugs -->
-	<haxedef name="HXCPP_CHECK_POINTER"/>
-	<haxedef name="HXCPP_STACK_LINE"/>
-	<!-- <haxedef name="HXCPP_STACK_TRACE"/> -->
 	<haxedef name="HXCPP_CATCH_SEGV"/>
 	<haxedef name="HXCPP_DEBUG_LINK" if="debug"/>
 
 	<!-- Disable Discord IO Thread -->
 	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="desktop"/>
-	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux"/>
 
-	<!-- <haxedef name="message.reporting" value="pretty"/> --> <!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
+	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
+	<!-- <haxedef name="message.reporting" value="pretty"/> -->
 	<haxedef name="openfl_dpi_aware" if="openfl_dpi_aware"/>
 	<haxedef name="openfl_enable_experimental_update_queue"/>
 	<haxedef name="openfl-enable-handle-error"/>
-	<haxedef name='no-deprecation-warnings'/>
-	<haxedef name="gl_stats" if="debug || cpp"/>
+	<!-- <haxedef name='no-deprecation-warnings'/> -->
+	<haxedef name="gl_stats"/>
 </project>

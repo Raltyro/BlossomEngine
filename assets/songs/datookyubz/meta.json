@@ -1,0 +1,10 @@
+{
+	"title": "Datookyubz",
+	"artist": "Jookz feat. ncy",
+	"charter": "iLusion",
+	"bpm": 120,
+	"icon": "k2k",
+	"difficulties": ["hard"],
+	"defaultDifficulty": "hard",
+	"rating": {"hard": 1.6}
+}
