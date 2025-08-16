@@ -5,7 +5,7 @@ class TestState extends BLState {
 		super.createPost();
 		trace('cool');
 
-		SoundUtil.playMenuMusic();
+		SoundUtil.playMusic(Paths.inst('lit up bf'));
 	}
 
 	override function update(elapsed:Float) {
