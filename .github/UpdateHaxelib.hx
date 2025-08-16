@@ -39,7 +39,7 @@ class UpdateHaxelib {
 
 					Sys.println('Installing "${lib.name}" from "${lib.url}" ${lib.ref}');
 
-					Sys.command('haxelib --always --quiet git ${lib.name} ${lib.url}${lib.ref != null ? " " + lib.ref : ""}');
+					Sys.command('haxelib --always --quiet --skip-dependencies git ${lib.name} ${lib.url}${lib.ref != null ? " " + lib.ref : ""}');
 
 					/*if (FileSystem.exists('${lib.dir}/git')) {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
@@ -60,7 +60,7 @@ class UpdateHaxelib {
 					Sys.println('Installing "${lib.name}"...');   
 					var vers = lib.version != null ? lib.version : "";          
 
-					Sys.command('haxelib install ${lib.name} ${vers} --always --quiet --skip-dependencies');
+					Sys.command('haxelib --always --quiet --skip-dependencies install ${lib.name} ${vers}');
 					if (lib.version != null) File.saveContent('${mainCwd}/${lib.dir}/.current', lib.version);
 				}
 			}
