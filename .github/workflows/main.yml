@@ -13,7 +13,7 @@ jobs:
         build: [release, debug]
         include:
           - compile: linux
-            os: ubuntu-20.04
+            os: ubuntu-latest
             folder: linux
 
           - compile: mac
@@ -79,6 +79,16 @@ jobs:
           name: ${{ matrix.compile }}-${{ matrix.build }}
           path: export/${{ matrix.build }}/${{ matrix.folder }}/bin
           if-no-files-found: error
+
+      - name: Upload artifact (Only executable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.compile }}-${{ matrix.build }}-executable
+          path: |
+            export/${{ matrix.build }}/${{ matrix.folder }}/bin
+            !export/${{ matrix.build }}/${{ matrix.folder }}/bin/assets
+            !export/${{ matrix.build }}/${{ matrix.folder }}/bin/manifest
+            !export/${{ matrix.build }}/${{ matrix.folder }}/bin/plugins
 
       - if: ${{ matrix.compile == 'windows' }}
         uses: actions/upload-artifact@v4

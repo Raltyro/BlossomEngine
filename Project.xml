@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project xmlns="http://lime.software/project/1.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://lime.software/project/1.0.2 http://lime.software/xsd/project-1.0.2.xsd">
+<project xmlns="http://lime.software/project/1.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://lime.software/project/1.0.4 http://lime.software/xsd/project-1.0.4.xsd">
 	<define name="HXCPP_M32" if="32bit || 32"/>
 	<define name="32bit" if="HXCPP_M32"/>
-	<define name="32bits" if="32bit"/>
-	<define name="64" unless="32bit"/>
 	<!--<haxeflag name="-dce no"/>-->
 
 	<!-- ___________________________ Blossom Settings ___________________________ -->
 
+	<!--Register your characters, stages, etc here-->
+	<haxeflag name="--macro" value="blossom.backend.macro.BuildMacro.registerClasses('funkin')"/>
+
 	<!--Compile with Base Game Assets-->
-	<define name="BASE_GAME_ASSETS"/>
+	<!--<define name="BASE_GAME_ASSETS"/>-->
 
 	<!--Disable Camera Buffers unless needed-->
 	<!--<define name="CAMERA_NO_BUFFER"/>-->
@@ -18,34 +19,31 @@
 	<define name="NO_VIDEOS" unless="cpp"/>
 
 	<!--Disable Discord RPC-->
-	<define name="NO_DISCORD" unless="cpp"/>
-
-	<!--Register your characters, stages, etc-->
-	<haxeflag name="--macro" value="include('funkin.character')"/>
-	<haxeflag name="--macro" value="include('funkin.event')"/>
-	<haxeflag name="--macro" value="include('funkin.stage')"/>
-	<haxeflag name="--macro" value="include('funkin.song')"/>
+	<define name="NO_DISCORD" unless="desktop"/>
 
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Funkin' Blossom" file="Blossom" packageName="com.raltyro.funkinblossom" package="com.raltyro.funkinblossom" version="BETA" company="raltyro"/>
-	<set name="SWF_VERSION" value="11.8"/> <!--Minimum without FLX_NO_GAMEPAD: 11.8, without FLX_NO_NATIVE_CURSOR: 11.2-->
-	<app preloader="flixel.system.FlxBasePreloader"/>
+	<app
+		title="Funkin' Blossom" file="Blossom" version="0.1.0"
+		packageName="com.raltyro.funkinblossom" package="com.raltyro.funkinblossom" company="raltyro"
+	/>
 
 	<window hardware="true" type="opengles" colorDepth="32" background="" fps="0" orientation="landscape"/>
-	<window unless="desktop" width="0" height="0" vsync="true"/>
+	<window unless="desktop" width="0" height="0" vsync="true" fullscreen="true"/>
 
 	<window if="desktop" width="1280" height="720" fullscreen="false" resizable="true" vsync="false" allowHighDPI="true"/>
-	<window if="mobile" fullscreen="true" resizable="false"/>
-	<!--<window if="switch" fullscreen="true" resizable="true"/>-->
+	<window if="mobile" resizable="false"/>
+	<window if="switch" resizable="true"/>
 
-	<!-- _____________________________ Path Settings ____________________________ -->
+	<!-- ____________________________ Source Settings ___________________________ -->
 
 	<set name="BUILD_DIR" value="export/debug" if="debug"/>
 	<set name="BUILD_DIR" value="export/release" unless="debug"/>
 	<set name="BUILD_DIR" value="export/32bit" if="32bit"/>
+	<!--<set name="SWF_VERSION" value="11.8"/>-->
 
-	<app main="Main"/>
+	<app main="blossom.backend.BLGame" preloader="flixel.system.FlxBasePreloader"/>
+	<classpath name="sourceInternal"/>
 	<classpath name="source"/>
 
 	<!-- ____________________________ Assets Settings ___________________________ -->
@@ -55,32 +53,6 @@
 	<library name="songs" preload="true"/>
 	<library name="skins" preload="true"/>
 
-	<section if="BASE_GAME_ASSETS">
-		<assets path="assets/base_game/preload" rename="assets"/>
-		<assets path="assets/base_game/videos" rename="assets/videos" unless="NO_VIDEOS"/>
-		<assets path="assets/base_game/shared" rename="assets/shared" library="shared"/>
-		<assets path="assets/base_game/songs" rename="assets/songs" library="songs"/>
-		<!--<assets path="assets/base_game/skins" rename="assets/skins" library="skins"/>-->
-
-		<library name="week1" preload="true"/>
-		<library name="week2" preload="true"/>
-		<library name="week3" preload="true"/>
-		<library name="week4" preload="true"/>
-		<library name="week5" preload="true"/>
-		<library name="week6" preload="true"/>
-		<library name="week7" preload="true"/>
-		<library name="weekend1" preload="true"/>
-
-		<assets path="assets/base_game/week1" rename="assets/week1" library="week1"/>
-		<assets path="assets/base_game/week2" rename="assets/week2" library="week2"/>
-		<assets path="assets/base_game/week3" rename="assets/week3" library="week3"/>
-		<assets path="assets/base_game/week4" rename="assets/week4" library="week4"/>
-		<assets path="assets/base_game/week5" rename="assets/week5" library="week5"/>
-		<assets path="assets/base_game/week6" rename="assets/week6" library="week6"/>
-		<assets path="assets/base_game/week7" rename="assets/week7" library="week7"/>
-		<assets path="assets/base_game/weekend1" rename="assets/weekend1" library="weekend1"/>
-	</section>
-
 	<assets path="assets/preload" rename="assets"/>
 	<assets path="assets/videos" unless="NO_VIDEOS"/>
 	<assets path="assets/shared" library="shared"/>
@@ -88,31 +60,27 @@
 	<assets path="assets/skins" library="skins"/>
 
 	<assets path='art/icons/icon512.png' rename='icon.png' if="linux"/>
-	<icon path="art/icons/icon16.png" size="16" priority='99'/>
-	<icon path="art/icons/icon24.png" size="24" priority='99'/>
-	<icon path="art/icons/icon32.png" size="32" priority='99'/>
-	<icon path="art/icons/icon128.png" size="128" priority='99'/>
-	<icon path="art/icons/icon256.png" size="256" priority='99'/>
-	<icon path="art/icons/icon512.png" size="512" priority='99'/>
-	<icon path="art/icons/iconOG.png" priority='99'/>
+	<icon path="art/icons/icon16.png" size="16"/>
+	<icon path="art/icons/icon24.png" size="24"/>
+	<icon path="art/icons/icon.png" size="32"/>
+	<icon path="art/icons/icon.png" size="128"/>
+	<icon path="art/icons/icon.png" size="256"/>
+	<icon path="art/icons/icon.png" size="512"/>
+	<icon path="art/icons/icon.png"/>
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="lime"/>
-	<haxelib name="openfl"/>
-	<haxelib name="flixel"/>
+	<haxelib name="lime" version="8.2.2"/>
+	<haxelib name="openfl" version="9.4.1"/>
+	<haxelib name="flixel" version="6.1.0"/>
 
-	<haxelib name="flixel-addons"/>
-	<haxelib name="flxanimate"/>
+	<haxelib name="flixel-addons" version="3.3.2"/>
+	<haxelib name="flixel-animate"/>
 
-	<haxelib name="polymod"/>
-	<haxelib name="hscript"/>
+	<haxelib name="hscript-improved"/>
 
-	<haxelib name="hxjson5"/>
-	<haxelib name="hxIni"/>
-
-	<haxelib name="hxvlc" unless="NO_VIDEOS"/>
-	<haxelib name="hxdiscord_rpc" version="1.3.0" if="desktop" unless="NO_DISCORD"/>
+	<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
+	<haxelib name="hxdiscord_rpc" if="desktop" unless="NO_DISCORD"/>
 
 	<!-- _______________________________ Haxedefines ____________________________ -->
 
@@ -138,8 +106,8 @@
 	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
 	<!-- <haxedef name="message.reporting" value="pretty"/> -->
 	<haxedef name="openfl_dpi_aware" if="openfl_dpi_aware"/>
-	<haxedef name="openfl_enable_experimental_update_queue"/>
-	<haxedef name="openfl-enable-handle-error"/>
+	<!-- <haxedef name="openfl_enable_experimental_update_queue"/> -->
+	<!-- <haxedef name="openfl-enable-handle-error"/> -->
 	<!-- <haxedef name='no-deprecation-warnings'/> -->
 	<haxedef name="gl_stats"/>
 </project>
