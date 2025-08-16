@@ -30,18 +30,43 @@ class BLState extends flixel.FlxSubState {
 	inline function get_controls() return _controls ?? Controls.instance;
 	inline function set_controls(controls) return _controls = controls;
 
+	public var updateConductor:Bool = true;
+	public var conductor(default, set):Null<Conductor>;
+	function set_conductor(newConductor) {
+		if (conductor != null) {
+			conductor.onMeasureHit.remove(_measureHit);
+			conductor.onBeatHit.remove(_beatHit);
+			conductor.onStepHit.remove(_stepHit);
+			conductor.onMetronomeHit.remove(_metronomeHit);
+		}
+		if (newConductor != null) {
+			newConductor.onMeasureHit.add(_measureHit);
+			newConductor.onBeatHit.add(_beatHit);
+			newConductor.onStepHit.add(_stepHit);
+			newConductor.onMetronomeHit.add(_metronomeHit);
+
+			#if FLX_DEBUG
+			FlxG.debugger.track(newConductor);
+			#end
+		}
+		return conductor = newConductor;
+	}
+
 	public function new() super(0);
 
 	override function create() {
 		super.create();
 
+		if (conductor == null && _parentState == null) conductor = Conductor.instance;
+		else updateConductor = false;
+
 		_created = true;
 		controls.reset();
-
-		FlxG.signals.postStateSwitch.addOnce(createPost);
 	}
 
-	public function createPost() {
+	override function createPost() {
+		super.createPost();
+
 		if (_parentState == null || transIn != null) {
 			final trans = transIn ?? defaultTransIn;
 			if (trans != null && !skipNextTransIn) openTransition(trans, IN);
@@ -66,6 +91,11 @@ class BLState extends flixel.FlxSubState {
 		curTrans._created = true;
 		curTrans.create();
 		curTrans.start();
+	}
+
+	override function update(elapsed:Float) {
+		super.update(elapsed);
+		if (updateConductor) conductor?.update();
 	}
 
 	override function tryUpdate(elapsed:Float) {
@@ -101,5 +131,40 @@ class BLState extends flixel.FlxSubState {
 
 		if (curTrans != null) curTrans.destroy();
 		curTrans = null;
+
+		if (conductor != null) {
+			conductor.onMeasureHit.remove(_measureHit);
+			conductor.onBeatHit.remove(_beatHit);
+			conductor.onStepHit.remove(_stepHit);
+			conductor.onMetronomeHit.remove(_metronomeHit);
+		}
+	}
+
+	public function stepHit() {}
+
+	public function beatHit() {}
+
+	public function measureHit() {}
+
+	public function metronomeHit(measureTicked:Bool) {}
+
+	function _stepHit() {
+		stepHit();
+		//modules.eventPost(ModuleEvent.get(StepHit).recycle(conductor.currentStep));
+	}
+
+	function _beatHit() {
+		beatHit();
+		//modules.eventPost(ModuleEvent.get(BeatHit).recycle(conductor.currentBeat));
+	}
+
+	function _measureHit() {
+		measureHit();
+		//modules.eventPost(ModuleEvent.get(MeasureHit).recycle(conductor.currentMeasure));
+	}
+
+	function _metronomeHit(measureTicked:Bool) {
+		metronomeHit(measureTicked);
+		//modules.eventPost(ModuleEvent.get(MetronomeHit).recycle(measureTicked, conductor.currentMeasure, conductor.currentBeat));
 	}
 }

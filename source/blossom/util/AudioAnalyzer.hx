@@ -20,8 +20,7 @@ typedef AudioAnalyzerCallback = Int->Int->Void;
  * An utility that analyze FlxSounds,
  * can be used to make waveform or real-time audio visualizer.
  * 
- * FlxSound.amplitude does work in CNE so if any case if your only checking for peak of current
- * time, use that instead.
+ * FlxSound.amplitude works so if any case if your only checking for peak of current time, use that instead.
  */
 final class AudioAnalyzer {
 	/**

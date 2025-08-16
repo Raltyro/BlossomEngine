@@ -1,15 +1,19 @@
 package openfl.display;
 
+import openfl.display3D.Context3DWrapMode;
+import openfl.display3D.Context3DMipFilter;
+import openfl.display3D.Context3DTextureFilter;
 #if !flash
-import openfl.display._internal.ShaderBuffer;
-import openfl.display.OpenGLRenderer;
-import openfl.display3D.Context3D;
-import openfl.display3D.Program3D;
 import openfl.display3D._internal.GLProgram;
 import openfl.display3D._internal.GLShader;
-import openfl.utils.ByteArray;
+import openfl.display._internal.ShaderBuffer;
 import openfl.utils._internal.Float32Array;
 import openfl.utils._internal.Log;
+import openfl.display3D.Context3D;
+import openfl.display3D.Program3D;
+import openfl.utils.ByteArray;
+
+using StringTools;
 
 /**
 	// TODO: Document GLSL Shaders
@@ -128,7 +132,7 @@ class Shader
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
 		//return #if lime_opengles "100" #elseif "120" #end;
-		return "300 es";
+		return #if mac "410" #else "300 es" #end;
 	}
 
 	/**
@@ -140,7 +144,7 @@ class Shader
 	 */
 	private static function processGLSLText(source:String, glVersion:String, isFragment:Bool, ?header:String, ?body:String)
 	{
-		if (header != null) source = StringTools.replace(source, "#pragma header", buildGLSLHeaders(glVersion) + header);
+		if (header != null) source = StringTools.replace(source, "#pragma header", buildGLSLHeaders(glVersion, header));
 		if (body != null) source = StringTools.replace(source, "#pragma body", body);
 		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment);
 
@@ -178,7 +182,7 @@ class Shader
 					result = varyingKeyword.replace(result, "out $1 $2");
 				}
 				result = texture2DKeyword.replace(result, "texture");
-				result = glFragColorKeyword.replace(result, "fragColor");
+				result = glFragColorKeyword.replace(result, "ofl_FragColor");
 				return result;
 
 			case "310 es", "320 es":
@@ -199,25 +203,26 @@ class Shader
 		}
 	}
 
-	private static function buildGLSLHeaders(glVersion:String):String
+	private static function buildGLSLHeaders(glVersion:String, header:String):String
 	{
-		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return "";
-		if (StringTools.endsWith(glVersion, " core")) return buildGLSLHeaders(StringTools.replace(glVersion, " core", ""));
+		if (header.contains("(location = 0)")) return header; // darn you swordcube
+		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return header;
+		if (StringTools.endsWith(glVersion, " core")) return buildGLSLHeaders(StringTools.replace(glVersion, " core", ""), header);
 
-		return switch (glVersion)
+		return (switch (glVersion)
 		{
 			#if desktop
-			case "300 es": "layout (location = 0) out vec4 fragColor;\n";
+			case "300 es": "layout (location = 0) out vec4 ofl_FragColor;\n";
 			#else
-			case "300 es": "out vec4 fragColor;\n";
+			case "300 es": "out vec4 ofl_FragColor;\n";
 			#end
 
 			case "310 es", "320 es", "330", "400", "410", "420", "430", "440", "450", "460":
-				buildGLSLHeaders("300 es");
+				buildGLSLHeaders("300 es", header);
 
 			// Don't add any default headers to undefined versions
 			default: "";
-		};
+		}) + header;
 	}
 
 	private static function buildGLSLExtensions(glExtensions:Array<{name:String, behavior:String}>, glVersion:String,
@@ -566,7 +571,14 @@ class Shader
 	/**
 	 * Retrieves the line number from a shader log line.
 	 */
+	#if windows
+	// 0(5) : whatever
+	@:noCompletion private var __lineExtractor = ~/^\d+\((\d+)\) : (.+$)/;
+	#else // (html5 || macos || linux)
+	// ERROR: 0:5:whatever
 	@:noCompletion private var __lineExtractor = ~/^\w+?: \d+:(\d+):(.+$)/;
+	#end
+
 	/**
 	 * Searches for strings that have only whitespace.
 	 * 
@@ -574,20 +586,18 @@ class Shader
 	 * notably: `String.fromCharCode(0)` is `false` but `\W` is `true`.
 	 */
 	@:noCompletion private var __isEmptyLine = ~/^\W*$/;
-	@:noCompletion private function __logGLShaderInfo(isError:Bool, type:Int, infoLog:String, source:String):Void
-	{
+
+	@:noCompletion private function __logGLShaderInfo(isError:Bool, type:Int, infoLog:String, source:String):Void {
 		var message = "";
 		var lines = source.split("\n");
 		var failingLine:String = null;
-		for (log in infoLog.split("\n"))
-		{
+		for (log in infoLog.split("\n")) {
 			// ignore empty lines
 			if (__isEmptyLine.match(log))
 				continue;
 
 			// look for a line number
-			if (!__lineExtractor.match(log))
-			{
+			if (!__lineExtractor.match(log)) {
 				// Could not find expected info, abort pretty formatting
 				failingLine = log;
 				break;
@@ -596,17 +606,19 @@ class Shader
 			var lineNumberStr = __lineExtractor.matched(1);
 			var lineNumber = Std.parseInt(lineNumberStr);
 			var info = __lineExtractor.matched(2);
-			if (lineNumber >= lines.length)
-			{
+			if (lineNumber >= lines.length) {
 				// EOF errors will not have a valid line
 				message += '\n\n $lineNumber | $info';
-			}
-			else
-			{
+			} else {
 				// Add the relevant line to each log
 				var line = lines[lineNumber - 1];
 				var indent = StringTools.lpad("|", " ", lineNumberStr.length + 3);
+				#if haxe4
+				var pos = getSourcePos(lines, lineNumber - 1);
+				message += '\n\n${pos.file}:${pos.lineNumber}\n ${pos.lineNumber} | $line\n$indent ${info}';
+				#else
 				message += '\n\n $lineNumber | $line\n$indent ${info}';
+				#end
 			}
 		}
 
@@ -615,8 +627,35 @@ class Shader
 			message = '\nFailed to simplify log:"$failingLine"\n$infoLog\n$source';
 
 		var typeName = (type == __context.gl.VERTEX_SHADER) ? "vertex" : "fragment";
-		if (isError) Log.error('Error compiling $typeName shader $message');
-		else Log.debug('Info compiling $typeName shader $message');
+		if (isError) {
+			Log.error('Error compiling $typeName shader $message');
+		} else
+			Log.debug('Info compiling $typeName shader $message');
+	}
+
+	function getSourcePos(lines:Array<String>, lineNumber:Int):{file:String, lineNumber:Int} {
+		var nests = 0;
+		var i = lineNumber;
+		var linesBack = 0;
+		while (i-- > 0) {
+			if (lines[i].indexOf("openfl_endregion") != -1)
+				nests++;
+
+			if (nests == 0)
+				linesBack++;
+
+			if (lines[i].indexOf("openfl_region") != -1) {
+				if (nests == 0)
+					break;
+				nests--;
+			}
+		}
+
+		var sourceData = lines[i].split("// { openfl_region       ")[1].split(":");
+		return {
+			file: sourceData[0],
+			lineNumber: Std.parseInt(sourceData[1]) + linesBack - 1
+		};
 	}
 
 	@:noCompletion private function __createGLProgram(vertexSource:String, fragmentSource:String):GLProgram
@@ -1077,21 +1116,22 @@ class Shader
 		}
 	}
 
-	@:noCompletion private function __updateGLFromBuffer(shaderBuffer:ShaderBuffer, bufferOffset:Int):Void
-	{
+	@:noCompletion private function __updateGLFromBuffer(shaderBuffer:ShaderBuffer, bufferOffset:Int):Void {
 		var textureCount = 0;
-		var input, inputData, inputFilter, inputMipFilter, inputWrap;
+		var input:ShaderInput<BitmapData>;
+		var inputData:BitmapData;
+		var inputFilter:Context3DTextureFilter;
+		var inputMipFilter:Context3DMipFilter;
+		var inputWrap:Context3DWrapMode;
 
-		for (i in 0...shaderBuffer.inputCount)
-		{
+		for (i in 0...shaderBuffer.inputCount) {
 			input = shaderBuffer.inputRefs[i];
 			inputData = shaderBuffer.inputs[i];
 			inputFilter = shaderBuffer.inputFilter[i];
 			inputMipFilter = shaderBuffer.inputMipFilter[i];
 			inputWrap = shaderBuffer.inputWrap[i];
 
-			if (inputData != null)
-			{
+			if (inputData != null) {
 				input.__updateGL(__context, textureCount, inputData, inputFilter, inputMipFilter, inputWrap);
 				textureCount++;
 			}
@@ -1099,10 +1139,8 @@ class Shader
 
 		var gl = __context.gl;
 
-		if (shaderBuffer.paramDataLength > 0)
-		{
-			if (shaderBuffer.paramDataBuffer == null)
-			{
+		if (shaderBuffer.paramDataLength > 0) {
+			if (shaderBuffer.paramDataBuffer == null) {
 				shaderBuffer.paramDataBuffer = gl.createBuffer();
 			}
 
@@ -1110,9 +1148,7 @@ class Shader
 
 			__context.__bindGLArrayBuffer(shaderBuffer.paramDataBuffer);
 			gl.bufferData(gl.ARRAY_BUFFER, shaderBuffer.paramData, gl.DYNAMIC_DRAW);
-		}
-		else
-		{
+		} else {
 			// Log.verbose ("bind buffer null");
 
 			__context.__bindGLArrayBuffer(null);
@@ -1126,23 +1162,22 @@ class Shader
 		var floatCount = shaderBuffer.paramFloatCount;
 		var paramData = shaderBuffer.paramData;
 
-		var boolRef, floatRef, intRef, hasOverride;
-		var overrideBoolValue:Array<Bool> = null,
-			overrideFloatValue:Array<Float> = null,
-			overrideIntValue:Array<Int> = null;
+		var boolRef:ShaderParameter<Bool>;
+		var floatRef:ShaderParameter<Float>;
+		var intRef:ShaderParameter<Int>;
+		var hasOverride:Bool;
+		var overrideBoolValue:Array<Bool> = null;
+		var overrideFloatValue:Array<Float> = null;
+		var overrideIntValue:Array<Int> = null;
 
-		for (i in 0...shaderBuffer.paramCount)
-		{
+		for (i in 0...shaderBuffer.paramCount) {
 			hasOverride = false;
 
-			if (i < boolCount)
-			{
+			if (i < boolCount) {
 				boolRef = shaderBuffer.paramRefs_Bool[boolIndex];
 
-				for (j in 0...shaderBuffer.overrideBoolCount)
-				{
-					if (boolRef.name == shaderBuffer.overrideBoolNames[j])
-					{
+				for (j in 0...shaderBuffer.overrideBoolCount) {
+					if (boolRef.name == shaderBuffer.overrideBoolNames[j]) {
 						overrideBoolValue = shaderBuffer.overrideBoolValues[j];
 						hasOverride = true;
 						break;
@@ -1159,15 +1194,11 @@ class Shader
 				}
 
 				boolIndex++;
-			}
-			else if (i < boolCount + floatCount)
-			{
+			} else if (i < boolCount + floatCount) {
 				floatRef = shaderBuffer.paramRefs_Float[floatIndex];
 
-				for (j in 0...shaderBuffer.overrideFloatCount)
-				{
-					if (floatRef.name == shaderBuffer.overrideFloatNames[j])
-					{
+				for (j in 0...shaderBuffer.overrideFloatCount) {
+					if (floatRef.name == shaderBuffer.overrideFloatNames[j]) {
 						overrideFloatValue = shaderBuffer.overrideFloatValues[j];
 						hasOverride = true;
 						break;
@@ -1184,15 +1215,11 @@ class Shader
 				}
 
 				floatIndex++;
-			}
-			else
-			{
+			} else {
 				intRef = shaderBuffer.paramRefs_Int[intIndex];
 
-				for (j in 0...shaderBuffer.overrideIntCount)
-				{
-					if (intRef.name == shaderBuffer.overrideIntNames[j])
-					{
+				for (j in 0...shaderBuffer.overrideIntCount) {
+					if (intRef.name == shaderBuffer.overrideIntNames[j]) {
 						overrideIntValue = cast shaderBuffer.overrideIntValues[j];
 						hasOverride = true;
 						break;

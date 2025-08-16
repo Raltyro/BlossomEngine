@@ -7,14 +7,7 @@ import haxe.macro.Type;
 
 import haxe.macro.ExprTools;
 
-class BuildMacro {
-	public static function registerClasses(parent:String) {
-		Compiler.include('$parent.characters');
-		Compiler.include('$parent.events');
-		Compiler.include('$parent.stages');
-		Compiler.include('$parent.songs');
-	}
-
+final class BuildMacro {
 	public static macro function buildFunkinControlList():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		var controlType = Context.getType('blossom.input.Controls.Control');

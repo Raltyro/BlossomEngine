@@ -465,12 +465,12 @@ class NativeAudioSource {
 	}
 
 	public function getLatency():Float {
-		/*#if (lime >= "8.3.0")
+		#if (lime >= "8.2.2")
 		if (AL.isExtensionPresent("AL_SOFT_source_latency")) {
 			final offsets = AL.getSourcedvSOFT(handle, AL.SEC_OFFSET_LATENCY_SOFT, 2);
 			if (offsets != null) return offsets[1] * 1000;
 		}
-		#end*/
+		#end
 		return 0;
 	}
 

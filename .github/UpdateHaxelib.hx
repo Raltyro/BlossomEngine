@@ -14,20 +14,14 @@ typedef Library = {
 
 class UpdateHaxelib {
 	static final libraries:Array<Library> = [
+		{name: "lime", url: "https://github.com/Raltyro/lime", ref: "9daf48fa4d96cd4177c9b1adb94f3c7ec4338668"},
+		{name: "openfl", url: "https://github.com/swordcubes-grave-of-shite/openfl"},
 		{name: "flixel", url: "https://github.com/swordcubes-grave-of-shite/flixel"},
 		{name: "flixel-addons", version: "3.3.2"},
-		{name: "polymod", version: "1.8.0"},
-		{name: "hscript", version: "2.6.0"},
-		{name: "flxanimate", url: "https://github.com/Dot-Stuff/flxanimate"},
-		{name: "openfl", url: "https://github.com/Raltyro/openfl", ref: "517a694b5322e951232aa14d733e26286edc256c"},
-		{name: "lime", url: "https://github.com/Raltyro/lime", ref: "6e8d499e108159e14bf93bf85dbe9a0e0d51aa67"},
-		{name: "jsonpath", url: "https://github.com/EliteMasterEric/jsonpath"},
-		{name: "thx.core", url: "https://github.com/fponticelli/thx.core", ref: '76d87418fadd92eb8e1b61f004cff27d656e53dd'},
-		{name: "thx.semver", url: "https://github.com/fponticelli/thx.semver", ref: 'bdb191fe7cf745c02a980749906dbf22719e200b'},
-		{name: "hxjson5"},
-		{name: "hxIni"},
-		{name: "hxvlc", url: "https://github.com/Vortex2Oblivion/hxvlc"},
-		{name: "hxdiscord_rpc", version: "1.3.0"}
+		{name: "hscript-improved", url: "https://github.com/CodenameCrew/hscript-improved"},
+		{name: "flixel-animate", url: "https://github.com/MaybeMaru/flixel-animate"},
+		{name: "hxvlc", version: "2.2.2"},
+		{name: "hxdiscord_rpc"}
 	];
 
 	public static function main() {
@@ -64,7 +58,7 @@ class UpdateHaxelib {
 					Sys.println('Installing "${lib.name}"...');   
 					var vers = lib.version != null ? lib.version : "";          
 
-					Sys.command('haxelib install ${lib.name} ${vers} --quiet');
+					Sys.command('haxelib install ${lib.name} ${vers} --quiet --skip-dependencies');
 					if (lib.version != null) File.saveContent('${mainCwd}/${lib.dir}/.current', lib.version);
 				}
 			}

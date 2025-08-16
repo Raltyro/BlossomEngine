@@ -81,7 +81,9 @@ class AudioSource
 	public var position(get, set):Vector4;
 
 	/**
-		The latency of the audio source.
+		The estimated output latency, in miliseconds, for this `AudioSource`. If not possible to retrieve will return `0`.
+
+		NOTE: This will return `0` if the source is not playing!
 	**/
 	public var latency(get, never):Float;
 

@@ -10,27 +10,28 @@ import haxe.macro.ExprTools;
 
 using StringTools;
 
-class InternalBuildMacro {
+final class InternalCompileMacro {
 	public static function init() {
 		#if (!display)
-		final buildMacro = 'macro.InternalBuildMacro';
-		Compiler.addMetadata('@:build($buildMacro.buildNativeCFFI())', 'lime._internal.backend.native.NativeCFFI');
-		Compiler.addMetadata('@:build($buildMacro.buildNativeHTTPRequest())', 'lime._internal.backend.native.NativeHTTPRequest');
-		if (Context.defined('lime_cffi') && Context.defined('lime_openal')) Compiler.addMetadata('@:build($buildMacro.buildAL())', 'lime.media.openal.AL');
-		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($buildMacro.buildCairoGraphics())', 'openfl.display._internal.CairoGraphics');
-		Compiler.addMetadata('@:build($buildMacro.buildBitmapData())', 'openfl.display.BitmapData');
-		if (Context.defined('js') && Context.defined('html5')) Compiler.addMetadata('@:build($buildMacro.buildCanvasRenderer())', 'openfl.display.CanvasRenderer');
-		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($buildMacro.buildCairoRenderer())', 'openfl.display.CairoRenderer');
-		Compiler.addMetadata('@:build($buildMacro.buildOpenGLRenderer())', 'openfl.display.OpenGLRenderer');
-		Compiler.addMetadata('@:build($buildMacro.buildContext3D())', 'openfl.display3D.Context3D');
-		Compiler.addMetadata('@:build($buildMacro.buildFLEvent())', 'openfl.events.Event');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxTypedGroup())', 'flixel.group.FlxGroup.FlxTypedGroup');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxMatrix())', 'flixel.math.FlxMatrix');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxSprite())', 'flixel.FlxSprite');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxCamera())', 'flixel.FlxCamera');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxObject())', 'flixel.FlxObject');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxGame())', 'flixel.FlxGame');
-		Compiler.addMetadata('@:build($buildMacro.buildFlxG())', 'flixel.FlxG');
+		final compileMacro = 'macro.InternalCompileMacro';
+		Compiler.addMetadata('@:build($compileMacro.buildNativeCFFI())', 'lime._internal.backend.native.NativeCFFI');
+		Compiler.addMetadata('@:build($compileMacro.buildNativeHTTPRequest())', 'lime._internal.backend.native.NativeHTTPRequest');
+		if (Context.defined('lime_cffi') && Context.defined('lime_openal')) Compiler.addMetadata('@:build($compileMacro.buildAL())', 'lime.media.openal.AL');
+		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($compileMacro.buildCairoGraphics())', 'openfl.display._internal.CairoGraphics');
+		Compiler.addMetadata('@:build($compileMacro.buildBitmapData())', 'openfl.display.BitmapData');
+		if (Context.defined('js') && Context.defined('html5')) Compiler.addMetadata('@:build($compileMacro.buildCanvasRenderer())', 'openfl.display.CanvasRenderer');
+		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($compileMacro.buildCairoRenderer())', 'openfl.display.CairoRenderer');
+		Compiler.addMetadata('@:build($compileMacro.buildOpenGLRenderer())', 'openfl.display.OpenGLRenderer');
+		Compiler.addMetadata('@:build($compileMacro.buildContext3D())', 'openfl.display3D.Context3D');
+		Compiler.addMetadata('@:build($compileMacro.buildFLEvent())', 'openfl.events.Event');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxTypedGroup())', 'flixel.group.FlxGroup.FlxTypedGroup');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxMatrix())', 'flixel.math.FlxMatrix');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxState())', 'flixel.FlxState');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxSprite())', 'flixel.FlxSprite');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxCamera())', 'flixel.FlxCamera');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxObject())', 'flixel.FlxObject');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxGame())', 'flixel.FlxGame');
+		Compiler.addMetadata('@:build($compileMacro.buildVideo())', 'hxvlc.openfl.Video');
 		#end
 	}
 
@@ -403,6 +404,36 @@ class InternalBuildMacro {
 		]);
 	}
 
+	// adds createPost
+	public static macro function buildFlxState():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
+
+		var createField:Field = null;
+		for (f in fields) switch (f.name) {
+			case 'createPost': return fields;
+			case 'create': createField = f;
+			default:
+		}
+		for (f in fields) {
+			if (f.name == 'createPost') return fields;
+			else if (f.name == 'create') createField = f;
+		}
+
+		if (createField != null) {
+			switch (createField.kind) {
+				case FFun(func): switch (func.expr.expr) {
+					case EBlock(exprs):
+						exprs.push(macro FlxG.signals.postStateSwitch.addOnce(createPost));
+					default:
+				}
+				default:
+			}
+		}
+
+		fields.push({name: 'createPost', access: [APublic], pos: pos, kind: FFun({args: [], expr: macro {}})});
+		return fields;
+	}
+
 	// for BLSprite & Character stageFlips
 	public static macro function buildFlxSprite():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
@@ -579,31 +610,15 @@ class InternalBuildMacro {
 		return fields;
 	}
 
-	// for forceSwitchState, forceResetState
-	public static macro function buildFlxG():Array<Field> {
+	// fix compilation error for custom openfl
+	public static macro function buildVideo():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
-		return fields.concat([
-			{
-				name: 'forceSwitchState', access: [APublic, AStatic, AInline], pos: pos,
-				kind: FFun({
-					args: [{name: 'immediate', type: macro :Bool, opt: true}, {name: 'nextState', type: macro :flixel.util.typeLimit.NextState}],
-					expr: macro {
-						$i{"game"}._nextState = $i{"nextState"};
-						if ($i{"immediate"}) $i{"game"}.switchState();
-					}
-				})
-			},
-			{
-				name: 'forceResetState', access: [APublic, AStatic, AInline], pos: pos,
-				kind: FFun({
-					args: [{name: 'immediate', type: macro :Bool, opt: true}],
-					expr: macro {
-						$i{"game"}._nextState = $i{"state"}._constructor;
-						if ($i{"immediate"}) $i{"game"}.switchState();
-					}
-				})
-			}
-		]);
+		for (f in fields) switch (f.name) {
+			case '__enterFrame': fields.remove(f); break;
+			default:
+		}
+
+		return fields;
 	}
 }
 #end

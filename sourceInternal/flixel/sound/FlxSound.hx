@@ -103,7 +103,7 @@ class FlxSound extends FlxBasic {
 	 * The latency of the sound in milliseconds.
 	 * @since raltyMod
 	 */
-	//public var latency(get, never):Float;
+	public var latency(get, never):Float;
 
 	/**
 	 * Whether or not this sound should loop.
@@ -903,19 +903,19 @@ class FlxSound extends FlxBasic {
 		return _time = time;
 	}
 
-	inline function get_offset():Float return _offset;
-	inline function set_offset(offset:Float):Float {
+	function get_offset():Float return _offset;
+	function set_offset(offset:Float):Float {
 		if (_offset == (_offset = offset)) return offset;
 		//time = time + _offset;
 		return offset;
 	}
 
-	inline function get_length():Float return _length - _offset;
+	function get_length():Float return _length - _offset;
 
-	/*function get_latency():Float {
+	function get_latency():Float {
 		if (_channel != null) return _source.latency;
 		return 0;
-	}*/
+	}
 
 	override function toString():String {
 		return FlxStringUtil.getDebugString([

@@ -7,7 +7,7 @@
 	<!-- ___________________________ Blossom Settings ___________________________ -->
 
 	<!--Register your characters, stages, etc here-->
-	<haxeflag name="--macro" value="blossom.backend.macro.BuildMacro.registerClasses('funkin')"/>
+	<haxeflag name="--macro" value="blossom.backend.macro.CompileMacro.registerClasses('funkin')"/>
 
 	<!--Compile with Base Game Assets-->
 	<!--<define name="BASE_GAME_ASSETS"/>-->
@@ -42,7 +42,7 @@
 	<set name="BUILD_DIR" value="export/32bit" if="32bit"/>
 	<!--<set name="SWF_VERSION" value="11.8"/>-->
 
-	<app main="blossom.backend.BLGame" preloader="flixel.system.FlxBasePreloader"/>
+	<app main="Main" preloader="flixel.system.FlxBasePreloader"/>
 	<classpath name="sourceInternal"/>
 	<classpath name="source"/>
 
@@ -70,9 +70,9 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="lime" version="8.2.2"/>
-	<haxelib name="openfl" version="9.4.1"/>
-	<haxelib name="flixel" version="6.1.0"/>
+	<haxelib name="lime"/>
+	<haxelib name="openfl"/>
+	<haxelib name="flixel"/>
 
 	<haxelib name="flixel-addons" version="3.3.2"/>
 	<haxelib name="flixel-animate"/>
@@ -86,7 +86,8 @@
 
 	<!-- This macro allows addition of new functionality and fixes to existing codes. -->
 	<haxeflag name="--macro" value="macro.HashLinkFixMacro.init()" if="hl"/>
-	<haxeflag name="--macro" value="macro.InternalBuildMacro.init()"/>
+	<haxeflag name="--macro" value="macro.InternalCompileMacro.init()"/>
+	<haxeflag name="--macro" value="blossom.backend.macro.CompileMacro.init()"/>
 
 	<haxedef name="hscriptPos"/>
 

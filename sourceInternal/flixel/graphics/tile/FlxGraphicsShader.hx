@@ -7,43 +7,38 @@ class FlxGraphicsShader extends GraphicsShader
 	@:glVertexDontOverride
 	@:glFragmentDontOverride
 	@:glVertexHeader("
-		attribute float openfl_Alpha;
-		attribute vec4 openfl_ColorMultiplier;
-		attribute vec4 openfl_ColorOffset;
-		attribute vec4 openfl_Position;
-		attribute vec2 openfl_TextureCoord;
+		in float openfl_Alpha;
+		in vec4 openfl_ColorMultiplier;
+		in vec4 openfl_ColorOffset;
+		in vec4 openfl_Position;
+		in vec2 openfl_TextureCoord;
 
-		varying float openfl_Alphav;
-		varying vec4 openfl_ColorMultiplierv;
-		varying vec4 openfl_ColorOffsetv;
-		varying vec2 openfl_TextureCoordv;
+		out float openfl_Alphav;
+		out vec4 openfl_ColorMultiplierv;
+		out vec4 openfl_ColorOffsetv;
+		out vec2 openfl_TextureCoordv;
 
 		uniform mat4 openfl_Matrix;
 		uniform bool openfl_HasColorTransform;
 		uniform vec2 openfl_TextureSize;
 
-		attribute float alpha;
-		attribute vec4 colorMultiplier;
-		attribute vec4 colorOffset;
+		in float alpha;
+		in vec4 colorMultiplier;
+		in vec4 colorOffset;
 		uniform bool hasColorTransform;
 	")
 	@:glVertexBody("
 		openfl_Alphav = openfl_Alpha * alpha;
 		openfl_TextureCoordv = openfl_TextureCoord;
 
-		if (hasColorTransform) {
-			if (openfl_HasColorTransform) {
-				openfl_ColorOffsetv = (openfl_ColorOffset / 255.0 * colorMultiplier) + (colorOffset / 255.0);
-				openfl_ColorMultiplierv = openfl_ColorMultiplier * colorMultiplier;
-			}
-			else {
-				openfl_ColorOffsetv = colorOffset / 255.0;
-				openfl_ColorMultiplierv = colorMultiplier;
-			}
-		}
-		else if (openfl_HasColorTransform) {
-			openfl_ColorOffsetv = openfl_ColorOffset / 255.0;
+		if (openfl_HasColorTransform) {
 			openfl_ColorMultiplierv = openfl_ColorMultiplier;
+			openfl_ColorOffsetv = openfl_ColorOffset / 255.0;
+		}
+
+		if (hasColorTransform) {
+			openfl_ColorOffsetv = colorOffset / 255.0;
+			openfl_ColorMultiplierv = colorMultiplier;
 		}
 
 		gl_Position = openfl_Matrix * openfl_Position;
@@ -55,10 +50,11 @@ class FlxGraphicsShader extends GraphicsShader
 		}
 	")
 	@:glFragmentHeader("
-		varying float openfl_Alphav;
-		varying vec4 openfl_ColorMultiplierv;
-		varying vec4 openfl_ColorOffsetv;
-		varying vec2 openfl_TextureCoordv;
+		layout(location = 0) out vec4 ofl_FragColor;
+		in float openfl_Alphav;
+		in vec4 openfl_ColorMultiplierv;
+		in vec4 openfl_ColorOffsetv;
+		in vec2 openfl_TextureCoordv;
 
 		uniform bool openfl_HasColorTransform;
 		uniform vec2 openfl_TextureSize;
@@ -87,8 +83,8 @@ class FlxGraphicsShader extends GraphicsShader
 		}
 	")
 	@:glFragmentBody("
-		gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
-		if (gl_FragColor.a == 0.0) discard;
+		ofl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
+		if (ofl_FragColor.a == 0.0) discard;
 	")
 	@:glFragmentSource("
 		#pragma header

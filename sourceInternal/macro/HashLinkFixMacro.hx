@@ -10,7 +10,7 @@ import haxe.macro.ExprTools;
 
 using StringTools;
 
-class HashLinkFixMacro {
+final class HashLinkFixMacro {
 	public static function init() {
 		#if (!display)
 		final buildMacro = 'macro.HashLinkFixMacro';

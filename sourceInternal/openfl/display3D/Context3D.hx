@@ -1,7 +1,6 @@
 package openfl.display3D;
 
 #if !flash
-import openfl.display3D.utils.UInt8Buff;
 import openfl.display3D._internal.Context3DState;
 import openfl.display3D._internal.GLBuffer;
 import openfl.display3D._internal.GLFramebuffer;
@@ -621,7 +620,26 @@ import lime.math.Vector2;
 				var scaledHeight = wantsBestResolution ? height : Std.int(height * __stage.window.scale);
 				#end
 				var vertexData = new Vector<Float>([
-					scaledWidth, scaledHeight, 0, 1, 1, 0, scaledHeight, 0, 0, 1, scaledWidth, 0, 0, 1, 0, 0, 0, 0, 0, 0.0
+					scaledWidth,
+					scaledHeight,
+					0,
+					1,
+					1,
+					0,
+					scaledHeight,
+					0,
+					0,
+					1,
+					scaledWidth,
+					0,
+					0,
+					1,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0.0
 				]);
 
 				__stage3D.__vertexBuffer.uploadFromVector(vertexData, 0, 20);
@@ -1095,9 +1113,10 @@ import lime.math.Vector2;
 
 			__flushGLFramebuffer();
 			__flushGLViewport();
-			//! EDITED BY NE_EO TO REDUCE GARBAGE MEMORY
-			var buffer = UInt8Buff.get(backBufferWidth * backBufferHeight * 4); // new UInt8Array(backBufferWidth * backBufferHeight * 4);
-			var data = buffer.buffer;
+
+			// TODO: Read less pixels if srcRect is smaller
+
+			var data = UInt8ArrayPool.get(backBufferWidth * backBufferHeight * 4);
 			gl.readPixels(0, 0, backBufferWidth, backBufferHeight, __backBufferTexture.__format, gl.UNSIGNED_BYTE, data);
 
 			var image = new Image(new ImageBuffer(data, backBufferWidth, backBufferHeight, 32, BGRA32));
@@ -1109,7 +1128,7 @@ import lime.math.Vector2;
 					__state.renderToTextureSurfaceSelector);
 			}
 
-			buffer.put();
+			UInt8ArrayPool.put(data);
 		}
 		#end
 	}
@@ -1857,13 +1876,13 @@ import lime.math.Vector2;
 		As an example, a programmer might define each vertex with the following data:
 
 		```
-		position:  x	float32
-				   y	float32
-				   z	float32
-		color:	 r	unsigned byte
-				   g	unsigned byte
-				   b	unsigned byte
-				   a	unsigned byte
+		position:  x    float32
+				   y    float32
+				   z    float32
+		color:     r    unsigned byte
+				   g    unsigned byte
+				   b    unsigned byte
+				   a    unsigned byte
 		```
 
 		Assuming the vertex was defined in a VertexBuffer3D object named buffer, it
@@ -1871,7 +1890,7 @@ import lime.math.Vector2;
 
 		```haxe
 		setVertexBufferAt(0, buffer, 0, Context3DVertexBufferFormat.FLOAT_3);   // attribute #0 will contain the position information
-		setVertexBufferAt(1, buffer, 3, Context3DVertexBufferFormat.BYTES_4);	// attribute #1 will contain the color information
+		setVertexBufferAt(1, buffer, 3, Context3DVertexBufferFormat.BYTES_4);    // attribute #1 will contain the color information
 		```
 
 		@param	index	the index of the attribute register in the vertex shader (0
@@ -2331,7 +2350,8 @@ import lime.math.Vector2;
 	@:noCompletion private function __flushGLTextures():Void
 	{
 		var sampler = 0;
-		var texture, samplerState;
+		var texture:TextureBase;
+		var samplerState:SamplerState;
 
 		for (i in 0...__state.textures.length)
 		{
@@ -2711,6 +2731,26 @@ import lime.math.Vector2;
 			}
 		}
 		return 0;
+	}
+}
+
+private class UInt8ArrayPool {
+	static var _pools:Map<Int, Array<UInt8Array>> = [];
+
+	public static function get(n:Int):UInt8Array {
+		var pool = _pools.get(n);
+		if (pool == null) _pools.set(n, pool = []);
+
+		return pool.pop() ?? new UInt8Array(n);
+	}
+
+	public static function put(obj:UInt8Array) {
+		if (obj == null) return;
+
+		var pool = _pools.get(obj.length);
+		if (pool == null) _pools.set(obj.length, pool = []);
+
+		pool.push(obj);
 	}
 }
 #else
