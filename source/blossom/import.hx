@@ -1,7 +1,9 @@
 #if !macro
+import flixel.math.FlxMath;
 import flixel.util.typeLimit.NextState;
 import flixel.util.FlxColor;
 import flixel.FlxG;
+import flixel.FlxSprite;
 
 import blossom.backend.constants.*;
 import blossom.util.AssetUtil;

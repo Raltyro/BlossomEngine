@@ -339,7 +339,7 @@ class FlxSound extends FlxBasic {
 	override function update(elapsed:Float):Void {
 		if (!playing) return;
 
-		var timeScaleTarget = timeScaleBased ? FlxG.timeScale : 1.0;
+		final timeScaleTarget = timeScaleBased ? FlxG.timeScale : 1.0;
 		if (_timeScaleAdjust != timeScaleTarget) {
 			_timeScaleAdjust = timeScaleTarget;
 			pitch = _pitch;
@@ -348,12 +348,12 @@ class FlxSound extends FlxBasic {
 
 		_amplitudeUpdate = true;
 
-		// Distance-based volume control (TODO for Ralty: REDO THIS)
+		// Distance-based volume control
+		/* TODO: REDO ALL OF THIS to use Lime's positioning instead of openfl panning! */
 		if (target != null) {
-			var targetPosition = target.getPosition();
-			var radialMultiplier = targetPosition.distanceTo(FlxPoint.weak(x, y)) / radius;
+			final targetPosition = target.getPosition();
+			final radialMultiplier = 1 - FlxMath.bound(targetPosition.distanceTo(FlxPoint.weak(x, y)) / radius, 0, 1);
 			targetPosition.put();
-			radialMultiplier = 1 - FlxMath.bound(radialMultiplier, 0, 1);
 
 			_volumeAdjust = radialMultiplier;
 			if (proximityPan) _panAdjust = (x - target.x) / radius;
@@ -362,6 +362,7 @@ class FlxSound extends FlxBasic {
 			_volumeAdjust = 1.0;
 
 		updateTransform();
+		/**/
 	}
 
 	override function revive() {
@@ -517,9 +518,7 @@ class FlxSound extends FlxBasic {
 		#if FLX_SOUND_SYSTEM
 		if (FlxG.sound.muted) return 0.0;
 
-		// TODO: when flixel-cne is updated, enable this
-		//return FlxG.sound.applySoundCurve(FlxG.sound.volume * volume);
-		return FlxG.sound.volume * getActualVolume();
+		return FlxG.sound.applySoundCurve(FlxG.sound.volume * volume);
 		#else
 		return getActualVolume();
 		#end

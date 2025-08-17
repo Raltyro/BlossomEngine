@@ -22,8 +22,6 @@ final class InternalCompileMacro {
 		if (Context.defined('js') && Context.defined('html5')) Compiler.addMetadata('@:build($compileMacro.buildCanvasRenderer())', 'openfl.display.CanvasRenderer');
 		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($compileMacro.buildCairoRenderer())', 'openfl.display.CairoRenderer');
 		Compiler.addMetadata('@:build($compileMacro.buildOpenGLRenderer())', 'openfl.display.OpenGLRenderer');
-		Compiler.addMetadata('@:build($compileMacro.buildContext3D())', 'openfl.display3D.Context3D');
-		Compiler.addMetadata('@:build($compileMacro.buildFLEvent())', 'openfl.events.Event');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxTypedGroup())', 'flixel.group.FlxGroup.FlxTypedGroup');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxMatrix())', 'flixel.math.FlxMatrix');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxState())', 'flixel.FlxState');
@@ -326,23 +324,6 @@ final class InternalCompileMacro {
 		return fields;
 	}
 
-	// additional helper functions
-	public static macro function buildContext3D():Array<Field> {
-		final fields:Array<Field> = Context.getBuildFields();
-		
-		return fields;
-	}
-
-	// for Ralty's FlxSound Modification
-	public static macro function buildFLEvent():Array<Field> {
-		final fields:Array<Field> = Context.getBuildFields();
-		fields.push({
-			name: 'SOUND_LOOP', access: [APublic, AStatic, AInline], pos: Context.currentPos(),
-			kind: FVar(macro :openfl.events.EventType<openfl.events.Event>, macro $v{'soundLoop'})
-		});
-		return fields;
-	}
-
 	// replace splice with swapAndPop instead in remove
 	public static macro function buildFlxTypedGroup():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
@@ -371,6 +352,7 @@ final class InternalCompileMacro {
 	}
 
 	// for to add new function skewing
+	// TODO: Maybe don't do this and instead use using haxe for Matrices?
 	public static macro function buildFlxMatrix():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		return fields.concat([

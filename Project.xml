@@ -78,9 +78,16 @@
 	<haxelib name="flixel-animate"/>
 
 	<haxelib name="hscript-improved"/>
+	<haxedef name="hscriptPos"/>
 
 	<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
-	<haxelib name="hxdiscord_rpc" if="desktop" unless="NO_DISCORD"/>
+
+	<section if="desktop" unless="NO_DISCORD">
+		<haxelib name="hxdiscord_rpc"/>
+		<haxedef name="DISCORD_DISABLE_IO_THREAD"/>
+	</section>
+
+	<haxelib name="hxcpp-debug-server" if="debug"/>
 
 	<!-- _______________________________ Haxedefines ____________________________ -->
 
@@ -97,18 +104,17 @@
 	<!-- Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode! -->
 	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
 
-	<!-- Debugs -->
 	<haxedef name="HXCPP_CATCH_SEGV"/>
+	<haxedef name="HXCPP_ALIGN_ALLOC"/>
 	<haxedef name="HXCPP_DEBUG_LINK" if="debug"/>
-
-	<!-- Disable Discord IO Thread -->
-	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="desktop"/>
+	<haxedef name="analyzer-optimize" unless="debug" />
 
 	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
 	<!-- <haxedef name="message.reporting" value="pretty"/> -->
 	<haxedef name="openfl_dpi_aware" if="openfl_dpi_aware"/>
 	<!-- <haxedef name="openfl_enable_experimental_update_queue"/> -->
+	<haxedef name="openfl_pool_events"/>
 	<!-- <haxedef name="openfl-enable-handle-error"/> -->
 	<!-- <haxedef name='no-deprecation-warnings'/> -->
-	<haxedef name="gl_stats"/>
+	<!-- <haxedef name="gl_stats"/> -->
 </project>

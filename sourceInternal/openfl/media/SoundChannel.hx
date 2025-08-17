@@ -137,7 +137,6 @@ import lime.media.openal.AL;
 
 		#if lime
 		__source.onComplete.remove(source_onComplete);
-		__source.onLoop.remove(source_onLoop);
 		__source.dispose();
 		__source = null;
 		#end
@@ -222,7 +221,6 @@ import lime.media.openal.AL;
 		}
 
 		__source.onComplete.add(source_onComplete);
-		__source.onLoop.add(source_onLoop);
 		__isValid = true;
 
 		__source.play();
@@ -396,11 +394,6 @@ import lime.media.openal.AL;
 
 		__dispose();
 		dispatchEvent(new Event(Event.SOUND_COMPLETE));
-	}
-
-	@:noCompletion private function source_onLoop():Void
-	{
-		//dispatchEvent(new Event(Event.SOUND_LOOP));
 	}
 
 	@:noCompletion private function get___audioSource():AudioSource return __source;

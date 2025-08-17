@@ -1,11 +1,5 @@
 package blossom.util;
 
-#if cpp
-import cpp.vm.Gc;
-#elseif hl
-import hl.Gc;
-#end
-
 import lime.app.Future;
 import lime.app.Promise;
 import lime.utils.Bytes;
@@ -18,6 +12,7 @@ import openfl.utils.Assets;
 final class AssetUtil {
 	inline public static function gc() {
 		#if cpp
+		cpp.vm.Gc.compact();
 		cpp.vm.Gc.run(true);
 		#elseif hl
 		hl.Gc.major();
@@ -80,7 +75,6 @@ final class AssetUtil {
 		sound.__buffer.dispose();
 		sound.__buffer = null;
 		Assets.cache.removeSound(path);
-		gc();
 	}
 
 	public static function soundExists(path:String):Bool return Assets.exists(path, SOUND) || Assets.exists(path, MUSIC);

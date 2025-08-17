@@ -7,5 +7,5 @@ final class GameConstants {
 	public static var HEIGHT:Int = 720;
 	public static var FRAMERATE:Int = 60;
 
-	public static var INITIAL_STATE:NextState = ralty.TestState.new;
+	public static var INITIAL_STATE:NextState = ralty.SpectrumTestState.new;
 }

@@ -47,7 +47,7 @@ final class AudioAnalyzer {
 	 * @param sampleRate Sample Rate input.
 	 * @param barCount How much bars to get.
 	 * @param levels The output for getting the values, to avoid memory leaks (Optional).
-	 * @param ratio How much ratio for smoothen the values from the previous levels values (Optional, use CoolUtil.getFPSRatio(1 - ratio) to simulate web AnalyserNode.smoothingTimeConstant, 0.35 of smoothingTime works most of the time).
+	 * @param ratio How much ratio for smoothen the values from the previous levels values (Optional, use FlxMath.getElapsedLerp(1 - ratio) to simulate web AnalyserNode.smoothingTimeConstant, 0.35 of smoothingTime works most of the time).
 	 * @param minDb The minimum decibels to cap (Optional, default -63.0, -120 is pure silence).
 	 * @param maxDb The maximum decibels to cap (Optional, default -10.0, Above 0 is not recommended).
 	 * @param minFreq The minimum frequency to cap (Optional, default 20.0, Below 8.0 is not recommended).
@@ -295,7 +295,7 @@ final class AudioAnalyzer {
 		__check();
 	}
 
-	function __check() if (sound.buffer != buffer) {
+	function __check() if (sound != null && sound.buffer != buffer) {
 		byteSize = 1 << ((buffer = sound.buffer).bitsPerSample - 1);
 
 		#if (lime_cffi && lime_vorbis)
@@ -316,7 +316,7 @@ final class AudioAnalyzer {
 	 * @param volume How much volume multiplier will it affect the output. (Optional, default 1.0).
 	 * @param barCount How much bars to get.
 	 * @param levels The output for getting the values, to avoid memory leaks (Optional).
-	 * @param ratio How much ratio for smoothen the values from the previous levels values (Optional, use CoolUtil.getFPSRatio(1 - ratio) to simulate web AnalyserNode.smoothingTimeConstant, 0.35 of smoothingTime works most of the time).
+	 * @param ratio How much ratio for smoothen the values from the previous levels values (Optional, use FlxMath.getElapsedLerp(1 - ratio) to simulate web AnalyserNode.smoothingTimeConstant, 0.35 of smoothingTime works most of the time).
 	 * @param minDb The minimum decibels to cap (Optional, default -63.0, -120 is pure silence).
 	 * @param maxDb The maximum decibels to cap (Optional, default -10.0, Above 0 is not recommended).
 	 * @param minFreq The minimum frequency to cap (Optional, default 20.0, Below 8.0 is not recommended).
@@ -466,22 +466,18 @@ final class AudioAnalyzer {
 		@:privateAccess return sound._source != null && sound._source.__backend != null && sound._source.__backend.playing;
 
 	inline function __readStream(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback):Float @:privateAccess {
-		var backend = sound._source.__backend;
-		var i = backend.bufferSizes.length - backend.queuedBuffers;
-		var time = backend.bufferTimes[i] * 1000;
+		final backend = sound._source.__backend;
 
-		var n = Math.floor((endPos - startPos) * __toBits);
-		if (startPos >= time && startPos < backend.bufferTimes[backend.bufferSizes.length - 1] * 1000) {
+		var n = Math.floor((endPos - startPos) * __toBits), i = backend.bufferSizes.length - backend.queuedBuffers - 1, time:Float;
+		while (++i < backend.bufferSizes.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
 			var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferSizes[i], c = 0;
 			while (pos >= size) {
-				if (++i >= backend.bufferSizes.length) {
-					n = 0;
-					break;
-				}
+				if (++i >= backend.bufferSizes.length) break;
 				pos -= size;
 				buf = backend.bufferDatas[i].buffer;
 				size = backend.bufferSizes[i];
 			}
+			if (pos >= size) break;
 			pos -= pos % __sampleSize;
 			n -= pos % __sampleSize;
 
@@ -496,6 +492,8 @@ final class AudioAnalyzer {
 				}
 				n -= __wordSize;
 			}
+
+			break;
 		}
 
 		return endPos - (n / __toBits);

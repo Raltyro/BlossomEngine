@@ -103,10 +103,10 @@ class Conductor {
 
 	public var currentTimeChange(get, never):Null<TimeChange>;
 	var currentTimeChangeIdx:Int = 0;
-	function get_currentTimeChange() return timeChanges[currentTimeChangeIdx];
+	inline function get_currentTimeChange() return timeChanges[currentTimeChangeIdx];
 
 	public var bpm(get, never):Float;
-	function get_bpm() {
+	inline function get_bpm() {
 		if (currentTimeChangeIdx > 0)
 			return getTimeWithIdxInBPM(songPosition, currentTimeChangeIdx);
 		else
@@ -114,41 +114,41 @@ class Conductor {
 	}
 
 	public var startingBPM(get, never):Float;
-	function get_startingBPM()
+	inline function get_startingBPM()
 		return (timeChanges[0] ?? DEFAULT_TIMECHANGE).bpm;
 
 	public var beatLength(get, never):Float;
-	function get_beatLength() return 240000 / bpm / denominator;
+	inline function get_beatLength() return 240000 / bpm / denominator;
 	public function getBeatLength(?timeChange:TimeChange)
 		return 240000 / (timeChange?.bpm ?? bpm) / getDenominator(timeChange);
 
 	public var stepLength(get, never):Float;
-	function get_stepLength() return beatLength / tuplet;
+	inline function get_stepLength() return beatLength / tuplet;
 	public function getStepLength(?timeChange:TimeChange)
 		return getBeatLength(timeChange) / getTuplet(timeChange);
 
 	public var measureLength(get, never):Float;
-	function get_measureLength() return beatLength * numerator;
+	inline function get_measureLength() return beatLength * numerator;
 	public function getMeasureLength(?timeChange:TimeChange)
 		return getBeatLength(timeChange) * getNumerator(timeChange);
 
 	public var numerator(get, never):Float;
-	function get_numerator() return (currentTimeChange ?? DEFAULT_TIMECHANGE).numerator;
+	inline function get_numerator() return (currentTimeChange ?? DEFAULT_TIMECHANGE).numerator;
 	public function getNumerator(?timeChange:TimeChange)
 		return (timeChange ?? currentTimeChange ?? DEFAULT_TIMECHANGE).numerator;
 
 	public var denominator(get, never):Float;
-	function get_denominator() return (currentTimeChange ?? DEFAULT_TIMECHANGE).denominator;
+	inline function get_denominator() return (currentTimeChange ?? DEFAULT_TIMECHANGE).denominator;
 	public function getDenominator(?timeChange:TimeChange)
 		return (timeChange ?? currentTimeChange ?? DEFAULT_TIMECHANGE).denominator;
 
 	public var tuplet(get, never):Float;
-	function get_tuplet() return (currentTimeChange ?? DEFAULT_TIMECHANGE).tuplet;
+	inline function get_tuplet() return (currentTimeChange ?? DEFAULT_TIMECHANGE).tuplet;
 	public function getTuplet(?timeChange:TimeChange)
 		return (timeChange ?? currentTimeChange ?? DEFAULT_TIMECHANGE).tuplet;
 
 	public var stepsPerMeasure(get, never):Float;
-	function get_stepsPerMeasure() return numerator * tuplet;
+	inline function get_stepsPerMeasure() return numerator * tuplet;
 	public function getStepsPerMeasure(?timeChange:TimeChange)
 		return getNumerator(timeChange) * getTuplet(timeChange);
 

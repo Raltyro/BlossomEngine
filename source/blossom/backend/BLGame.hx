@@ -4,11 +4,11 @@ import blossom.input.Controls;
 
 class BLGame extends flixel.FlxGame {
 	public function new() {
-		FlxG.signals.preGameReset.add(preGameReset);
+		FlxG.signals.postGameReset.add(postGameReset);
 		super(GameConstants.WIDTH, GameConstants.HEIGHT, Initial, GameConstants.FRAMERATE, GameConstants.FRAMERATE, true);
 	}
 
-	function preGameReset() {
+	function postGameReset() {
 		flixel.graphics.FlxGraphic.defaultPersist = true; // Let AssetUtil handle the rest.
 		flixel.FlxObject.defaultMoves = false;
 		flixel.FlxSprite.defaultAntialiasing = true;
