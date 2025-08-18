@@ -7,4 +7,10 @@ import flixel.system.debug.watch.Tracker.TrackerProfile;
 import flixel.system.debug.watch.Tracker;
 #end
 
-class Main extends blossom.backend.BLGame {}
+class Main extends Sprite {
+	public function new() {
+		super();
+
+		addChild(new blossom.backend.Game());
+	}
+}

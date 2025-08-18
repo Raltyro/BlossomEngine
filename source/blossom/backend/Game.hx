@@ -1,8 +1,12 @@
 package blossom.backend;
 
+import blossom.backend.debug.StatsCounter;
 import blossom.input.Controls;
 
-class BLGame extends flixel.FlxGame {
+class Game extends flixel.FlxGame {
+	var borderTiles:BorderTiles;
+	var statsCounter:StatsCounter;
+
 	public function new() {
 		FlxG.signals.postGameReset.add(postGameReset);
 		super(GameConstants.WIDTH, GameConstants.HEIGHT, Initial, GameConstants.FRAMERATE, GameConstants.FRAMERATE, true);
@@ -17,9 +21,23 @@ class BLGame extends flixel.FlxGame {
 		FlxG.sound.volumeUpKeys = [];
 		FlxG.sound.volumeDownKeys = [];
 		FlxG.sound.muteKeys = [];
-		FlxG.sound.acceptInputs = false;
+		FlxG.mouse.useSystemCursor = true;
 
 		Controls.instance = new Controls();
+	}
+
+	override function create(_) {
+		if (stage == null) return;
+		addChild(borderTiles = new BorderTiles(AssetUtil.getBitmap(Paths.image("border"))));
+
+		super.create(_);
+
+		addChild(statsCounter = new StatsCounter(3, 3));
+	}
+
+	override function resizeGame(width:Int, height:Int) {
+		super.resizeGame(width, height);
+		borderTiles.onResize();
 	}
 }
 

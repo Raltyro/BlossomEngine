@@ -138,22 +138,30 @@ class Shader
 	 * @param isFragment Whether the source is a fragment shader. False if it is a vertex shader.
 	 * @return The converted source.
 	 */
-	public static function processGLSLText(source:String, glVersion:String, isFragment:Bool, ?pragmas:Map<String, String>):String
+	private static function processGLSLText(source:String, glVersion:String, isFragment:Bool, ?pragmas:Map<String, String>):String
 	{
+		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment, pragmas);
+		if (StringTools.endsWith(glVersion, " core")) return processGLSLText(source, StringTools.replace(glVersion, " core", ""), isFragment, pragmas);
+
 		if (pragmas != null) {
 			var pragmaKeyword:EReg = ~/#pragma (\w+)/g;
 			source = pragmaKeyword.map(source, (_) -> {
 				var name = pragmaKeyword.matched(1);
-				if (pragmas.exists(name)) return name == "header" ? buildGLSLHeaders(glVersion, pragmas.get(name)) : pragmas.get(name);
-				else return "";
+				var pragma = pragmas.exists(name) ? pragmas.get(name) : "";
+				if (name == "header" && isFragment) if (!StringTools.contains(pragma, "(location = 0)")) switch (glVersion) {
+					case "300 es", "330", "400", "410", "420", "430", "440", "450", "460":
+						#if desktop
+						return "layout (location = 0) out vec4 ofl_FragColor;\n" + pragma;
+						#else
+						return "out vec4 ofl_FragColor;\n" + pragma;
+						#end
+				}
+				
+				return pragma;
 			});
 		}
 
-		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment);
-
-		// No processing needed on "compatibility" profile
 		if (StringTools.endsWith(glVersion, " compatibility")) return source;
-		if (StringTools.endsWith(glVersion, " core")) return processGLSLText(source, StringTools.replace(glVersion, " core", ""), isFragment);
 
 		// Recall: Attribute values are per-vertex, varying values are per-fragment
 		// Thus, an `out` value in the vertex shader is an `in` value in the fragment shader
@@ -163,8 +171,7 @@ class Shader
 		var texture2DKeyword:EReg = ~/texture2D/g;
 		var glFragColorKeyword:EReg = ~/gl_FragColor/g;
 
-		switch (glVersion)
-		{
+		switch (glVersion) {
 			default:
 				// Don't make any changes to undefined versions.
 				return source;
@@ -189,46 +196,21 @@ class Shader
 				return result;
 
 			case "310 es", "320 es":
-				var result = processGLSLText(source, "300 es", isFragment);
-				return result;
+				return processGLSLText(source, "300 es", isFragment);
 
 			case "330":
 				#if desktop
-				var result = processGLSLText(source, "300 es", isFragment);
+				return processGLSLText(source, "300 es", isFragment);
 				#else
-				var result = source;
+				return glFragColorKeyword.replace(result, "ofl_FragColor");
 				#end
-				return result;
 
 			case "400", "410", "420", "430", "440", "450", "460":
-				var result = processGLSLText(source, "330", isFragment);
-				return result;
+				return processGLSLText(source, "330", isFragment);
 		}
 	}
 
-	public static function buildGLSLHeaders(glVersion:String, header:String):String
-	{
-		if (StringTools.contains(header, "(location = 0)")) return header; // darn you swordcube
-		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return header;
-		if (StringTools.endsWith(glVersion, " core")) return buildGLSLHeaders(StringTools.replace(glVersion, " core", ""), header);
-
-		return (switch (glVersion)
-		{
-			#if desktop
-			case "300 es": "layout (location = 0) out vec4 ofl_FragColor;\n";
-			#else
-			case "300 es": "out vec4 ofl_FragColor;\n";
-			#end
-
-			case "310 es", "320 es", "330", "400", "410", "420", "430", "440", "450", "460":
-				buildGLSLHeaders("300 es", header);
-
-			// Don't add any default headers to undefined versions
-			default: "";
-		}) + header;
-	}
-
-	public static function buildGLSLExtensions(glExtensions:Array<ShaderExtension>, glVersion:String,
+	private static function buildGLSLExtensions(glExtensions:Array<ShaderExtension>, glVersion:String,
 			isFragment:Bool):Array<ShaderExtension>
 	{
 		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return glExtensions;
@@ -283,7 +265,6 @@ class Shader
 	/**
 		Get or set the GLSL version used in the header when compiling with GLSL.
 
-		- `120` is required for initialization (i.e. providing a default value for) `uniform` variables
 		@default The default value is determined at compile time.
 	**/
 	public var glVersion(get, set):String;
@@ -594,6 +575,14 @@ class Shader
 		if (hasInfoLog || isError)
 		{
 			__logGLShaderInfo(isError, type, shaderInfoLog, source);
+
+			/*var message = isError ? "Error" : "Info";
+			message += (type == gl.VERTEX_SHADER) ? " compiling vertex shader" : " compiling fragment shader";
+			message += "\n" + shaderInfoLog;
+			message += "\n" + source;
+
+			if (isError) Log.error(message);
+			else if (hasInfoLog) Log.debug(message);*/
 		}
 
 		return shader;
@@ -659,7 +648,7 @@ class Shader
 
 		var typeName = (type == __context.gl.VERTEX_SHADER) ? "vertex" : "fragment";
 		if (isError) {
-			Log.error('Error compiling $typeName shader $message');
+			Log.error('Error compiling $typeName shader $message\n$source');
 		} else
 			Log.debug('Info compiling $typeName shader $message');
 	}
@@ -1304,14 +1293,8 @@ class Shader
 		if (value != __glVersion)
 		{
 			__glSourceDirty = true;
-			if (__glVertexSourceRaw != null)
-			{
-				__glVertexSource = processGLSLText(__glVertexSourceRaw, value, false, __glVertexPragmas);
-			}
-			if (__glFragmentSourceRaw != null)
-			{
-				__glFragmentSource = processGLSLText(__glFragmentSourceRaw, value, true, __glFragmentPragmas);
-			}
+			if (__glVertexSourceRaw != null) __glVertexSource = processGLSLText(__glVertexSourceRaw, value, false, __glVertexPragmas);
+			if (__glFragmentSourceRaw != null) __glFragmentSource = processGLSLText(__glFragmentSourceRaw, value, true, __glFragmentPragmas);
 		}
 
 		return __glVersion = value;

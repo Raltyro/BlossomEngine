@@ -1,6 +1,5 @@
 package flixel.graphics.tile;
 
-
 import openfl.geom.ColorTransform;
 import openfl.Vector;
 

@@ -1,4 +1,4 @@
-package blossom;
+package blossom.backend;
 
 import flixel.math.FlxMath;
 import flixel.sound.FlxSound;

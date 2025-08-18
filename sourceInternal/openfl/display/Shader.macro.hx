@@ -23,13 +23,13 @@ class Shader {
 		var nextFragmentDontOverride = false, nextVertexDontOverride = false;
 		var glFragmentPragmas:Map<String, String> = [], glVertexPragmas:Map<String, String> = [];
 		function addPragma(pragmas:Map<String, String>, key:String, value:String) {
-			if (pragmas.exists(key)) pragmas.set(key, pragmas.get(key) + value);
+			if (pragmas.exists(key)) pragmas.set(key, value + '\n' + pragmas.get(key));
 			else pragmas.set(key, value);
 		}
 
 		var glFragmentExtensions = [], glVertexExtensions = [];
 		var glFragmentSource:String = null, glVertexSource:String = null, glVersion:String = null;
-		var prefixFragment = 'glFragment', prefixVertex = 'glVertex', name:String;
+		var prefixFragment = "glFragment", prefixVertex = "glVertex", name:String;
 
 		for (field in fields) {
 			for (meta in field.meta) {
@@ -54,6 +54,12 @@ class Shader {
 					case "glExtensions":
 						glFragmentExtensions = glFragmentExtensions.concat(meta.params[0].getValue());
 						glVertexExtensions = glVertexExtensions.concat(meta.params[0].getValue());
+
+					case "glFragmentPragma":
+						addPragma(glFragmentPragmas, meta.params[0].getValue(), meta.params[1].getValue());
+
+					case "glVertexPragma":
+						addPragma(glVertexPragmas, meta.params[0].getValue(), meta.params[1].getValue());
 
 					default:
 						if (name.substr(0, prefixFragment.length) == prefixFragment)
@@ -96,6 +102,12 @@ class Shader {
 						case "glExtensions":
 							if (!fragmentDontOverride) glFragmentExtensions = glFragmentExtensions.concat(meta.params[0].getValue());
 							if (!vertexDontOverride) glVertexExtensions = glVertexExtensions.concat(meta.params[0].getValue());
+
+						case "glFragmentPragma":
+							if (!fragmentDontOverride) addPragma(glFragmentPragmas, meta.params[0].getValue(), meta.params[1].getValue());
+
+						case "glVertexPragma":
+							if (!vertexDontOverride) addPragma(glVertexPragmas, meta.params[0].getValue(), meta.params[1].getValue());
 
 						default:
 							if (!fragmentDontOverride && name.substr(0, prefixFragment.length) == prefixFragment)
@@ -182,21 +194,21 @@ class Shader {
 
 						block.unshift(Context.parse("__isGenerated = true", pos));
 
-						if (glVertexSource != null)
-							block.unshift(macro if (__glVertexSource == null) glVertexSource = $v{glVertexSource});
-
 						if (glFragmentSource != null)
 							block.unshift(macro if (__glFragmentSource == null) glFragmentSource = $v{glFragmentSource});
 
-						if (glVertexExtensions != null)
-							block.unshift(macro if (__glVertexExtensions == null) glVertexExtensions = $v{glVertexExtensions});
+						if (glVertexSource != null)
+							block.unshift(macro if (__glVertexSource == null) glVertexSource = $v{glVertexSource});
 
 						if (glFragmentExtensions != null)
 							block.unshift(macro if (__glFragmentExtensions == null) glFragmentExtensions = $v{glFragmentExtensions});
 
+						if (glVertexExtensions != null)
+							block.unshift(macro if (__glVertexExtensions == null) glVertexExtensions = $v{glVertexExtensions});
+
+						block.unshift(macro if (__glVersion == null) glVersion = $v{glVersion});
 						block.unshift(macro if (__glVertexPragmas == null) __glVertexPragmas = $v{glVertexPragmas});
 						block.unshift(macro if (__glFragmentPragmas == null) __glFragmentPragmas = $v{glFragmentPragmas});
-						block.unshift(macro if (__glVersion == null) glVersion = $v{glVersion});
 
 						block.push(Context.parse("__initGL()", pos));
 

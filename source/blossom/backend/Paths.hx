@@ -1,4 +1,4 @@
-package blossom;
+package blossom.backend;
 
 import haxe.io.Path;
 

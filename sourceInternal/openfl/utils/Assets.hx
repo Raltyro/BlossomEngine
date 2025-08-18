@@ -11,6 +11,7 @@ import openfl.media.Sound;
 import openfl.text.Font;
 #if lime
 import lime.app.Promise;
+import lime.graphics.Image;
 import lime.utils.AssetLibrary as LimeAssetLibrary;
 import lime.utils.Assets as LimeAssets;
 #end
@@ -55,6 +56,7 @@ class Assets
 
 	@:noCompletion private static var dispatcher:EventDispatcher #if !macro = new EventDispatcher() #end;
 	private static var libraryBindings:Map<String, AssetLibrary> = new Map();
+	private static var mainImage:Image;
 
 	public static function addEventListener(type:String, listener:Dynamic, useCapture:Bool = false, priority:Int = 0, useWeakReference:Bool = false):Void
 	{
@@ -142,16 +144,24 @@ class Assets
 	public static function getRawBitmapData(id:String, ?hardware:Bool):BitmapData
 	{
 		#if lime
+		#if flash
 		var image = LimeAssets.getImage(id, false);
-		if (image != null) {
-			#if flash
-			return cast image.src;
-			#else
-			var bitmapData = BitmapData.fromImage(image);
-			if (hardware != null ? hardware : defaultHardware) BitmapDataUtil.toHardware(bitmapData);
-			return bitmapData;
-			#end
+		if (image != null) return cast image.src;
+		#else
+		var image:Image;
+		if (hardware = hardware != null ? hardware : defaultHardware) {
+			if (mainImage == null) mainImage = new Image();
+			@:privateAccess if (!(image = mainImage).__fromFile(getPath(id))) return null;
 		}
+		else
+			image = LimeAssets.getImage(id, false);
+
+		if (image != null) {
+			var bitmapData = BitmapData.fromImage(image);
+			if (hardware) BitmapDataUtil.toHardware(bitmapData);
+			return bitmapData;
+		}
+		#end
 		#end
 
 		return null;

@@ -7,24 +7,24 @@ class FlxGraphicsShader extends GraphicsShader
 	@:glVertexDontOverride
 	@:glFragmentDontOverride
 	@:glVertexHeader("
-		in float openfl_Alpha;
-		in vec4 openfl_ColorMultiplier;
-		in vec4 openfl_ColorOffset;
-		in vec4 openfl_Position;
-		in vec2 openfl_TextureCoord;
+		attribute float openfl_Alpha;
+		attribute vec4 openfl_ColorMultiplier;
+		attribute vec4 openfl_ColorOffset;
+		attribute vec4 openfl_Position;
+		attribute vec2 openfl_TextureCoord;
 
-		out float openfl_Alphav;
-		out vec4 openfl_ColorMultiplierv;
-		out vec4 openfl_ColorOffsetv;
-		out vec2 openfl_TextureCoordv;
+		varying float openfl_Alphav;
+		varying vec4 openfl_ColorMultiplierv;
+		varying vec4 openfl_ColorOffsetv;
+		varying vec2 openfl_TextureCoordv;
 
 		uniform mat4 openfl_Matrix;
 		uniform bool openfl_HasColorTransform;
 		uniform vec2 openfl_TextureSize;
 
-		in float alpha;
-		in vec4 colorMultiplier;
-		in vec4 colorOffset;
+		attribute float alpha;
+		attribute vec4 colorMultiplier;
+		attribute vec4 colorOffset;
 		uniform bool hasColorTransform;
 	")
 	@:glVertexBody("
@@ -40,21 +40,19 @@ class FlxGraphicsShader extends GraphicsShader
 			openfl_ColorOffsetv = colorOffset / 255.0;
 			openfl_ColorMultiplierv = colorMultiplier;
 		}
-
-		gl_Position = openfl_Matrix * openfl_Position;
 	")
 	@:glVertexSource("
 		#pragma header
 		void main(void) {
 			#pragma body
+			gl_Position = openfl_Matrix * openfl_Position;
 		}
 	")
 	@:glFragmentHeader("
-		layout(location = 0) out vec4 ofl_FragColor;
-		in float openfl_Alphav;
-		in vec4 openfl_ColorMultiplierv;
-		in vec4 openfl_ColorOffsetv;
-		in vec2 openfl_TextureCoordv;
+		varying float openfl_Alphav;
+		varying vec4 openfl_ColorMultiplierv;
+		varying vec4 openfl_ColorOffsetv;
+		varying vec2 openfl_TextureCoordv;
 
 		uniform bool openfl_HasColorTransform;
 		uniform vec2 openfl_TextureSize;
@@ -83,8 +81,8 @@ class FlxGraphicsShader extends GraphicsShader
 		}
 	")
 	@:glFragmentBody("
-		ofl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
-		if (ofl_FragColor.a == 0.0) discard;
+		gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
+		if (gl_FragColor.a == 0.0) discard;
 	")
 	@:glFragmentSource("
 		#pragma header

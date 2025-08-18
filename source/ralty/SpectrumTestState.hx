@@ -5,12 +5,17 @@ import blossom.util.AudioAnalyzer;
 import blossom.util.BitmapDataUtil;
 
 class SpectrumTestState extends BLState {
+	var voices:FlxSound;
+
 	override function create() {
 		super.create();
 
-		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('lit up bf')));
+		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('the uprising')));
+		voices = FlxG.sound.play(AssetUtil.getMusic(Paths.voices('the uprising')), 1.0, true, false);
 
-		var spectrum = new Spectrum([FlxG.sound.music]);
+		FlxG.sound.music.onComplete = () -> voices.play(true, 0);
+
+		var spectrum = new Spectrum([FlxG.sound.music, voices]);
 		spectrum.screenCenter();
 		add(spectrum);
 	}
@@ -73,7 +78,7 @@ class Spectrum extends FlxSprite {
 			}
 
 			_frequencies = AudioAnalyzer.getFrequenciesFromSamples(_samples, _fftN, false, _frequencies);
-			_cache = AudioAnalyzer.getLevelsFromFrequencies(_frequencies, sounds[0].buffer.sampleRate, bars, _cache, FlxMath.getElapsedLerp(0.52, elapsed), -60, -20, 20, 20000);
+			_cache = AudioAnalyzer.getLevelsFromFrequencies(_frequencies, sounds[0].buffer.sampleRate, bars, _cache, FlxMath.getElapsedLerp(0.52, elapsed), -64, -10, 20, 20000);
 
 			var k = 0, i = bars;
 			while (i > 0) graphic.bitmap.setPixel(k++, 0, FlxColor.fromRGBFloat(_cache[i--], _cache[i--], _cache[i--]));

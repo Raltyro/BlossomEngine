@@ -966,8 +966,8 @@ class FlxText extends FlxSprite
 	 */
 	function drawTextFieldTo(graphic:BitmapData):Void
 	{
-		//BitmapDataUtil.draw(graphic, textField, _matrix);
-		graphic.draw(textField, _matrix);
+		BitmapDataUtil.draw(graphic, textField, _matrix);
+		//graphic.draw(textField, _matrix);
 	}
 
 	override public function draw():Void
@@ -1163,10 +1163,10 @@ class FlxText extends FlxSprite
 		if (_borderColorTransform == null)
 			_borderColorTransform = new ColorTransform();
 
-		_borderColorTransform.alphaMultiplier = borderColor.alphaFloat;
-		_borderPixels.colorTransform(_borderPixels.rect, _borderColorTransform);
-		graphic.bitmap.draw(_borderPixels);
-		//BitmapDataUtil.copyFrom(graphic.bitmap, _borderPixels, borderColor.alphaFloat);
+		//_borderColorTransform.alphaMultiplier = borderColor.alphaFloat;
+		//_borderPixels.colorTransform(_borderPixels.rect, _borderColorTransform);
+		//graphic.bitmap.draw(_borderPixels);
+		BitmapDataUtil.copyFrom(graphic.bitmap, _borderPixels, borderColor.alphaFloat);
 	}
 
 	/**
