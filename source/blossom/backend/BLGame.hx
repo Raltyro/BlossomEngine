@@ -17,6 +17,7 @@ class BLGame extends flixel.FlxGame {
 		FlxG.sound.volumeUpKeys = [];
 		FlxG.sound.volumeDownKeys = [];
 		FlxG.sound.muteKeys = [];
+		FlxG.sound.acceptInputs = false;
 
 		Controls.instance = new Controls();
 	}

@@ -8,7 +8,9 @@ class SpectrumTestState extends BLState {
 	override function create() {
 		super.create();
 
-		var spectrum = new Spectrum(SoundUtil.playMusic(Paths.inst('lit up bf')));
+		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('lit up bf')));
+
+		var spectrum = new Spectrum([FlxG.sound.music]);
 		spectrum.screenCenter();
 		add(spectrum);
 	}
@@ -22,41 +24,56 @@ class SpectrumTestState extends BLState {
 		if (controls.justPressed.BACK) {
 			trace(FlxG.sound.music.time);
 			AssetUtil.gc();
+			FlxG.autoPause = !FlxG.autoPause;
 		}
 	}
 }
 
 class Spectrum extends FlxSprite {
-	public var sound:FlxSound;
+	public var sounds:Array<FlxSound>;
 	public var bars(default, null):Int;
 	var _bars3:Int; // value to r, g, b
 
-	var _analyzer:AudioAnalyzer;
+	var _analyzers:Array<AudioAnalyzer> = [];
 	var _lastTime:Float;
 	var _cache:Array<Float>;
+	var _frequencies:Array<Float>;
+	var _samples:Array<Float> = [];
+	var _fftN:Int = 2048;
 
-	public function new(sound:FlxSound, width = 1200, height = 320, bars = 400) {
+	public function new(sounds:Array<FlxSound>, width = 1200, height = 320, bars = 400) {
 		super();
 		makeGraphic(_bars3 = Math.ceil((this.bars = bars) / 3), 1, FlxColor.BLACK, false);
 		graphic.persist = true;
 		graphic.destroyOnNoUse = false;
 
-		shader = new SpectrumShader(bars);
 		setGraphicSize(width, height);
 		updateHitbox();
 
-		_analyzer = new AudioAnalyzer(this.sound = sound);
+		shader = new SpectrumShader(bars);
+
+		this.sounds = sounds;
+		for (sound in sounds) _analyzers.push(new AudioAnalyzer(sound));
 	}
 
 	override function update(elapsed:Float) {
 		super.update(elapsed);
+		if (sounds.length == 0) return;
 
-		if (sound == null || !sound.playing) return;
-
-		var time = sound.time; 
-		_analyzer.sound = sound;
+		var time = sounds[0].time;
 		if (_lastTime != time) {
-			_cache = _analyzer.getLevels(_lastTime = time, FlxG.sound.music.getActualVolume(), bars, _cache, FlxMath.getElapsedLerp(0.52, elapsed), -60, 0, 20, 20000);
+			_lastTime = time;
+
+			var analyzer:AudioAnalyzer;
+			for (i => sound in sounds) {
+				if ((analyzer = _analyzers[i]) != null) analyzer.sound = sound;
+				else _analyzers[i] = analyzer = new AudioAnalyzer(sound);
+
+				analyzer.getSamples(time, _fftN, true, sound.getActualVolume(), _samples, i != 0);
+			}
+
+			_frequencies = AudioAnalyzer.getFrequenciesFromSamples(_samples, _fftN, false, _frequencies);
+			_cache = AudioAnalyzer.getLevelsFromFrequencies(_frequencies, sounds[0].buffer.sampleRate, bars, _cache, FlxMath.getElapsedLerp(0.52, elapsed), -60, -20, 20, 20000);
 
 			var k = 0, i = bars;
 			while (i > 0) graphic.bitmap.setPixel(k++, 0, FlxColor.fromRGBFloat(_cache[i--], _cache[i--], _cache[i--]));
@@ -64,7 +81,7 @@ class Spectrum extends FlxSprite {
 	}
 }
 
-class SpectrumShader extends flixel.system.FlxAssets.FlxShader {
+class SpectrumShader extends blossom.graphic.shaders.BlossomShader {
 	@:glFragmentSource("
 #pragma header
 uniform float bars;

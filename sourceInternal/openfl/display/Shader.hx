@@ -13,7 +13,7 @@ import openfl.display3D.Context3D;
 import openfl.display3D.Program3D;
 import openfl.utils.ByteArray;
 
-using StringTools;
+typedef ShaderExtension = {name:String, behavior:String};
 
 /**
 	// TODO: Document GLSL Shaders
@@ -121,17 +121,13 @@ using StringTools;
 @:access(openfl.display3D.Program3D)
 @:access(openfl.display.ShaderInput)
 @:access(openfl.display.ShaderParameter)
-// #if (!display && !macro)
-#if !macro
-@:autoBuild(openfl.utils._internal.ShaderMacro.build())
-#end
+@:autoBuild(openfl.display.Shader.build())
 class Shader
 {
-	private static inline function getDefaultGLVersion():String
+	public static inline function getDefaultGLVersion():String
 	{
 		// Specify the default glVersion.
 		// We can use compile defines to guess the value that prevents crashes in the majority of cases.
-		//return #if lime_opengles "100" #elseif "120" #end;
 		return #if mac "410" #else "300 es" #end;
 	}
 
@@ -142,10 +138,17 @@ class Shader
 	 * @param isFragment Whether the source is a fragment shader. False if it is a vertex shader.
 	 * @return The converted source.
 	 */
-	private static function processGLSLText(source:String, glVersion:String, isFragment:Bool, ?header:String, ?body:String)
+	public static function processGLSLText(source:String, glVersion:String, isFragment:Bool, ?pragmas:Map<String, String>):String
 	{
-		if (header != null) source = StringTools.replace(source, "#pragma header", buildGLSLHeaders(glVersion, header));
-		if (body != null) source = StringTools.replace(source, "#pragma body", body);
+		if (pragmas != null) {
+			var pragmaKeyword:EReg = ~/#pragma (\w+)/g;
+			source = pragmaKeyword.map(source, (_) -> {
+				var name = pragmaKeyword.matched(1);
+				if (pragmas.exists(name)) return name == "header" ? buildGLSLHeaders(glVersion, pragmas.get(name)) : pragmas.get(name);
+				else return "";
+			});
+		}
+
 		if (glVersion == "" || glVersion == null) return processGLSLText(source, getDefaultGLVersion(), isFragment);
 
 		// No processing needed on "compatibility" profile
@@ -203,9 +206,9 @@ class Shader
 		}
 	}
 
-	private static function buildGLSLHeaders(glVersion:String, header:String):String
+	public static function buildGLSLHeaders(glVersion:String, header:String):String
 	{
-		if (header.contains("(location = 0)")) return header; // darn you swordcube
+		if (StringTools.contains(header, "(location = 0)")) return header; // darn you swordcube
 		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return header;
 		if (StringTools.endsWith(glVersion, " core")) return buildGLSLHeaders(StringTools.replace(glVersion, " core", ""), header);
 
@@ -225,8 +228,8 @@ class Shader
 		}) + header;
 	}
 
-	private static function buildGLSLExtensions(glExtensions:Array<{name:String, behavior:String}>, glVersion:String,
-			isFragment:Bool):Array<{name:String, behavior:String}>
+	public static function buildGLSLExtensions(glExtensions:Array<ShaderExtension>, glVersion:String,
+			isFragment:Bool):Array<ShaderExtension>
 	{
 		if (glVersion == "" || glVersion == null || StringTools.endsWith(glVersion, " compatibility")) return glExtensions;
 		if (StringTools.endsWith(glVersion, " core")) return buildGLSLExtensions(glExtensions, StringTools.replace(glVersion, " core", ""), isFragment);
@@ -292,18 +295,48 @@ class Shader
 
 
 	/**
-		Provides additional `#extension` directives to insert in the vertex and fragment shaders.
+		Provides additional `#extension` directives to insert in the vertex shaders.
 
 		Example:
 		```
-		@:glExtensions([{name: "OES_standard_derivatives", behavior: "require"}])
 		@:glVertexExtensions([{name: "OES_standard_derivatives", behavior: "require"}])
-		@:glFragmentExtensions([{name: "OES_standard_derivatives", behavior: "require"}])
+		// or @:glExtensions([{name: "OES_standard_derivatives", behavior: "require"}])
 		```
 	**/
-	public var glVertexExtensions(get, set):Array<{name:String, behavior:String}>;
+	public var glVertexExtensions(get, set):Array<ShaderExtension>;
 
-	public var glFragmentExtensions(get, set):Array<{name:String, behavior:String}>;
+	/**
+		Provides additional `#extension` directives to insert in the fragment shaders.
+
+		Example:
+		```
+		@:glFragmentExtensions([{name: "OES_standard_derivatives", behavior: "require"}])
+		// or @:glExtensions([{name: "OES_standard_derivatives", behavior: "require"}])
+		```
+	**/
+	public var glFragmentExtensions(get, set):Array<ShaderExtension>;
+
+	/**
+		Provides an additional pragmas to use in (child class of) vertex shaders.
+
+		Example:
+		```
+		@:glVertexHeader(...)
+		@:glVertexBody(...)
+		```
+	**/
+	public var glVertexPragmas(get, set):Map<String, String>;
+
+	/**
+		Provides an additional pragmas to use in (child class of) fragment shaders.
+
+		Example:
+		```
+		@:glFragmentHeader(...)
+		@:glFragmentBody(...)
+		```
+	**/
+	public var glFragmentPragmas(get, set):Map<String, String>;
 
 	/**
 		The default GLSL vertex header, before being applied to the vertex source.
@@ -410,17 +443,15 @@ class Shader
 	@:noCompletion private var __colorOffset:ShaderParameter<Float>;
 	@:noCompletion private var __context:Context3D;
 	@:noCompletion private var __data:ShaderData;
-	@:noCompletion private var __glVertexExtensions:Array<{name:String, behavior:String}>;
-	@:noCompletion private var __glFragmentExtensions:Array<{name:String, behavior:String}>;
+	@:noCompletion private var __glVertexExtensions:Array<ShaderExtension>;
+	@:noCompletion private var __glFragmentExtensions:Array<ShaderExtension>;
+	@:noCompletion private var __glVertexPragmas:Map<String, String>;
+	@:noCompletion private var __glFragmentPragmas:Map<String, String>;
 	@:noCompletion private var __glVersionRaw:String;
 	@:noCompletion private var __glVersion:String;
-	@:noCompletion private var __glFragmentHeaderRaw:String;
-	@:noCompletion private var __glFragmentBodyRaw:String;
 	@:noCompletion private var __glFragmentSourceRaw:String;
 	@:noCompletion private var __glFragmentSource:String;
 	@:noCompletion private var __glSourceDirty:Bool;
-	@:noCompletion private var __glVertexHeaderRaw:String;
-	@:noCompletion private var __glVertexBodyRaw:String;
 	@:noCompletion private var __glVertexSourceRaw:String;
 	@:noCompletion private var __glVertexSource:String;
 	@:noCompletion private var __hasColorTransform:ShaderParameter<Bool>;
@@ -932,7 +963,7 @@ class Shader
 			type = regex.matched(1);
 			name = regex.matched(2);
 
-			if (StringTools.startsWith(name, "gl_"))
+			if (StringTools.startsWith(name, "gl_") || StringTools.startsWith(name, "ofl_"))
 			{
 				continue;
 			}
@@ -1275,28 +1306,28 @@ class Shader
 			__glSourceDirty = true;
 			if (__glVertexSourceRaw != null)
 			{
-				__glVertexSource = processGLSLText(__glVertexSourceRaw, value, false, __glVertexHeaderRaw, __glVertexBodyRaw);
+				__glVertexSource = processGLSLText(__glVertexSourceRaw, value, false, __glVertexPragmas);
 			}
 			if (__glFragmentSourceRaw != null)
 			{
-				__glFragmentSource = processGLSLText(__glFragmentSourceRaw, value, true, __glFragmentHeaderRaw, __glFragmentBodyRaw);
+				__glFragmentSource = processGLSLText(__glFragmentSourceRaw, value, true, __glFragmentPragmas);
 			}
 		}
 
 		return __glVersion = value;
 	}
 
-	@:noCompletion private function get_glVertexExtensions():Array<{name:String, behavior:String}>
+	@:noCompletion private function get_glVertexExtensions():Array<ShaderExtension>
 	{
 		return __glVertexExtensions;
 	}
 
-	@:noCompletion private function get_glFragmentExtensions():Array<{name:String, behavior:String}>
+	@:noCompletion private function get_glFragmentExtensions():Array<ShaderExtension>
 	{
 		return __glFragmentExtensions;
 	}
 
-	@:noCompletion private function set_glVertexExtensions(value:Array<{name:String, behavior:String}>):Array<{name:String, behavior:String}>
+	@:noCompletion private function set_glVertexExtensions(value:Array<ShaderExtension>):Array<ShaderExtension>
 	{
 		if (value != __glVertexExtensions)
 		{
@@ -1306,7 +1337,7 @@ class Shader
 		return __glVertexExtensions = value;
 	}
 
-	@:noCompletion private function set_glFragmentExtensions(value:Array<{name:String, behavior:String}>):Array<{name:String, behavior:String}>
+	@:noCompletion private function set_glFragmentExtensions(value:Array<ShaderExtension>):Array<ShaderExtension>
 	{
 		if (value != __glFragmentExtensions)
 		{
@@ -1316,14 +1347,44 @@ class Shader
 		return __glFragmentExtensions = value;
 	}
 
+	@:noCompletion private function get_glVertexPragmas():Map<String, String>
+	{
+		return __glVertexPragmas;
+	}
+
+	@:noCompletion private function get_glFragmentPragmas():Map<String, String>
+	{
+		return __glFragmentPragmas;
+	}
+
+	@:noCompletion private function set_glVertexPragmas(value:Map<String, String>):Map<String, String>
+	{
+		if (value != __glVertexPragmas)
+		{
+			__glSourceDirty = true;
+		}
+
+		return __glVertexPragmas = value;
+	}
+
+	@:noCompletion private function set_glFragmentPragmas(value:Map<String, String>):Map<String, String>
+	{
+		if (value != __glFragmentPragmas)
+		{
+			__glSourceDirty = true;
+		}
+
+		return __glFragmentPragmas = value;
+	}
+
 	@:noCompletion private function get_glFragmentHeaderRaw():String
 	{
-		return __glFragmentHeaderRaw;
+		return __glFragmentPragmas.get("header");
 	}
 
 	@:noCompletion private function get_glFragmentBodyRaw():String
 	{
-		return __glFragmentBodyRaw;
+		return __glFragmentPragmas.get("body");
 	}
 
 	@:noCompletion private function get_glFragmentSourceRaw():String
@@ -1339,7 +1400,7 @@ class Shader
 	@:noCompletion private function set_glFragmentSource(value:String):String
 	{
 		__glFragmentSourceRaw = value;
-		if (value != null) value = processGLSLText(value, __glVersion, true, __glFragmentHeaderRaw, __glFragmentBodyRaw);
+		if (value != null) value = processGLSLText(value, __glVersion, true, __glFragmentPragmas);
 		if (value != __glFragmentSource)
 		{
 			__glSourceDirty = true;
@@ -1350,12 +1411,12 @@ class Shader
 
 	@:noCompletion private function get_glVertexHeaderRaw():String
 	{
-		return __glVertexHeaderRaw;
+		return __glVertexPragmas.get("header");
 	}
 
 	@:noCompletion private function get_glVertexBodyRaw():String
 	{
-		return __glVertexBodyRaw;
+		return __glVertexPragmas.get("body");
 	}
 
 	@:noCompletion private function get_glVertexSourceRaw():String
@@ -1371,7 +1432,7 @@ class Shader
 	@:noCompletion private function set_glVertexSource(value:String):String
 	{
 		__glVertexSourceRaw = value;
-		if (value != null) value = processGLSLText(value, __glVersion, false, __glVertexHeaderRaw, __glVertexBodyRaw);
+		if (value != null) value = processGLSLText(value, __glVersion, false, __glVertexPragmas);
 		if (value != __glVertexSource)
 		{
 			__glSourceDirty = true;

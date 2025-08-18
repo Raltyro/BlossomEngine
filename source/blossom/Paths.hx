@@ -15,49 +15,46 @@ import openfl.utils.AssetType;
 using StringTools;
 
 class Paths {
-	public static final EXT_SOUND:String = 'ogg';
-	public static final EXT_IMAGE:String = 'png';
-	public static final EXT_VIDEO:String = 'mp4';
+	public static final EXT_SOUND:String = "ogg";
+	public static final EXT_IMAGE:String = "png";
+	public static final EXT_VIDEO:String = "mp4";
 
-	inline public static function fix(file:String, defaultExt:String):String return Path.extension(file) == '' ? '$file.$defaultExt' : file;
+	inline public static function fix(file:String, defaultExt:String):String return Path.extension(file) == "" ? '$file.$defaultExt' : file;
 
 	public static var currentLevel:Null<String> = null;
 	inline public static function setCurrentLevel(?name:String):Void
 		currentLevel = name == null ? null : name.toLowerCase();
 
 	public static function stripLibrary(path:String):String
-		return path.substr(path.indexOf(':') + 1);
+		return path.substr(path.indexOf(":") + 1);
 
 	public static function getLibrary(path:String):String {
-		var idx = path.indexOf(':');
-		return if (idx == -1) 'default'; else path.substr(0, idx);
+		var idx = path.indexOf(":");
+		return if (idx == -1) "default"; else path.substr(0, idx);
 	}
 
 	static function getPath(file:String, ?type:AssetType, ?library:String):String {
 		#if macro
 		return getLibraryPath(file, library);
 		#else
-		if (library != null || library == 'default') return getLibraryPath(file, library);
+		if (library != null || library == "default") return getLibraryPath(file, library);
 		if (currentLevel != null) {
 			var levelPath:String = getLibraryPath(file, currentLevel);
 			if (Assets.exists(levelPath, type)) return levelPath;
 		}
 
-		var sharedPath:String = getLibraryPathForce(file, 'shared');
+		var sharedPath:String = getLibraryPathForce(file, "shared");
 		if (Assets.exists(sharedPath, type)) return sharedPath;
 
 		return getDefaultPath(file);
 		#end
 	}
 
-	public static function getLibraryPath(file:String, library = 'default'):String
-		return if (library == 'default') getDefaultPath(file); else getLibraryPathForce(file, library);
+	public static function getLibraryPath(file:String, library = "default"):String
+		return if (library == "default") getDefaultPath(file); else getLibraryPathForce(file, library);
 
 	inline static function getLibraryPathForce(file:String, library:String):String return '$library:assets/$library/$file';
 	inline static function getDefaultPath(file:String):String return 'assets/$file';
-
-	public static function file(file:String, type:AssetType = TEXT, ?library:String):String
-		return getPath(file, type, library);
 
 	public static function txt(key:String, ?library:String):String
 		return getPath(fix('data/$key', 'txt'), TEXT, library);
@@ -71,11 +68,14 @@ class Paths {
 	public static function character(key:String, ?library:String):String
 		return getPath(fix('data/characters/$key', 'json'), TEXT, library);
 
+	public static function shader(key:String, ?library:String):String
+		return getPath('shaders/$key', TEXT, library);
+
 	public static function frag(key:String, ?library:String):String
-		return getPath(fix('data/shaders/$key', 'frag'), TEXT, library);
+		return shader(fix(key, 'frag'), library);
 
 	public static function vert(key:String, ?library:String):String
-		return getPath(fix('data/shaders/$key', 'vert'), TEXT, library);
+		return shader(fix(key, 'vert'), library);
 
 	public static function sound(key:String, ?library:String):String
 		return getPath(fix('sounds/$key', EXT_SOUND), SOUND, library);

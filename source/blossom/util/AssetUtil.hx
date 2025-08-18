@@ -12,8 +12,8 @@ import openfl.utils.Assets;
 final class AssetUtil {
 	inline public static function gc() {
 		#if cpp
-		cpp.vm.Gc.compact();
 		cpp.vm.Gc.run(true);
+		cpp.vm.Gc.compact();
 		#elseif hl
 		hl.Gc.major();
 		#end
