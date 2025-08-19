@@ -55,6 +55,7 @@ jobs:
       - name: Setup Haxelib
         run: |
           haxelib setup .haxelib/
+          haxelib --global update haxelib
           haxelib install hxcpp --quiet
           haxelib install format --quiet
           haxelib install hxp --quiet

@@ -39,9 +39,9 @@ class UpdateHaxelib {
 
 					Sys.println('Installing "${lib.name}" from "${lib.url}" ${lib.ref}');
 
-					Sys.command('haxelib --always --quiet --skip-dependencies git ${lib.name} ${lib.url}${lib.ref != null ? " " + lib.ref : ""}');
+					//Sys.command('haxelib --always --quiet --skip-dependencies git ${lib.name} ${lib.url}${lib.ref != null ? " " + lib.ref : ""}');
 
-					/*if (FileSystem.exists('${lib.dir}/git')) {
+					if (FileSystem.exists('${lib.dir}/git')) {
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
 						Sys.command('git checkout');
 						if (lib.ref == null) Sys.command('git pull origin'); else Sys.command('git pull origin ${lib.ref}');
@@ -51,7 +51,7 @@ class UpdateHaxelib {
 						Sys.command('git clone "${lib.url}" git');
 						Sys.setCwd('${mainCwd}/${lib.dir}/git');
 						if (lib.ref == null) Sys.command('git pull origin'); else Sys.command('git pull origin ${lib.ref}');
-					}*/
+					}
 					Sys.setCwd('${mainCwd}/${lib.dir}');
 					File.saveContent('${mainCwd}/${lib.dir}/.current', 'git');
 					Sys.setCwd(mainCwd);
