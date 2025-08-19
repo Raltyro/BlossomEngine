@@ -6,9 +6,9 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 
 import blossom.backend.constants.*;
+import blossom.backend.util.AssetUtil;
+import blossom.backend.util.SoundUtil;
 import blossom.backend.Conductor;
-import blossom.util.AssetUtil;
-import blossom.util.SoundUtil;
 import blossom.BLState;
 #end
 

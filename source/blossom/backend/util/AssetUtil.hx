@@ -1,4 +1,4 @@
-package blossom.util;
+package blossom.backend.util;
 
 import lime.app.Future;
 import lime.app.Promise;
@@ -89,13 +89,15 @@ final class AssetUtil {
 	// Graphics
 	public static var usedGraphics:Array<String> = [];
 
-	public static function getBitmap(path:String, hardware = true):BitmapData {
+	public static function getBitmap(path:String, hardware = true, useCache = true):BitmapData {
 		var bitmap = Assets.cache.getBitmapData(path);
-		if (bitmap != null || (graphicExists(path) && (bitmap = Assets.getBitmapData(path, true, hardware)) != null)) usedGraphics.push(path);
+		if (bitmap != null || (graphicExists(path) && (bitmap = Assets.getBitmapData(path, useCache, hardware)) != null) && useCache)
+			usedGraphics.push(path);
+
 		return bitmap;
 	}
 
-	public static function loadBitmap(path:String, hardware = true):Future<BitmapData> {
+	public static function loadBitmap(path:String, hardware = true, useCache = true):Future<BitmapData> {
 		final bitmap = Assets.cache.getBitmapData(path);
 		if (bitmap != null) {
 			usedGraphics.push(path);
@@ -104,8 +106,8 @@ final class AssetUtil {
 		else if (graphicExists(path)) {
 			final promise = new Promise<BitmapData>();
 
-			Assets.loadBitmapData(path, true, hardware).onComplete((bitmap) -> {
-				usedGraphics.push(path);
+			Assets.loadBitmapData(path, useCache, hardware).onComplete((bitmap) -> {
+				if (useCache) usedGraphics.push(path);
 				promise.complete(bitmap);
 			}).onError(promise.error).onProgress(promise.progress);
 

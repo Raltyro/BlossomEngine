@@ -8,7 +8,7 @@ import openfl.geom.Matrix;
 import openfl.geom.Rectangle;
 import openfl.Vector;
 
-import blossom.util.BitmapDataUtil;
+import blossom.backend.util.BitmapDataUtil;
 
 class BorderTiles extends Bitmap {
 	public static var instance:BorderTiles;

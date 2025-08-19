@@ -1,4 +1,4 @@
-package blossom.util;
+package blossom.backend.util;
 
 import flixel.sound.FlxSound;
 import lime.media.AudioBuffer;
@@ -329,7 +329,7 @@ final class AudioAnalyzer {
 	 * @param maxFreq The maximum frequency to cap (Optional, default 22000.0, Above 23000.0 is not recommended).
 	 * @return Output of levels/bars that ranges from 0 to 1.
 	 */
-	public function getLevels(startPos:Float, ?volume:Float, barCount:Int, ?levels:Array<Float>, ?ratio:Float, ?minDb:Float, ?maxDb:Float, ?minFreq:Float, ?maxFreq:Float):Array<Float>
+	public function getLevels(?startPos:Float, ?volume:Float, barCount:Int, ?levels:Array<Float>, ?ratio:Float, ?minDb:Float, ?maxDb:Float, ?minFreq:Float, ?maxFreq:Float):Array<Float>
 		return inline getLevelsFromFrequencies(__frequencies = getFrequencies(startPos, volume, __frequencies), buffer.sampleRate, barCount, levels, ratio, minDb, maxDb, minFreq, maxFreq);
 
 	/**
@@ -339,8 +339,8 @@ final class AudioAnalyzer {
 	 * @param frequencies The output for getting the frequencies, to avoid memory leaks (Optional).
 	 * @return Output of frequencies.
 	 */
-	public function getFrequencies(startPos:Float, ?volume:Float, ?frequencies:Array<Float>):Array<Float>
-		return inline getFrequenciesFromSamples(__freqSamples = getSamples(startPos, fftN, true, -1, volume, __freqSamples), fftN, useWindowingFFT, frequencies);
+	public function getFrequencies(?startPos:Float, ?volume:Float, ?frequencies:Array<Float>):Array<Float>
+		return inline getFrequenciesFromSamples(__freqSamples = getSamples(startPos ?? sound.time, fftN, true, -1, volume, __freqSamples), fftN, useWindowingFFT, frequencies);
 
 	/**
 	 * Analyzes an attached FlxSound from startPos to endPos in milliseconds to get the amplitudes.
@@ -474,33 +474,38 @@ final class AudioAnalyzer {
 	inline function __readStream(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback):Float @:privateAccess {
 		final backend = sound._source.__backend;
 
-		var n = Math.floor((endPos - startPos) * __toBits), i = backend.bufferSizes.length - backend.queuedBuffers - 1, time:Float;
-		while (++i < backend.bufferSizes.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
-			var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferSizes[i], c = 0;
-			while (pos >= size) {
-				if (++i >= backend.bufferSizes.length) break;
-				pos -= size;
-				buf = backend.bufferDatas[i].buffer;
-				size = backend.bufferSizes[i];
-			}
-			if (pos >= size) break;
-			pos -= pos % __sampleSize;
-			n -= pos % __sampleSize;
-
-			while (n > 0) {
-				callback(getByte(buf, pos, __wordSize), c);
-				if (++c > buffer.channels) c = 0;
-				if ((pos += __wordSize) >= size) {
+		// TODO: Wrap it with try until i figured it out an effective way to do this...
+		var n = Math.floor((endPos - startPos) * __toBits);
+		try {
+			var i = backend.bufferSizes.length - backend.queuedBuffers - 1, time:Float;
+			while (++i < backend.bufferSizes.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
+				var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferSizes[i], c = 0;
+				while (pos >= size) {
 					if (++i >= backend.bufferSizes.length) break;
-					pos = 0;
+					pos -= size;
 					buf = backend.bufferDatas[i].buffer;
 					size = backend.bufferSizes[i];
 				}
-				n -= __wordSize;
-			}
+				if (pos >= size) break;
+				pos -= pos % __sampleSize;
+				n -= pos % __sampleSize;
 
-			break;
+				while (n > 0) {
+					callback(getByte(buf, pos, __wordSize), c);
+					if (++c > buffer.channels) c = 0;
+					if ((pos += __wordSize) >= size) {
+						if (++i >= backend.bufferSizes.length) break;
+						pos = 0;
+						buf = backend.bufferDatas[i].buffer;
+						size = backend.bufferSizes[i];
+					}
+					n -= __wordSize;
+				}
+
+				break;
+			}
 		}
+		catch (e:haxe.Exception) trace(e.stack, e.message);
 
 		return endPos - (n / __toBits);
 	}

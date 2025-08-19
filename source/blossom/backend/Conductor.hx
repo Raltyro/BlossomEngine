@@ -6,8 +6,8 @@ import flixel.util.FlxSignal;
 import flixel.util.FlxStringUtil;
 import flixel.FlxG;
 
+import blossom.backend.util.SortUtil;
 import blossom.sound.Music;
-import blossom.util.SortUtil;
 
 enum abstract BeatType(UInt8) from UInt8 to UInt8 {
 	var BEAT = 0;

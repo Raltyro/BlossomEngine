@@ -1,6 +1,5 @@
-package blossom.util;
+package blossom.backend.util;
 
-import openfl.display._internal.Context3DShape;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
@@ -11,12 +10,14 @@ import openfl.display.Sprite;
 import openfl.display3D.textures.TextureBase;
 import openfl.display3D.Context3D;
 import openfl.display3D.Context3DTextureFormat;
+import openfl.filters.BitmapFilter;
 import openfl.geom.ColorTransform;
 import openfl.geom.Rectangle;
 import openfl.geom.Point;
 import openfl.geom.Matrix;
+import flixel.math.FlxRect;
 
-import blossom.util.MathUtil;
+import blossom.backend.util.MathUtil;
 
 final class BitmapDataUtil {
 	public static var context3D(get, never):Context3D; inline static function get_context3D():Context3D return FlxG.stage.context3D;
@@ -52,6 +53,87 @@ final class BitmapDataUtil {
 		gfxRenderer.__allowSmoothing = (gfxRenderer.__stage = FlxG.stage).__renderer.__allowSmoothing;
 		gfxRenderer.__clearShader();
 		//gfxRenderer.__copyShader(cast FlxG.stage.__gfxRenderer);
+	}
+
+	public static function applyFilters(bitmap:BitmapData, filters:Array<BitmapFilter>, resizeBitmap = false, ?rect:FlxRect) @:privateAccess {
+		if (filters == null || filters.length == 0) return;
+
+		var width = bitmap.width, height = bitmap.height;
+		if (resizeBitmap) {
+			final flashRect = Rectangle.__pool.get(), cacheFilters = gfxSprite.__filters;
+			gfxSprite.__filters = filters;
+			gfxBitmap.bitmapData = bitmap;
+			gfxSprite.__getFilterBounds(flashRect, gfxSprite.__cacheBitmapMatrix);
+			gfxSprite.__filters = cacheFilters;
+
+			if (rect != null) rect.copyFromFlash(flashRect);
+			resize(bitmap, width = Math.floor(flashRect.width), height = Math.floor(flashRect.height));
+			Rectangle.__pool.release(flashRect);
+		}
+		else if (rect != null)
+			rect.set(0, 0, width, height);
+
+		inline function prepareCacheBitmapData(bitmap:BitmapData):BitmapData {
+			if (bitmap == null) return create(width, height);
+			resize(bitmap, width, height);
+			return bitmap;
+		}
+
+		var bitmap2 = gfxSprite.__cacheBitmapData2 = prepareCacheBitmapData(gfxSprite.__cacheBitmapData2);
+		var bitmap3 = gfxSprite.__cacheBitmapData3, cacheBitmap:BitmapData;
+
+		prepareGfxRenderer();
+		if (bitmap.__texture != null && gfxRenderer != null) {
+			final context = gfxRenderer.__context3D;
+			final cacheRTT = context.__state.renderToTexture,
+				cacheRTTDepthStencil = context.__state.renderToTextureDepthStencil,
+				cacheRTTAntiAlias = context.__state.renderToTextureAntiAlias,
+				cacheRTTSurfaceSelector = context.__state.renderToTextureSurfaceSelector;
+
+			for (filter in filters) {
+				if (filter.__preserveObject) {
+					gfxRenderer.__setRenderTarget(bitmap3 = prepareCacheBitmapData(bitmap3));
+					gfxRenderer.__renderFilterPass(bitmap, gfxRenderer.__defaultDisplayShader, false, false);
+				}
+
+				for (i in 0...filter.__numShaderPasses) {
+					final shader = filter.__initShader(gfxRenderer, i, filter.__preserveObject ? bitmap3 : null);
+					gfxRenderer.__setBlendMode(filter.__shaderBlendMode);
+					gfxRenderer.__setRenderTarget(bitmap2);
+
+					clear(bitmap2);
+					gfxRenderer.__renderFilterPass(cacheBitmap = bitmap, shader, filter.__smooth, false);
+
+					bitmap = bitmap2;
+					bitmap2 = cacheBitmap;
+				}
+
+				gfxRenderer.__setBlendMode(NORMAL);
+			}
+
+			if (bitmap == gfxSprite.__cacheBitmapData2) {
+				gfxRenderer.__setRenderTarget(bitmap2);
+				gfxRenderer.__renderFilterPass(bitmap, gfxRenderer.__defaultDisplayShader, false, false);
+				//bitmap = bitmap2;
+			}
+
+			if (cacheRTT != null) context.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
+			else context.setRenderToBackBuffer();
+		}
+		else {
+			final destPoint = gfxSprite.__tempPoint = gfxSprite.__tempPoint ?? new Point();
+			for (filter in filters) {
+				if (filter.__preserveObject)
+					(bitmap3 = prepareCacheBitmapData(bitmap3)).copyPixels(bitmap, bitmap.rect, destPoint);
+
+				cacheBitmap = filter.__applyFilter(bitmap2, bitmap, bitmap.rect, destPoint);
+
+				if (filter.__preserveObject) cacheBitmap.draw(bitmap3);
+				if (cacheBitmap == bitmap2) copyFrom(bitmap, bitmap2, false);
+			}
+		}
+
+		gfxSprite.__cacheBitmapData3 = bitmap3;
 	}
 
 	public static function copyFrom(dst:BitmapData, src:BitmapData, ?alpha:Float, resizeBitmap = false) @:privateAccess {
@@ -135,17 +217,16 @@ final class BitmapDataUtil {
 		}
 
 		if (src is DisplayObject) {
-			var displayObject:DisplayObject = cast src;
-			if (displayObject.__graphics == null && onlyGraphics) return;
+			final displayObject:DisplayObject = cast src;
 			gfxSprite.__visible = displayObject.__visible;
 			displayObject.__visible = true;
 
 			src.__update(false, true);
 			if (src.__renderable) {
 				_preDraw();
-				if (onlyGraphics) {
+				if (onlyGraphics && displayObject.__graphics != null) {
 					displayObject.__graphics.__bitmapScale = 1;
-					Context3DShape.render(displayObject, gfxRenderer);
+					openfl.display._internal.Context3DShape.render(displayObject, gfxRenderer);
 				}
 				else gfxRenderer.__renderDrawable(src);
 				_postDraw();

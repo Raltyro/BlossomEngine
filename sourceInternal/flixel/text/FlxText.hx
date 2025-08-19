@@ -20,7 +20,7 @@ import openfl.text.TextField;
 import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
-import blossom.util.BitmapDataUtil;
+import blossom.backend.util.BitmapDataUtil;
 
 using flixel.util.FlxStringUtil;
 
@@ -691,7 +691,9 @@ class FlxText extends FlxSprite
 			var newFontName:String = Font;
 			if (FlxG.assets.exists(Font, FONT))
 			{
-				newFontName = FlxG.assets.getFontUnsafe(Font).fontName;
+				var fontName:String = FlxG.assets.getFontUnsafe(Font).fontName;
+				if (fontName != null && fontName.length != 0)
+					newFontName = fontName;
 			}
 
 			_defaultFormat.font = newFontName;

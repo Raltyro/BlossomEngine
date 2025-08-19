@@ -1,3 +1,5 @@
+// TODO: redo
+
 package blossom.backend.debug;
 
 import openfl.display.DisplayObjectContainer;
@@ -5,7 +7,7 @@ import openfl.display.DisplayObject;
 import openfl.events.Event;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
-import blossom.util.StringUtil;
+import blossom.backend.util.StringUtil;
 
 final class StatsCounter extends DisplayObjectContainer {
 	public static var instance:StatsCounter;
@@ -14,9 +16,9 @@ final class StatsCounter extends DisplayObjectContainer {
 	public var flixelCounter:FlixelCounter;
 	public var memoryCounter:MemoryCounter;
 	public var drawCounter:DrawCounter;
-	public var updateRateDuration:Int = 500;
+	public var updateRateDuration:Float = 0.5;
 
-	var debounceUpdate:Int = 1000;
+	var debounceUpdate:Float;
 
 	public var fontName(default, set):String = Paths.font('vcr.ttf');
 	function set_fontName(font:String) {
@@ -37,6 +39,7 @@ final class StatsCounter extends DisplayObjectContainer {
 		addChild(drawCounter = new DrawCounter()).visible = showDraw;
 
 		instance = this;
+		debounceUpdate = updateRateDuration;
 	}
 
 	override function addChildAt(child:DisplayObject, index:Int):DisplayObject {
@@ -57,11 +60,11 @@ final class StatsCounter extends DisplayObjectContainer {
 	}
 
 	override function __enterFrame(tickdt) {
-		@:privateAccess if (FlxG.game != null && FlxG.game._lostFocus && FlxG.autoPause)
+		@:privateAccess if (FlxG.game == null || FlxG.game._lostFocus && FlxG.autoPause)
 			return;
 
-		if ((debounceUpdate += Math.floor(tickdt)) < updateRateDuration) return fpsCounter.__enterFrame(cast tickdt);
-		super.__enterFrame(cast tickdt);
+		if ((debounceUpdate += tickdt) < updateRateDuration) return fpsCounter.__enterFrame(tickdt);
+		super.__enterFrame(tickdt);
 		debounceUpdate = 0;
 
 		var y:Float = 0;
@@ -79,13 +82,13 @@ class StatsText extends TextField {
 		__textFormat.color = 0xFFFFFF;
 		selectable = mouseEnabled = multiline = wordWrap = false;
 		autoSize = openfl.text.TextFieldAutoSize.LEFT;
-		
+
 		__enterFrame(0);
 		addEventListener(Event.ADDED, reloadFont);
 	}
 
 	private function reloadFont(?_) {
-		var font = parent != null && (parent is StatsCounter) ? cast(parent, StatsCounter).fontName : "assets/fonts/vcr.ttf";
+		var font = parent != null && (parent is StatsCounter) ? cast(parent, StatsCounter).fontName : Paths.font('vcr.ttf');
 		if (__textFormat.font == font) return;
 
 		__textFormat.font = font;
@@ -169,7 +172,9 @@ class FlixelCounter extends StatsText {
 @:headerInclude("mach/mach.h")
 #end
 final class MemoryCounter extends StatsText {
-	public static var totalMemory(get, never):Float;
+	public static var memoryUsageGC(get, never):Float;
+	public static var memoryPeakGC(get, never):Float;
+	public static var memoryUsage(get, never):Float;
 	public static var memoryPeak(get, never):Float;
 
 	public var memoryDisplay:Float = 0;
@@ -181,9 +186,28 @@ final class MemoryCounter extends StatsText {
 	}
 
 	override function __enterFrame(_) {
-		checkColor((memoryDisplay = totalMemory) > redMemory);
-		text = StringUtil.getSizeString(memoryDisplay) + (showPeak ? ' / ${StringUtil.getSizeString(memoryPeak)} MEM' : " MEM");
+		checkColor((memoryDisplay = memoryUsageGC) > redMemory);
+		text = StringUtil.getSizeString(memoryDisplay) + (showPeak ? ' / ${StringUtil.getSizeString(memoryPeakGC)} MEM' : " MEM");
 	}
+
+	#if (hl || (js && html5))
+	@:noCompletion static function get_memoryUsageGC() return inline get_memoryUsage();
+	@:noCompletion static function get_memoryPeakGC() return inline get_memoryPeak();
+	#else
+	@:noCompletion static function get_memoryUsageGC() {
+		var ret =
+			#if cpp
+			cpp.vm.Gc.memUsage()
+			#else
+			0
+			#end;
+		if (ret > _memPeakGC) _memPeakGC = ret;
+		return ret;
+	}
+
+	static var _memPeakGC:Float;
+	@:noCompletion static function get_memoryPeakGC() return _memPeakGC;
+	#end
 
 	#if (cpp && windows)
 	@:functionCode("
@@ -191,7 +215,7 @@ final class MemoryCounter extends StatsText {
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
 			return (size_t)info.WorkingSetSize;
 	")
-	@:noCompletion public static function get_totalMemory() return 0;
+	@:noCompletion static function get_memoryUsage() return 0;
 	/*#elseif linux
 	@:functionCode("
 		long rss = 0L;
@@ -204,7 +228,7 @@ final class MemoryCounter extends StatsText {
 		if (fscanf(fp, \"%*s%ld\", &rss) == 1)
 			return (size_t)rss * (size_t)sysconf( _SC_PAGESIZE);
 	")
-	@:noCompletion public static function get_totalMemory() return 0;*/
+	@:noCompletion static function get_memoryUsage() return 0;*/
 	#elseif mac
 	@:functionCode("
 		struct mach_task_basic_info info;
@@ -213,10 +237,10 @@ final class MemoryCounter extends StatsText {
 		if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &infoCount) == KERN_SUCCESS)
 			return (size_t)info.resident_size;
 	")
-	@:noCompletion public static function get_totalMemory() return 0;
+	@:noCompletion static function get_memoryUsage() return 0;
 	#else
 	#if hl static var _temp = 0.; #end
-	@:noCompletion public static function get_totalMemory() {
+	@:noCompletion static function get_memoryUsage() {
 		var ret =
 			#if cpp
 			untyped __global__.__hxcpp_gc_used_bytes()
@@ -251,7 +275,7 @@ final class MemoryCounter extends StatsText {
 		return (size_t)rusage.ru_maxrss;
 	")
 	#end
-	@:noCompletion public static function get_memoryPeak() return _memPeak;
+	@:noCompletion static function get_memoryPeak() return _memPeak;
 }
 
 class DrawCounter extends StatsText {

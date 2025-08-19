@@ -1,4 +1,4 @@
-package blossom.util;
+package blossom.backend.util;
 
 import flixel.util.FlxSort;
 

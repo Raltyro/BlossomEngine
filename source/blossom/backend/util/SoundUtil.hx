@@ -1,4 +1,4 @@
-package blossom.util;
+package blossom.backend.util;
 
 import flixel.system.FlxAssets.FlxSoundAsset;
 import flixel.sound.FlxSound;

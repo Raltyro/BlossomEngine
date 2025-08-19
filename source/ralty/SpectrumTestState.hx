@@ -1,8 +1,8 @@
 package ralty;
 
 import flixel.sound.FlxSound;
-import blossom.util.AudioAnalyzer;
-import blossom.util.BitmapDataUtil;
+import blossom.backend.util.AudioAnalyzer;
+import blossom.backend.util.BitmapDataUtil;
 
 class SpectrumTestState extends BLState {
 	var voices:FlxSound;
@@ -10,12 +10,13 @@ class SpectrumTestState extends BLState {
 	override function create() {
 		super.create();
 
-		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('the uprising')));
-		voices = FlxG.sound.play(AssetUtil.getMusic(Paths.voices('the uprising')), 1.0, true, false);
+		//SoundUtil.playMusic(Paths.music('suspended'));
+		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('aquatemp')));
+		//voices = FlxG.sound.play(AssetUtil.getMusic(Paths.voices('the uprising')), 1.0, true, false);
 
-		FlxG.sound.music.onComplete = () -> voices.play(true, 0);
+		//FlxG.sound.music.onComplete = () -> voices.play(true, 0);
 
-		var spectrum = new Spectrum([FlxG.sound.music, voices]);
+		var spectrum = new Spectrum([FlxG.sound.music]);
 		spectrum.screenCenter();
 		add(spectrum);
 	}
@@ -40,7 +41,6 @@ class Spectrum extends FlxSprite {
 	var _bars3:Int; // value to r, g, b
 
 	var _analyzers:Array<AudioAnalyzer> = [];
-	var _lastTime:Float;
 	var _cache:Array<Float>;
 	var _frequencies:Array<Float>;
 	var _samples:Array<Float> = [];
@@ -65,24 +65,19 @@ class Spectrum extends FlxSprite {
 		super.update(elapsed);
 		if (sounds.length == 0) return;
 
-		var time = sounds[0].time;
-		if (_lastTime != time) {
-			_lastTime = time;
+		var analyzer:AudioAnalyzer;
+		for (i => sound in sounds) {
+			if ((analyzer = _analyzers[i]) != null) analyzer.sound = sound;
+			else _analyzers[i] = analyzer = new AudioAnalyzer(sound);
 
-			var analyzer:AudioAnalyzer;
-			for (i => sound in sounds) {
-				if ((analyzer = _analyzers[i]) != null) analyzer.sound = sound;
-				else _analyzers[i] = analyzer = new AudioAnalyzer(sound);
-
-				analyzer.getSamples(time, _fftN, true, sound.getActualVolume(), _samples, i != 0);
-			}
-
-			_frequencies = AudioAnalyzer.getFrequenciesFromSamples(_samples, _fftN, false, _frequencies);
-			_cache = AudioAnalyzer.getLevelsFromFrequencies(_frequencies, sounds[0].buffer.sampleRate, bars, _cache, FlxMath.getElapsedLerp(0.52, elapsed), -64, -10, 20, 20000);
-
-			var k = 0, i = bars;
-			while (i > 0) graphic.bitmap.setPixel(k++, 0, FlxColor.fromRGBFloat(_cache[i--], _cache[i--], _cache[i--]));
+			analyzer.getSamples(sound.time, _fftN, true, sound.getActualVolume(), _samples, i != 0);
 		}
+
+		_frequencies = AudioAnalyzer.getFrequenciesFromSamples(_samples, _fftN, false, _frequencies);
+		_cache = AudioAnalyzer.getLevelsFromFrequencies(_frequencies, sounds[0].buffer.sampleRate, bars, _cache, FlxMath.getElapsedLerp(0.52, elapsed), -64, -10, 20, 20000);
+
+		var k = 0, i = bars;
+		while (i > 0) graphic.bitmap.setPixel(k++, 0, FlxColor.fromRGBFloat(_cache[i--], _cache[i--], _cache[i--]));
 	}
 }
 

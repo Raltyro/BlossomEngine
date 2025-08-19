@@ -59,7 +59,6 @@
 	<assets path="assets/songs" library="songs"/>
 	<assets path="assets/skins" library="skins"/>
 
-	<assets path='art/icons/icon512.png' rename='icon.png' if="linux"/>
 	<icon path="art/icons/icon16.png" size="16"/>
 	<icon path="art/icons/icon24.png" size="24"/>
 	<icon path="art/icons/icon.png" size="32"/>
@@ -70,8 +69,6 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="lime"/>
-	<haxelib name="openfl"/>
 	<haxelib name="flixel"/>
 
 	<haxelib name="flixel-addons" version="3.3.2"/>
@@ -114,7 +111,7 @@
 	<haxedef name="openfl_dpi_aware" if="openfl_dpi_aware"/>
 	<!-- <haxedef name="openfl_enable_experimental_update_queue"/> -->
 	<haxedef name="openfl_pool_events"/>
-	<!-- <haxedef name="openfl-enable-handle-error"/> -->
+	<haxedef name="openfl-enable-handle-error"/>
 	<!-- <haxedef name='no-deprecation-warnings'/> -->
 	<!-- <haxedef name="gl_stats"/> -->
 </project>

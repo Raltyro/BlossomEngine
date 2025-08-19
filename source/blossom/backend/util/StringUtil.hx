@@ -1,4 +1,4 @@
-package blossom.util;
+package blossom.backend.util;
 
 final class StringUtil {
 	public static var intervalSizes:Array<String> = ["B", "KB", "MB", "GB"];

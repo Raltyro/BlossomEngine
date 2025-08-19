@@ -1,4 +1,4 @@
-package blossom.util;
+package blossom.backend.util;
 
 final class MathUtil {
 	/**

@@ -1,6 +1,6 @@
 package openfl.utils;
 
-import blossom.util.BitmapDataUtil;
+import blossom.backend.util.BitmapDataUtil;
 import openfl.utils._internal.Log;
 import openfl.display.BitmapData;
 import openfl.display.MovieClip;

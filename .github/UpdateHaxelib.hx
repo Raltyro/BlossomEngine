@@ -13,9 +13,9 @@ typedef Library = {
 }
 
 class UpdateHaxelib {
-	static final libraries:Array<Library> = [
-		{name: "lime", url: "https://github.com/Raltyro/lime", ref: "9daf48fa4d96cd4177c9b1adb94f3c7ec4338668"},
-		{name: "openfl", url: "https://github.com/swordcubes-grave-of-shite/openfl"},
+	static var libraries:Array<Library> = [
+		{name: "lime", url: "https://github.com/Raltyro/lime", ref: "0c57d218c310a16456d12aa7d3c904556ea72080"},
+		{name: "openfl", url: "https://github.com/Raltyro/openfl", ref: "26a2e25e3cbabfe7ce928985781f1c39f000d972"},
 		{name: "flixel", url: "https://github.com/swordcubes-grave-of-shite/flixel"},
 		{name: "flixel-addons", version: "3.3.2"},
 		{name: "hscript-improved", url: "https://github.com/CodenameCrew/hscript-improved"},

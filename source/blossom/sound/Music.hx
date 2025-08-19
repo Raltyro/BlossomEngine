@@ -18,7 +18,9 @@ typedef MusicData = {
 	?looped:Bool,
 	?volume:Float,
 	?offset:Float,
-	?after:MusicAsset
+	?after:MusicAsset,
+	?loopTime:Float,
+	?endTime:Float
 }
 
 typedef MusicAsset = flixel.util.typeLimit.OneOfTwo<String, MusicData>;
@@ -56,7 +58,7 @@ class Music extends FlxSound {
 			if (raw.songName is String) data.title = raw.songName;
 			if (raw.bpm is Float) data.timeChanges = [{bpm: raw.bpm}];
 			else if (Type.typeof(raw.timeChanges) == TObject) {
-				data.timeChanges = blossom.util.ParseUtil.parseTimeChanges(raw.timeChanges);
+				data.timeChanges = blossom.backend.util.ParseUtil.parseTimeChanges(raw.timeChanges);
 			}
 		}
 		else
@@ -133,8 +135,16 @@ class Music extends FlxSound {
 		}
 		makeChannel();
 
-		if (inIntro) looped = false;
-		else if (_musicData.looped != null) looped = _musicData.looped;
+		if (inIntro) {
+			looped = false;
+			loopTime = 0;
+			endTime = null;
+		}
+		else {
+			if (_musicData.looped != null) looped = _musicData.looped;
+			if (_musicData.loopTime != null) loopTime = _musicData.loopTime;
+			if (_musicData.endTime != null) endTime = _musicData.endTime;
+		}
 	}
 
 	override function updateTransform() {

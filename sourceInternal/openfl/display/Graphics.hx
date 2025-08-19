@@ -1667,8 +1667,16 @@ import js.html.CanvasRenderingContext2D;
 		__bitmap = null;
 
 		#if (js && html5)
-		__canvas = null;
-		__context = null;
+		if (__canvas != null) {
+			__canvas.width = 0;
+			__canvas.height = 0;
+			__canvas = null;
+		}
+
+		if (__context != null) {
+			__context.clearRect(0, 0, 0, 0);
+			__context = null;
+		}
 		#else
 		__cairo = null;
 		#end
@@ -1906,7 +1914,13 @@ import js.html.CanvasRenderingContext2D;
 
 	@:noCompletion private function __update(displayMatrix:Matrix, pixelRatio:Float):Void
 	{
-		if (__bounds == null || __bounds.width <= 0 || __bounds.height <= 0) return;
+		if (__bounds == null || __bounds.width <= 0 || __bounds.height <= 0)
+		{
+			if (__width >= 1 || __height >= 1) __dirty = true;
+			__width = 0;
+			__height = 0;
+			return;
+		}
 
 		var parentTransform = __owner.__renderTransform;
 		if (parentTransform == null) return;
