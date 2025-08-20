@@ -2,7 +2,7 @@
 <project xmlns="http://lime.software/project/1.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://lime.software/project/1.0.4 http://lime.software/xsd/project-1.0.4.xsd">
 	<define name="HXCPP_M32" if="32bit || 32"/>
 	<define name="32bit" if="HXCPP_M32"/>
-	<!--<haxeflag name="-dce no"/>-->
+	<!-- <haxeflag name="-dce" value="no"/> -->
 
 	<!-- ___________________________ Blossom Settings ___________________________ -->
 
@@ -77,11 +77,9 @@
 	<haxelib name="hscript-improved"/>
 	<haxedef name="hscriptPos"/>
 
-	<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
-
-	<section if="desktop" unless="NO_DISCORD">
+	<section if="cpp" unless="NO_DISCORD">
+		<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
 		<haxelib name="hxdiscord_rpc"/>
-		<haxedef name="DISCORD_DISABLE_IO_THREAD"/>
 	</section>
 
 	<haxelib name="hxcpp-debug-server" if="debug"/>
@@ -94,6 +92,7 @@
 	<haxeflag name="--macro" value="blossom.backend.macro.CompileMacro.init()"/>
 
 	<haxedef name="hscriptPos"/>
+	<haxedef name="DISCORD_DISABLE_IO_THREAD"/>
 
 	<!-- Disable the Flixel core focus lost screen -->
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN"/>
@@ -101,10 +100,18 @@
 	<!-- Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode! -->
 	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
 
+	<haxedef name="HXCPP_GC_BIG_BLOCKS"/>
 	<haxedef name="HXCPP_CATCH_SEGV"/>
 	<haxedef name="HXCPP_ALIGN_ALLOC"/>
-	<haxedef name="HXCPP_DEBUG_LINK" if="debug"/>
-	<haxedef name="analyzer-optimize" unless="debug" />
+	<haxedef name="analyzer-optimize" unless="debug"/>
+	<section if="debug">
+		<haxedef name="HXCPP_DEBUG_LINK"/>
+		<haxedef name="HXCPP_DEBUG"/>
+		<section if="summary">
+			<haxedef name="HXCPP_GC_SUMMARY"/>
+			<haxedef name="HXCPP_GC_DEBUG_LEVEL" value="3"/>
+		</section>
+	</section>
 
 	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
 	<!-- <haxedef name="message.reporting" value="pretty"/> -->

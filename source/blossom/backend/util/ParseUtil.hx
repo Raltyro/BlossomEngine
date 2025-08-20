@@ -2,7 +2,7 @@ package blossom.backend.util;
 
 import openfl.display.BlendMode;
 
-class ParseUtil {
+final class ParseUtil {
 	public static function parseColor(data:Dynamic, defaultColor = FlxColor.WHITE):FlxColor {
 		if (data is String) return FlxColor.fromString(data);
 		else if (data is Int) return FlxColor.fromInt(data);

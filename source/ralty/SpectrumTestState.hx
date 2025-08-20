@@ -1,6 +1,5 @@
 package ralty;
 
-import flixel.sound.FlxSound;
 import blossom.backend.util.AudioAnalyzer;
 import blossom.backend.util.BitmapDataUtil;
 

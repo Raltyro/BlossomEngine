@@ -1,6 +1,5 @@
 package blossom.backend.util;
 
-import flixel.sound.FlxSound;
 import lime.media.AudioBuffer;
 import lime.utils.ArrayBufferView.ArrayBufferIO;
 import lime.utils.ArrayBuffer;
@@ -445,7 +444,7 @@ final class AudioAnalyzer {
 		__read(startPos, endPos, callback);
 	}
 
-	inline function __read(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
+	#if !debug inline #end function __read(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
 		if (buffer.data != null) __readData(startPos, endPos, callback);
 		#if lime_cffi
 		else if (__canReadStream() && (startPos += __readStream(startPos, endPos, callback)) >= endPos) {}
@@ -471,7 +470,7 @@ final class AudioAnalyzer {
 	inline function __canReadStream():Bool
 		@:privateAccess return sound._source != null && sound._source.__backend != null && sound._source.__backend.playing;
 
-	inline function __readStream(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback):Float @:privateAccess {
+	#if !debug inline #end function __readStream(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback):Float @:privateAccess {
 		final backend = sound._source.__backend;
 
 		// TODO: Wrap it with try until i figured it out an effective way to do this...
@@ -486,8 +485,8 @@ final class AudioAnalyzer {
 					buf = backend.bufferDatas[i].buffer;
 					size = backend.bufferSizes[i];
 				}
-				if (pos >= size) break;
-				pos -= pos % __sampleSize;
+				if (i >= backend.bufferSizes.length) break;
+				if ((pos -= pos % __sampleSize) < 0) pos = 0;
 				n -= pos % __sampleSize;
 
 				while (n > 0) {
@@ -521,7 +520,7 @@ final class AudioAnalyzer {
 		return false;
 	}
 
-	inline function __readDecoder(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
+	#if !debug inline #end function __readDecoder(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
 		var n = Math.floor((endPos - startPos) * __toBits);
 		if ((n -= n % __sampleSize) > 0) {
 			var pos = Math.floor((startPos - __bufferTime * 1000) * __toBits);

@@ -3,7 +3,6 @@ package blossom.sound;
 import haxe.Json;
 
 import openfl.media.Sound;
-import flixel.sound.FlxSound;
 import flixel.system.FlxAssets;
 import flixel.util.FlxSignal;
 

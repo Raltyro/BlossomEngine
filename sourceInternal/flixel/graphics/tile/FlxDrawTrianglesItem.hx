@@ -68,9 +68,9 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		uvtData.length = 0;
 		colors.length = 0;
 
-		alphas.splice(0, alphas.length);
-		colorMultipliers?.splice(0, colorMultipliers.length);
-		colorOffsets?.splice(0, colorOffsets.length);
+		alphas.resize(0);
+		colorMultipliers?.resize(0);
+		colorOffsets?.resize(0);
 	}
 
 	override public function dispose() {
@@ -225,6 +225,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		final shader = shader != null ? shader : graphics.shader;
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
+		shader.frameRect.value = @:privateAccess untyped (uvtData).__array; // check if this is correct.
 		shader.alpha.value = alphas;
 		if (colored || hasColorOffsets) {
 			shader.colorMultiplier.value = colorMultipliers;

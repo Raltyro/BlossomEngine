@@ -2,7 +2,6 @@ package blossom.sound;
 
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tweens.FlxTween;
-import flixel.sound.FlxSound;
 
 typedef FlxSoundOrGroup = flixel.util.typeLimit.OneOfTwo<FlxSound, SoundGroup>;
 

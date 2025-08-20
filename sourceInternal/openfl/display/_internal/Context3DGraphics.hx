@@ -35,7 +35,7 @@ import openfl.display._internal.stats.DrawCallContext;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Context3DGraphics
 {
-	private static var blankBitmapData = new BitmapData(1, 1, false, 0);
+	private static var blankBitmapData:BitmapData;//= new BitmapData(1, 1, false, 0xFFFFFF);
 	private static var maskRender:Bool;
 	private static var tempColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
 
@@ -91,14 +91,15 @@ class Context3DGraphics
 					if (bitmap != null)
 					{
 						var c = data.readDrawQuads();
+
+						#if cpp
+						var rects:Array<Float> = c.rects == null ? null : untyped (c.rects).__array;
+						var indices:Array<Int> = c.indices == null ? null : untyped (c.indices).__array;
+						var transforms:Array<Float> = c.transforms == null ? null : untyped (c.transforms).__array;
+						#else
 						var rects = c.rects;
 						var indices = c.indices;
 						var transforms = c.transforms;
-
-						#if cpp
-						var rects:Array<Float> = rects == null ? null : untyped (rects).__array;
-						var indices:Array<Int> = indices == null ? null : untyped (indices).__array;
-						var transforms:Array<Float> = transforms == null ? null : untyped (transforms).__array;
 						#end
 
 						var hasIndices = (indices != null);
@@ -606,16 +607,24 @@ class Context3DGraphics
 							if (bitmap != null)
 							{
 								var c = data.readDrawQuads();
-								var rects = c.rects;
-								var indices = c.indices;
 
-								#if cpp
-								var rects:Array<Float> = rects == null ? null : untyped (rects).__array;
-								var indices:Array<Int> = indices == null ? null : untyped (indices).__array;
-								#end
-
-								var hasIndices = (indices != null);
-								var length = hasIndices ? indices.length : Math.floor(rects.length / 4);
+								var length:Int;
+								if (c.indices != null) {
+									#if cpp
+									length = (untyped (c.indices).__array).length;
+									#else
+									length = c.indices.length;
+									#end
+								}
+								else if (c.rects != null) {
+									#if cpp
+									length = Math.floor((untyped (c.rects).__array).length / 4);
+									#else
+									length = Math.floor(c.rects.length / 4);
+									#end
+								}
+								else
+									length = 0;
 
 								var uMatrix = renderer.__getMatrix(graphics.__owner.__renderTransform, AUTO);
 								var shader:Shader;
@@ -681,13 +690,16 @@ class Context3DGraphics
 								var width = c.width;
 								var height = c.height;
 
-								#if lime
 								var color:ARGB = (fill : ARGB);
-								tempColorTransform.redOffset = color.r;
-								tempColorTransform.greenOffset = color.g;
-								tempColorTransform.blueOffset = color.b;
-								#end
-								tempColorTransform.__combine(graphics.__owner.__worldColorTransform);
+								var worldCT = graphics.__owner.__worldColorTransform;
+
+								tempColorTransform.redMultiplier = Math.min(Math.max(color.r / 0xFF * worldCT.redMultiplier + worldCT.redOffset / 0xFF, 0), 1);
+								tempColorTransform.greenMultiplier = Math.min(Math.max(color.g / 0xFF * worldCT.greenMultiplier + worldCT.greenOffset / 0xFF, 0), 1);
+								tempColorTransform.blueMultiplier = Math.min(Math.max(color.b / 0xFF * worldCT.blueMultiplier + worldCT.blueOffset / 0xFF, 0), 1);
+								tempColorTransform.redOffset = 0;
+								tempColorTransform.greenOffset = 0;
+								tempColorTransform.blueOffset = 0;
+								tempColorTransform.alphaOffset = 0;
 
 								if (matrix == null) matrix = Matrix.__pool.get();
 								matrix.identity();
@@ -696,13 +708,12 @@ class Context3DGraphics
 								matrix.ty = y;
 								matrix.concat(graphics.__owner.__renderTransform);
 
+								if (blankBitmapData == null) blankBitmapData = blossom.backend.util.BitmapDataUtil.create(1, 1, 0xFFFFFFFF);
 								var shader = maskRender ? renderer.__maskShader : renderer.__initGraphicsShader(null);
 								renderer.setShader(shader);
 								renderer.applyMatrix(renderer.__getMatrix(matrix, AUTO));
 								renderer.applyBitmapData(blankBitmapData, true, repeat);
-								#if lime
 								renderer.applyAlpha((color.a / 0xFF) * graphics.__owner.__worldAlpha);
-								#end
 								renderer.applyColorTransform(tempColorTransform);
 								renderer.updateShader();
 

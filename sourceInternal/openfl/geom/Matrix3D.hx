@@ -1,8 +1,3 @@
-/*
-	TODO for ralty
-	make matrix3D calcuations to use __tempMatrix3D instead of allocating another	
-*/
-
 package openfl.geom;
 
 #if !flash
@@ -956,9 +951,8 @@ class Matrix3D
 	**/
 	public function deltaTransformVector(v:Vector3D):Vector3D
 	{
-		final x = v.x, y = v.y, z = v.z;
-		return new Vector3D((x * rawData[0] + y * rawData[4] + z * rawData[8]), (x * rawData[1] + y * rawData[5] + z * rawData[9]),
-			(x * rawData[2] + y * rawData[6] + z * rawData[10]), (x * rawData[3] + y * rawData[7] + z * rawData[11]));
+		return new Vector3D((v.x * rawData[0] + v.y * rawData[4] + v.z * rawData[8]), (v.x * rawData[1] + v.y * rawData[5] + v.z * rawData[9]),
+			(v.x * rawData[2] + v.y * rawData[6] + v.z * rawData[10]), (v.x * rawData[3] + v.y * rawData[7] + v.z * rawData[11]));
 	}
 
 	/**
@@ -989,17 +983,15 @@ class Matrix3D
 	**/
 	public function deltaTransformVectorToOutput(v:Vector3D, output:Vector3D):Vector3D
 	{
-		final x = v.x, y = v.y, z = v.z;
-
 		if (output != null)
 		{
-			output.setTo((x * rawData[0] + y * rawData[4] + z * rawData[8]), (x * rawData[1] + y * rawData[5] + z * rawData[9]),
-				(x * rawData[2] + y * rawData[6] + z * rawData[10]));
-			output.w = (x * rawData[3] + y * rawData[7] + z * rawData[11]);
+			output.setTo((v.x * rawData[0] + v.y * rawData[4] + v.z * rawData[8]), (v.x * rawData[1] + v.y * rawData[5] + v.z * rawData[9]),
+				(v.x * rawData[2] + v.y * rawData[6] + v.z * rawData[10]));
+			output.w = (v.x * rawData[3] + v.y * rawData[7] + v.z * rawData[11]);
 			return output;
 		}
-		return new Vector3D((x * rawData[0] + y * rawData[4] + z * rawData[8]), (x * rawData[1] + y * rawData[5] + z * rawData[9]),
-			(x * rawData[2] + y * rawData[6] + z * rawData[10]), (x * rawData[3] + y * rawData[7] + z * rawData[11]));
+		return new Vector3D((v.x * rawData[0] + v.y * rawData[4] + v.z * rawData[8]), (v.x * rawData[1] + v.y * rawData[5] + v.z * rawData[9]),
+			(v.x * rawData[2] + v.y * rawData[6] + v.z * rawData[10]), (v.x * rawData[3] + v.y * rawData[7] + v.z * rawData[11]));
 	}
 
 	/**
@@ -1797,13 +1789,9 @@ class Matrix3D
 	**/
 	public function transformVector(v:Vector3D):Vector3D
 	{
-		var x = v.x;
-		var y = v.y;
-		var z = v.z;
-
-		return new Vector3D((x * rawData[0] + y * rawData[4] + z * rawData[8] + rawData[12]),
-			(x * rawData[1] + y * rawData[5] + z * rawData[9] + rawData[13]), (x * rawData[2] + y * rawData[6] + z * rawData[10] + rawData[14]),
-			(x * rawData[3] + y * rawData[7] + z * rawData[11] + rawData[15]));
+		return new Vector3D((v.x * rawData[0] + v.y * rawData[4] + v.z * rawData[8] + rawData[12]),
+			(v.x * rawData[1] + v.y * rawData[5] + v.z * rawData[9] + rawData[13]), (v.x * rawData[2] + v.y * rawData[6] + v.z * rawData[10] + rawData[14]),
+			(v.x * rawData[3] + v.y * rawData[7] + v.z * rawData[11] + rawData[15]));
 	}
 
 	/**
@@ -1827,20 +1815,16 @@ class Matrix3D
 	**/
 	public function transformVectorToOutput(v:Vector3D, output:Vector3D):Vector3D
 	{
-		var x = v.x;
-		var y = v.y;
-		var z = v.z;
-
 		if (output != null)
 		{
-			output.setTo((x * rawData[0] + y * rawData[4] + z * rawData[8] + rawData[12]), (x * rawData[1] + y * rawData[5] + z * rawData[9] + rawData[13]),
-				(x * rawData[2] + y * rawData[6] + z * rawData[10] + rawData[14]));
-			output.w = (x * rawData[3] + y * rawData[7] + z * rawData[11] + rawData[15]);
+			output.setTo((v.x * rawData[0] + v.y * rawData[4] + v.z * rawData[8] + rawData[12]), (v.x * rawData[1] + v.y * rawData[5] + v.z * rawData[9] + rawData[13]),
+				(v.x * rawData[2] + v.y * rawData[6] + v.z * rawData[10] + rawData[14]));
+			output.w = (v.x * rawData[3] + v.y * rawData[7] + v.z * rawData[11] + rawData[15]);
 			return output;
 		}
-		return new Vector3D((x * rawData[0] + y * rawData[4] + z * rawData[8] + rawData[12]),
-			(x * rawData[1] + y * rawData[5] + z * rawData[9] + rawData[13]), (x * rawData[2] + y * rawData[6] + z * rawData[10] + rawData[14]),
-			(x * rawData[3] + y * rawData[7] + z * rawData[11] + rawData[15]));
+		return new Vector3D((v.x * rawData[0] + v.y * rawData[4] + v.z * rawData[8] + rawData[12]),
+			(v.x * rawData[1] + v.y * rawData[5] + v.z * rawData[9] + rawData[13]), (v.x * rawData[2] + v.y * rawData[6] + v.z * rawData[10] + rawData[14]),
+			(v.x * rawData[3] + v.y * rawData[7] + v.z * rawData[11] + rawData[15]));
 	}
 
 	/**

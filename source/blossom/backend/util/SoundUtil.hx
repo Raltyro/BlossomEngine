@@ -1,7 +1,6 @@
 package blossom.backend.util;
 
 import flixel.system.FlxAssets.FlxSoundAsset;
-import flixel.sound.FlxSound;
 import flixel.sound.FlxSoundGroup;
 import blossom.sound.Music;
 

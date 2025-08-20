@@ -22,6 +22,7 @@ class FlxGraphicsShader extends GraphicsShader
 		uniform bool openfl_HasColorTransform;
 		uniform vec2 openfl_TextureSize;
 
+		attribute vec4 frameRect;
 		attribute float alpha;
 		attribute vec4 colorMultiplier;
 		attribute vec4 colorOffset;

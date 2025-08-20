@@ -1,5 +1,8 @@
 #if !macro
 import flixel.math.FlxMath;
+import flixel.sound.FlxSound;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 import flixel.util.typeLimit.NextState;
 import flixel.util.FlxColor;
 import flixel.FlxG;

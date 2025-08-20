@@ -12,6 +12,7 @@ import openfl.utils._internal.Log;
 import openfl.display3D.Context3D;
 import openfl.display3D.Program3D;
 import openfl.utils.ByteArray;
+import openfl.Lib;
 
 typedef ShaderExtension = {name:String, behavior:String};
 
@@ -121,6 +122,8 @@ typedef ShaderExtension = {name:String, behavior:String};
 @:access(openfl.display3D.Program3D)
 @:access(openfl.display.ShaderInput)
 @:access(openfl.display.ShaderParameter)
+@:access(openfl.display.Stage)
+@:access(openfl.events.UncaughtErrorEvents)
 @:autoBuild(openfl.display.Shader.build())
 class Shader
 {
@@ -866,9 +869,23 @@ class Shader
 			{
 				program = __context.createProgram(GLSL);
 
-				// TODO
-				// program.uploadSources (vertex, fragment);
-				program.__glProgram = __createGLProgram(vertex, fragment);
+				if (Lib.current.stage.__uncaughtErrorEvents.__enabled)
+				{
+					try
+					{
+						// program.uploadSources (vertex, fragment);
+						program.__glProgram = __createGLProgram(vertex, fragment);
+					}
+					catch (e:Dynamic)
+					{
+						Lib.current.stage.__handleError(e);
+					}
+				}
+				else
+				{
+					// program.uploadSources (vertex, fragment);
+					program.__glProgram = __createGLProgram(vertex, fragment);
+				}
 
 				__context.__programs.set(id, program);
 			}

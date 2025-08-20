@@ -17,7 +17,6 @@ final class AssetUtil {
 	inline public static function gc() {
 		#if cpp
 		cpp.vm.Gc.run(true);
-		cpp.vm.Gc.compact();
 		#elseif hl
 		hl.Gc.major();
 		#end
@@ -174,18 +173,13 @@ final class AssetUtil {
 		if (graphic != null) {
 			if ((graphic.useCount > 0 || !graphic.destroyOnNoUse) && !force) return false;
 			FlxG.bitmap._cache.remove(path);
-			bitmap = graphic.bitmap;
+			graphic.bitmap?.dispose();
+			graphic.destroy();
 		}
 		else
-			bitmap = Assets.cache.getBitmapData(path);
+			Assets.cache.getBitmapData(path)?.dispose();
 
 		Assets.cache.removeBitmapData(path);
-		if (bitmap != null) {
-			bitmap.__texture?.dispose();
-			bitmap.dispose();
-		}
-
-		if (graphic != null) graphic.destroy();
 		return true;
 	}
 

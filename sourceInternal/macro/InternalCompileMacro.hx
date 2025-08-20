@@ -13,7 +13,7 @@ using StringTools;
 final class InternalCompileMacro {
 	public static function init() {
 		#if (!display)
-		final compileMacro = 'macro.InternalCompileMacro';
+		final compileMacro = "macro.InternalCompileMacro";
 		Compiler.addMetadata('@:build($compileMacro.buildNativeCFFI())', 'lime._internal.backend.native.NativeCFFI');
 		Compiler.addMetadata('@:build($compileMacro.buildNativeHTTPRequest())', 'lime._internal.backend.native.NativeHTTPRequest');
 		if (Context.defined('lime_cffi') && Context.defined('lime_openal')) Compiler.addMetadata('@:build($compileMacro.buildAL())', 'lime.media.openal.AL');
@@ -36,7 +36,7 @@ final class InternalCompileMacro {
 	// audio
 	public static macro function buildNativeCFFI():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
-		if (!Context.defined('lime_cffi') || !Context.defined('lime_openal')) return fields;
+		if (!Context.defined("lime_cffi") || !Context.defined("lime_openal")) return fields;
 
 		final fieldNames:Array<String> = [], pos:Position = Context.currentPos();
 		for (f in fields) fieldNames.push(f.name);
@@ -44,29 +44,29 @@ final class InternalCompileMacro {
 		function addField(name:String, args:Array<String>, signature:String) {
 			var meta:Metadata = [], kind = null;
 
-			if (Context.defined('cpp') && !Context.defined('cppia')) {
-				if (Context.defined('disable_cffi') || Context.definedValue('haxe_ver') < "3.4.0") {
+			if (Context.defined("cpp") && !Context.defined("cppia")) {
+				if (Context.defined("disable_cffi") || Context.definedValue("haxe_ver") < "3.4.0") {
 					kind = FFun({ret: macro :Void, args: [for (arg in args) {name: arg, type: macro :lime.system.CFFIPointer}], expr: macro {}});
-					meta.push({name: ':cffi', pos: pos});
+					meta.push({name: ":cffi", pos: pos});
 				}
 				else {
 					kind = FVar(macro :cpp.Callable<cpp.Object->cpp.Void>, macro new cpp.Callable<cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime", $v{name}, $v{signature}, false)));
 				}
 			}
-			else if (Context.defined('neko') || Context.defined('cppia')) {
+			else if (Context.defined("neko") || Context.defined("cppia")) {
 				kind = FVar(macro :Dynamic, macro lime.system.CFFI.load("lime", $v{name}, $v{args.length}));
 			}
-			else if (Context.defined('hl')) {
+			else if (Context.defined("hl")) {
 				kind = FFun({ret: macro :Void, args: [for (arg in args) {name: arg, type: macro :lime.system.CFFIPointer}], expr: macro {}});
-				meta.push({pos: pos, name: ':hlNative', params: [macro "lime", macro $v{'hl' + name.substr(4)}]});
+				meta.push({pos: pos, name: ":hlNative", params: [macro "lime", macro $v{"hl" + name.substr(4)}]});
 			}
 
 			if (kind != null) fields.push({name: name, access: [APrivate, AStatic], pos: pos, kind: kind, meta: meta});
 		}
 
-		if (!fieldNames.contains('lime_al_delete_effect')) addField('lime_al_delete_effect', ['effect'], 'ov');
-		if (!fieldNames.contains('lime_al_delete_filter')) addField('lime_al_delete_filter', ['filter'], 'ov');
-		if (!fieldNames.contains('lime_al_delete_auxiliary_effect_slot')) addField('lime_al_delete_auxiliary_effect_slot', ['slot'], 'ov');
+		if (!fieldNames.contains("lime_al_delete_effect")) addField("lime_al_delete_effect", ["effect"], "ov");
+		if (!fieldNames.contains("lime_al_delete_filter")) addField("lime_al_delete_filter", ["filter"], "ov");
+		if (!fieldNames.contains("lime_al_delete_auxiliary_effect_slot")) addField("lime_al_delete_auxiliary_effect_slot", ["slot"], "ov");
 		return fields;
 	}
 
@@ -76,21 +76,21 @@ final class InternalCompileMacro {
 		final fieldNames:Array<String> = [], pos:Position = Context.currentPos();
 		for (f in fields) fieldNames.push(f.name);
 
-		if (!fieldNames.contains('deleteEffect'))
-			fields.push({name: 'deleteEffect', access: [APublic, AStatic], pos: pos, kind: FFun({
-				ret: macro :Void, args: [{name: 'effect', type: macro :lime.media.openal.ALEffect}],
+		if (!fieldNames.contains("deleteEffect"))
+			fields.push({name: "deleteEffect", access: [APublic, AStatic], pos: pos, kind: FFun({
+				ret: macro :Void, args: [{name: "effect", type: macro :lime.media.openal.ALEffect}],
 				expr: macro lime._internal.backend.native.NativeCFFI.lime_al_delete_effect(effect)
 			})});
 
-		if (!fieldNames.contains('deleteFilter'))
-			fields.push({name: 'deleteFilter', access: [APublic, AStatic], pos: pos, kind: FFun({
-				ret: macro :Void, args: [{name: 'filter', type: macro :lime.media.openal.ALFilter}],
+		if (!fieldNames.contains("deleteFilter"))
+			fields.push({name: "deleteFilter", access: [APublic, AStatic], pos: pos, kind: FFun({
+				ret: macro :Void, args: [{name: "filter", type: macro :lime.media.openal.ALFilter}],
 				expr: macro lime._internal.backend.native.NativeCFFI.lime_al_delete_filter(filter)
 			})});
 
-		if (!fieldNames.contains('deleteAux'))
-			fields.push({name: 'deleteAux', access: [APublic, AStatic], pos: pos, kind: FFun({
-				ret: macro :Void, args: [{name: 'aux', type: macro :lime.media.openal.ALAuxiliaryEffectSlot}],
+		if (!fieldNames.contains("deleteAux"))
+			fields.push({name: "deleteAux", access: [APublic, AStatic], pos: pos, kind: FFun({
+				ret: macro :Void, args: [{name: "aux", type: macro :lime.media.openal.ALAuxiliaryEffectSlot}],
 				expr: macro lime._internal.backend.native.NativeCFFI.lime_al_delete_auxiliary_effect_slot(aux)
 			})});
 
@@ -100,10 +100,10 @@ final class InternalCompileMacro {
 	// fix maxThreads locked to 1
 	public static macro function buildNativeHTTPRequest():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
-		for (f in fields) if (f.name == 'loadData') switch (f.kind) {
+		for (f in fields) if (f.name == "loadData") switch (f.kind) {
 			case FFun(func): switch (func.expr.expr) {
 				case EBlock(exprs):
-					exprs.insert(0, macro if ($i{"localThreadPool"} != null) $i{"localThreadPool"}.maxThreads = 2);
+					exprs.insert(0, macro if (localThreadPool != null) localThreadPool.maxThreads = 2);
 				default:
 			}
 			default:
@@ -114,10 +114,10 @@ final class InternalCompileMacro {
 	// fix hardware cairo
 	public static macro function buildCairoGraphics():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
-		for (f in fields) if (f.name == 'createImagePattern') switch (f.kind) {
+		for (f in fields) if (f.name == "createImagePattern") switch (f.kind) {
 			case FFun(func): switch (func.expr.expr) {
 				case EBlock(exprs):
-					exprs.insert(0, macro if ($p{["bitmapFill", "__surface"]} == null) return null);
+					exprs.insert(0, macro if (bitmapFill.__surface == null) return null);
 				default:
 			}
 			default:
@@ -128,10 +128,11 @@ final class InternalCompileMacro {
 	// fix cairo surface
 	public static macro function buildBitmapData():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
-		for (f in fields) if (f.name == 'getSurface') switch (f.kind) {
+		for (f in fields) switch (f.kind) {
 			case FFun(func): switch (func.expr.expr) {
 				case EBlock(exprs):
-					exprs.insert(0, macro if ($i{"__surface"} != null) return $i{"__surface"});
+					if (f.name == "getSurface") exprs.insert(0, macro if (__surface != null) return __surface);
+					else if (f.name == "dispose") exprs.insert(0, macro if (__texture != null) __texture.dispose());
 				default:
 			}
 			default:
@@ -143,7 +144,7 @@ final class InternalCompileMacro {
 	public static macro function buildCanvasRenderer():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		for (f in fields) switch (f.kind) {
-			case FFun(func): if (f.name == '__setBlendModeContext') {
+			case FFun(func): if (f.name == "__setBlendModeContext") {
 				func.expr = macro {
 					switch (value) {
 						case ADD: context.globalCompositeOperation = "lighter";
@@ -173,7 +174,7 @@ final class InternalCompileMacro {
 	public static macro function buildCairoRenderer():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		for (f in fields) switch (f.kind) {
-			case FFun(func): if (f.name == '__setBlendModeCairo') {
+			case FFun(func): if (f.name == "__setBlendModeCairo") {
 				func.expr = macro {
 					switch (value) {
 						case ADD: cairo.setOperator(lime.graphics.cairo.CairoOperator.ADD);
@@ -205,9 +206,9 @@ final class InternalCompileMacro {
 	// and dont force sets depth test to false
 	public static macro function buildOpenGLRenderer():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
-		fields.push({name: 'hasKHRBlendAdvancedExt', access: [AStatic, APublic], pos: pos, kind: FVar(macro :Null<Bool>, macro null)});
+		fields.push({name: "hasKHRBlendAdvancedExt", access: [AStatic, APublic], pos: pos, kind: FVar(macro :Null<Bool>, macro null)});
 		for (f in fields) switch (f.kind) {
-			case FFun(func): if (f.name == '__getMatrix') {
+			case FFun(func): if (f.name == "__getMatrix") {
 				func.expr = macro {
 					__matrix[0] = transform.a * __worldTransform.a + transform.b * __worldTransform.c;
 					__matrix[1] = transform.a * __worldTransform.b + transform.b * __worldTransform.d;
@@ -242,7 +243,7 @@ final class InternalCompileMacro {
 					return __values;
 				}
 			}
-			else if (f.name == '__setBlendMode') {
+			else if (f.name == "__setBlendMode") {
 				func.expr = macro {
 					if (__overrideBlendMode != null) value = __overrideBlendMode;
 					if (__blendMode == value) return;
@@ -291,7 +292,7 @@ final class InternalCompileMacro {
 					}
 				}
 			}
-			else if (f.name == 'new') {
+			else if (f.name == "new") {
 				switch (func.expr.expr) {
 					case EBlock(exprs):
 						exprs.push(macro
@@ -302,13 +303,13 @@ final class InternalCompileMacro {
 					default:
 				}
 			}
-			else if (f.name == '__render') {
+			else if (f.name == "__render") {
 				switch (func.expr.expr) {
 					case EBlock(exprs):
 						for (i => code in exprs) switch (code.expr) {
 							case ECall(expr, _): switch (expr.expr) {
 								case EField(expr, field, _):
-									if (field == 'setDepthTest') {
+									if (field == "setDepthTest") {
 										exprs[i] = macro if (object.__drawableType == openfl.display._internal.IBitmapDrawableType.STAGE) ${code};
 										break;
 									}
@@ -328,7 +329,7 @@ final class InternalCompileMacro {
 	public static macro function buildFlxTypedGroup():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		for (f in fields) switch (f.kind) {
-			case FFun(func): if (f.name == 'remove') {
+			case FFun(func): if (f.name == "remove") {
 				func.expr = macro {
 					if (members == null) return null;
 
@@ -356,8 +357,8 @@ final class InternalCompileMacro {
 	public static macro function buildFlxMatrix():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		return fields.concat([
-			{name: 'skew', access: [APublic, AInline], pos: pos, kind: FFun({
-				args: [{name: 'xtheta', type: macro :Float}, {name: 'ytheta', type: macro :Float}], ret: macro :flixel.math.FlxMatrix,
+			{name: "skew", access: [APublic, AInline], pos: pos, kind: FFun({
+				args: [{name: "xtheta", type: macro :Float}, {name: "ytheta", type: macro :Float}], ret: macro :flixel.math.FlxMatrix,
 				expr: macro {
 					final b1 = Math.tan(xtheta), c1 = Math.tan(ytheta);
 					b = a * b1 + b;
@@ -370,8 +371,8 @@ final class InternalCompileMacro {
 					return this;
 				}
 			})},
-			{name: 'skewByTrigs', access: [APublic, AInline], pos: pos, kind: FFun({
-				args: [{name: 'b1', type: macro :Float}, {name: 'c1', type: macro :Float}], ret: macro :flixel.math.FlxMatrix,
+			{name: "skewByTrigs", access: [APublic, AInline], pos: pos, kind: FFun({
+				args: [{name: "b1", type: macro :Float}, {name: "c1", type: macro :Float}], ret: macro :flixel.math.FlxMatrix,
 				expr: macro {
 					b = a * b1 + b;
 					c = c + d * c1;
@@ -392,13 +393,13 @@ final class InternalCompileMacro {
 
 		var createField:Field = null;
 		for (f in fields) switch (f.name) {
-			case 'createPost': return fields;
-			case 'create': createField = f;
+			case "createPost": return fields;
+			case "create": createField = f;
 			default:
 		}
 		for (f in fields) {
-			if (f.name == 'createPost') return fields;
-			else if (f.name == 'create') createField = f;
+			if (f.name == "createPost") return fields;
+			else if (f.name == "create") createField = f;
 		}
 
 		if (createField != null) {
@@ -412,7 +413,7 @@ final class InternalCompileMacro {
 			}
 		}
 
-		fields.push({name: 'createPost', access: [APublic], pos: pos, kind: FFun({args: [], expr: macro {}})});
+		fields.push({name: "createPost", access: [APublic], pos: pos, kind: FFun({args: [], expr: macro {}})});
 		return fields;
 	}
 
@@ -420,9 +421,9 @@ final class InternalCompileMacro {
 	public static macro function buildFlxSprite():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
 		for (f in fields) switch (f.name) {
-			case 'centerOrigin': f.access.remove(AInline);
-			case 'checkFlipX': f.access.remove(AInline);
-			case 'checkFlipY': f.access.remove(AInline);
+			case "centerOrigin": f.access.remove(AInline);
+			case "checkFlipX": f.access.remove(AInline);
+			case "checkFlipY": f.access.remove(AInline);
 			default:
 		}
 		return fields;
@@ -432,23 +433,23 @@ final class InternalCompileMacro {
 	/*
 	inline static function attachBitmapCacheFix(idx:Int, exprs:Array<Expr>, ?prefix:Array<String>) {
 		if (prefix == null) prefix = [];
-		exprs.insert(idx, macro @:privateAccess $p{prefix.concat(['__cacheBitmapData'])} =
-			$p{prefix.concat(['__cacheBitmapData2'])} =
-			$p{prefix.concat(['__cacheBitmapData3'])} = null);
-		exprs.insert(idx, macro @:privateAccess if ($p{prefix.concat(['__cacheBitmapData'])} != null) $p{prefix.concat(['__cacheBitmapData'])}.dispose());
-		exprs.insert(idx, macro @:privateAccess if ($p{prefix.concat(['__cacheBitmapData2'])} != null) $p{prefix.concat(['__cacheBitmapData2'])}.dispose());
-		exprs.insert(idx, macro @:privateAccess if ($p{prefix.concat(['__cacheBitmapData3'])} != null) $p{prefix.concat(['__cacheBitmapData3'])}.dispose());
+		exprs.insert(idx, macro @:privateAccess $p{prefix.concat(["__cacheBitmapData"])} =
+			$p{prefix.concat(["__cacheBitmapData2"])} =
+			$p{prefix.concat(["__cacheBitmapData3"])} = null);
+		exprs.insert(idx, macro @:privateAccess if ($p{prefix.concat(["__cacheBitmapData"])} != null) $p{prefix.concat(["__cacheBitmapData"])}.dispose());
+		exprs.insert(idx, macro @:privateAccess if ($p{prefix.concat(["__cacheBitmapData2"])} != null) $p{prefix.concat(["__cacheBitmapData2"])}.dispose());
+		exprs.insert(idx, macro @:privateAccess if ($p{prefix.concat(["__cacheBitmapData3"])} != null) $p{prefix.concat(["__cacheBitmapData3"])}.dispose());
 	}
 	*/
 
 	public static macro function buildFlxGame():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		final f:Function = {
-			args: [{name: 'r', type: macro :openfl.geom.Rectangle}, {name: 'm', type: macro :openfl.geom.Matrix}],
+			args: [{name: "r", type: macro :openfl.geom.Rectangle}, {name: "m", type: macro :openfl.geom.Matrix}],
 			expr: macro r.setTo(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y)
 		};
 
-		/*for (f in fields) if (f.name == 'resizeGame') switch (f.kind) {
+		/*for (f in fields) if (f.name == "resizeGame") switch (f.kind) {
 			case FFun(func): switch (func.expr.expr) {
 				case EBlock(exprs): //attachBitmapCacheFix(0, exprs);
 					exprs.push(macro graphics.clear());
@@ -461,31 +462,39 @@ final class InternalCompileMacro {
 			default:
 		}*/
 
-		for (name in ['__getBounds', '__getFilterBounds', '__getRenderBounds'])
+		for (name in ["__getBounds", "__getFilterBounds", "__getRenderBounds"])
 			fields.push({name: name, access: [AOverride], pos: pos, kind: FFun(f)});
 
 		return fields;
 	}
 
-	// for PlayCamera
+	// for BLCamera
 	public static macro function buildFlxCamera():Array<Field> {
-		final fields:Array<Field> = Context.getBuildFields();
+		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos(), fieldNames:Array<String> = [];
 		for (f in fields) switch (f.name) {
-			case 'calcMarginX' | 'calcMarginY' | 'updateBlitMatrix': f.access.remove(AInline);
-			case 'set_followLerp': fields.remove(f);
-			case 'followLerp': f.kind = FVar(macro :Float, macro 1);
-			/*case 'onResize': switch (f.kind) {
+			case "calcMarginX" | "calcMarginY" | "updateBlitMatrix": f.access.remove(AInline);
+			case "set_followLerp" | "_filters" | "set_filters" | "get_filters" | "addShader" | "removeShader": fields.remove(f);
+			case "filters": f.kind = FVar(macro :Null<Array<openfl.filters.BitmapFilter>>, macro null);
+			case "followLerp": f.kind = FVar(macro :Float, macro 1);
+			/*case "onResize": switch (f.kind) {
 				case FFun(func): switch (func.expr.expr) {
-					case EBlock(exprs): attachBitmapCacheFix(0, exprs, ['flashSprite']);
+					case EBlock(exprs): attachBitmapCacheFix(0, exprs, ["flashSprite"]);
 					default:
 				}
 				default:
 			}*/
+			default:
+				fieldNames.push(f.name);
 		}
+
+		// just add stuff idc, these flixel forks pmo
+		if (!fieldNames.contains("followEnabled")) fields.push({name: "followEnabled", access: [APublic], pos: pos, kind: FVar(macro :Bool, macro true)});
+		if (!fieldNames.contains("paused")) fields.push({name: "paused", access: [APublic], pos: pos, kind: FVar(macro :Bool, macro false)});
+
 		for (f in fields) switch (f.kind) {
 			case FFun(func): switch (f.name) {
-				case 'startQuadBatch':
-					func.args.push({name: 'depthCompareMode', type: macro :openfl.display3D.Context3DCompareMode, opt: true});
+				case "startQuadBatch":
+					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
 					func.expr = macro {
 						if (_currentDrawItem != null
 							&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TILES
@@ -525,9 +534,9 @@ final class InternalCompileMacro {
 
 						return item;
 					}
-				case 'startTrianglesBatch':
-					func.args.push({name: 'depthCompareMode', type: macro :openfl.display3D.Context3DCompareMode, opt: true});
-					func.args.push({name: 'culling', type: macro :openfl.display.TriangleCulling, opt: true});
+				case "startTrianglesBatch":
+					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
+					func.args.push({name: "culling", type: macro :openfl.display.TriangleCulling, opt: true});
 					func.expr = macro {
 						if (_currentDrawItem != null
 							&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TRIANGLES
@@ -544,9 +553,9 @@ final class InternalCompileMacro {
 
 						return getNewDrawTrianglesItem(graphic, smoothing, isColored, blend, hasColorOffsets, shader, depthCompareMode, culling);
 					}
-				case 'getNewDrawTrianglesItem':
-					func.args.push({name: 'depthCompareMode', type: macro :openfl.display3D.Context3DCompareMode, opt: true});
-					func.args.push({name: 'culling', type: macro :openfl.display.TriangleCulling, opt: true});
+				case "getNewDrawTrianglesItem":
+					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
+					func.args.push({name: "culling", type: macro :openfl.display.TriangleCulling, opt: true});
 					func.expr = macro {
 						final item = if (_storageTrianglesHead != null) {
 							final head = _storageTrianglesHead;
@@ -585,8 +594,8 @@ final class InternalCompileMacro {
 	public static macro function buildFlxObject():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
 		for (f in fields) switch (f.name) {
-			case 'initMotionVars': f.access.remove(AInline);
-			case 'screenCenter': f.access.remove(AInline);
+			case "initMotionVars": f.access.remove(AInline);
+			case "screenCenter": f.access.remove(AInline);
 			default:
 		}
 		return fields;
@@ -596,7 +605,7 @@ final class InternalCompileMacro {
 	public static macro function buildVideo():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		for (f in fields) switch (f.name) {
-			case '__enterFrame': fields.remove(f); break;
+			case "__enterFrame": fields.remove(f); break;
 			default:
 		}
 

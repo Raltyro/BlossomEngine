@@ -76,6 +76,7 @@ class BLGame extends flixel.FlxGame {
 
 final class Initial extends flixel.FlxState {
 	override function create() {
-		FlxG.switchState(GameConstants.INITIAL_STATE);
+		if (!blossom.backend.util.CommandLineHandler.parse(Sys.args()))
+			FlxG.switchState(GameConstants.INITIAL_STATE);
 	}
 }

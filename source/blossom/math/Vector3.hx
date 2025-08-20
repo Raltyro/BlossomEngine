@@ -74,20 +74,20 @@ import openfl.geom.Vector3D;
 	}
 
 	public var dx(get, never):Float;
-	inline function get_dx() {
-		if (isZero()) return 0;
+	inline function get_dx():Float {
+		if (isZero()) return 0.0;
 		return x / length;
 	}
 
 	public var dy(get, never):Float;
-	inline function get_dy() {
-		if (isZero()) return 0;
+	inline function get_dy():Float {
+		if (isZero()) return 0.0;
 		return y / length;
 	}
 
 	public var dz(get, never):Float;
-	inline function get_dz() {
-		if (isZero()) return 0;
+	inline function get_dz():Float {
+		if (isZero()) return 0.0;
 		return z / length;
 	}
 
@@ -185,10 +185,10 @@ import openfl.geom.Vector3D;
 }
 
 @:noCompletion
-@:allow(bl.math.Vector3)
+@:allow(bl3d.math.Vector3)
 class BaseVector3 implements IFlxPooled {
 	#if FLX_POINT_POOL
-	static var pool:FlxPool<BaseVector3> = new FlxPool(BaseVector3.new.bind(0, 0, 0));
+	static var pool:FlxPool<BaseVector3> = new FlxPool(BaseVector3.new);
 	#end
 
 	public static inline function get(x = 0.0, y = 0.0, z = 0.0):BaseVector3 {
@@ -209,9 +209,9 @@ class BaseVector3 implements IFlxPooled {
 		return vector3;
 	}
 
-	public var x(default, set):Float; function set_x(v:Float):Float return x = v;
-	public var y(default, set):Float; function set_y(v:Float):Float return y = v;
-	public var z(default, set):Float; function set_z(v:Float):Float return z = v;
+	public var x(default, set):Float; inline function set_x(v:Float):Float return x = v;
+	public var y(default, set):Float; inline function set_y(v:Float):Float return y = v;
+	public var z(default, set):Float; inline function set_z(v:Float):Float return z = v;
 
 	#if FLX_POINT_POOL
 	var _weak:Bool = false;

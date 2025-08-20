@@ -1,7 +1,6 @@
 package blossom.backend;
 
 import flixel.math.FlxMath;
-import flixel.sound.FlxSound;
 import flixel.util.FlxSignal;
 import flixel.util.FlxStringUtil;
 import flixel.FlxG;
