@@ -188,7 +188,7 @@ import openfl.geom.Vector3D;
 @:allow(bl3d.math.Vector3)
 class BaseVector3 implements IFlxPooled {
 	#if FLX_POINT_POOL
-	static var pool:FlxPool<BaseVector3> = new FlxPool(BaseVector3.new);
+	static var pool:FlxPool<BaseVector3> = new FlxPool(BaseVector3.new.bind(0, 0, 0));
 	#end
 
 	public static inline function get(x = 0.0, y = 0.0, z = 0.0):BaseVector3 {
@@ -209,9 +209,9 @@ class BaseVector3 implements IFlxPooled {
 		return vector3;
 	}
 
-	public var x(default, set):Float; inline function set_x(v:Float):Float return x = v;
-	public var y(default, set):Float; inline function set_y(v:Float):Float return y = v;
-	public var z(default, set):Float; inline function set_z(v:Float):Float return z = v;
+	public var x(default, set):Float; function set_x(v:Float):Float return x = v;
+	public var y(default, set):Float; function set_y(v:Float):Float return y = v;
+	public var z(default, set):Float; function set_z(v:Float):Float return z = v;
 
 	#if FLX_POINT_POOL
 	var _weak:Bool = false;

@@ -151,6 +151,7 @@ class Assets
 		var image:Image;
 		if (hardware = hardware != null ? hardware : defaultHardware) {
 			if (mainImage == null) mainImage = new Image();
+			mainImage.height = mainImage.width = -1;
 			@:privateAccess if (!(image = mainImage).__fromFile(getPath(id))) return null;
 		}
 		else

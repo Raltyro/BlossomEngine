@@ -23,9 +23,15 @@ class FlxGraphicsShader extends GraphicsShader
 		uniform vec2 openfl_TextureSize;
 
 		attribute vec4 frameRect;
+		attribute float frameAngle;
 		attribute float alpha;
 		attribute vec4 colorMultiplier;
 		attribute vec4 colorOffset;
+
+		varying vec4 frameRectv;
+		varying float frameAnglev;
+		varying vec2 frameCoordv;
+
 		uniform bool hasColorTransform;
 	")
 	@:glVertexBody("
@@ -41,6 +47,13 @@ class FlxGraphicsShader extends GraphicsShader
 			openfl_ColorOffsetv = colorOffset / 255.0;
 			openfl_ColorMultiplierv = colorMultiplier;
 		}
+
+		frameRectv = frameRect;
+		frameAnglev = frameAngle;
+		frameCoordv = (openfl_TextureCoord * openfl_TextureSize - frameRect.xy) / frameRect.zw;
+		if (frameAngle == 90.0) frameCoordv = vec2(1.0 - frameCoordv.y, frameCoordv.x);
+		else if (frameAngle == -90.0) frameCoordv = vec2(frameCoordv.y, 1.0 - frameCoordv.x);
+		else if (frameAngle == 180.0) frameCoordv = vec2(1.0 - frameCoordv.x, 1.0 - frameCoordv.y);
 	")
 	@:glVertexSource("
 		#pragma header
@@ -59,8 +72,19 @@ class FlxGraphicsShader extends GraphicsShader
 		uniform vec2 openfl_TextureSize;
 		uniform sampler2D bitmap;
 
+		varying vec4 frameRectv;
+		varying float frameAnglev;
+		varying vec2 frameCoordv;
+
 		uniform bool hasTransform;
 		uniform bool hasColorTransform;
+
+		vec2 frameCoordToUV(vec2 coord) {
+			if (frameAnglev == 90.0) coord = vec2(coord.y, 1.0 - coord.x);
+			else if (frameAnglev == -90.0) coord = vec2(1.0 - coord.y, coord.x);
+			else if (frameAnglev == 180.0) coord = vec2(1.0 - coord.x, 1.0 - coord.y);
+			return (coord * frameRectv.zw + frameRectv.xy) / openfl_TextureSize;
+		}
 
 		vec4 apply_flixel_transform(vec4 color) {
 			if (color.a == 0.0 || openfl_Alphav == 0.0) return vec4(0.0, 0.0, 0.0, 0.0);

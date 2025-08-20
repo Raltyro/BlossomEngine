@@ -13,6 +13,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 	static inline var VERTICES_PER_QUAD = 4;
 
 	public var shader:FlxShader;
+	var angles:Array<Float>;
 	var alphas:Array<Float>;
 	var colorMultipliers:Array<Float>;
 	var colorOffsets:Array<Float>;
@@ -23,6 +24,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 	public function new() {
 		super();
 		type = FlxDrawItemType.TILES;
+		angles = [];
 		alphas = [];
 	}
 
@@ -31,6 +33,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		rects.length = 0;
 		transforms.length = 0;
 
+		angles.resize(0);
 		alphas.resize(0);
 		colorMultipliers?.resize(0);
 		colorOffsets?.resize(0);
@@ -41,21 +44,24 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		rects = null;
 		transforms = null;
 
+		angles = null;
 		alphas = null;
 		colorMultipliers = null;
 		colorOffsets = null;
 	}
 
 	override public function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {
-		final rect = frame.frame;
-		rects.push(rect.x); rects.push(rect.y);
-		rects.push(rect.width); rects.push(rect.height);
+		rects.push(frame.frame.x); rects.push(frame.frame.y);
+		rects.push(frame.frame.width); rects.push(frame.frame.height);
 
 		transforms.push(matrix.a); transforms.push(matrix.b); transforms.push(matrix.c);
 		transforms.push(matrix.d); transforms.push(matrix.tx); transforms.push(matrix.ty);
 
 		final alpha = transform?.alphaMultiplier ?? 1;
-		for (i in 0...VERTICES_PER_QUAD) alphas.push(alpha);
+		for (i in 0...VERTICES_PER_QUAD) {
+			angles.push(frame.angle);
+			alphas.push(alpha);
+		}
 
 		if (colored || hasColorOffsets) {
 			if (colorMultipliers == null) colorMultipliers = [];
@@ -96,6 +102,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
 		shader.frameRect.value = @:privateAccess untyped (rects).__array;
+		shader.frameAngle.value = angles;
 		shader.alpha.value = alphas;
 		if (colored || hasColorOffsets) {
 			shader.colorMultiplier.value = colorMultipliers;
