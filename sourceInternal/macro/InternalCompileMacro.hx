@@ -22,12 +22,13 @@ final class InternalCompileMacro {
 		if (Context.defined('js') && Context.defined('html5')) Compiler.addMetadata('@:build($compileMacro.buildCanvasRenderer())', 'openfl.display.CanvasRenderer');
 		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($compileMacro.buildCairoRenderer())', 'openfl.display.CairoRenderer');
 		Compiler.addMetadata('@:build($compileMacro.buildOpenGLRenderer())', 'openfl.display.OpenGLRenderer');
+		Compiler.addMetadata('@:build($compileMacro.buildDisplayObject())', 'openfl.display.DisplayObject');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxAnimation())', 'flixel.animation.FlxAnimation');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxTypedGroup())', 'flixel.group.FlxGroup.FlxTypedGroup');
-		Compiler.addMetadata('@:build($compileMacro.buildFlxMatrix())', 'flixel.math.FlxMatrix');
-		Compiler.addMetadata('@:build($compileMacro.buildFlxState())', 'flixel.FlxState');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxSprite())', 'flixel.FlxSprite');
+		if (Context.defined('flixel_animate')) Compiler.addMetadata('@:build($compileMacro.buildFlxAnimate())', 'animate.FlxAnimate');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxState())', 'flixel.FlxState');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxCamera())', 'flixel.FlxCamera');
-		Compiler.addMetadata('@:build($compileMacro.buildFlxObject())', 'flixel.FlxObject');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxGame())', 'flixel.FlxGame');
 		Compiler.addMetadata('@:build($compileMacro.buildVideo())', 'hxvlc.openfl.Video');
 		#end
@@ -208,118 +209,135 @@ final class InternalCompileMacro {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		fields.push({name: "hasKHRBlendAdvancedExt", access: [AStatic, APublic], pos: pos, kind: FVar(macro :Null<Bool>, macro null)});
 		for (f in fields) switch (f.kind) {
-			case FFun(func): if (f.name == "__getMatrix") {
-				func.expr = macro {
-					__matrix[0] = transform.a * __worldTransform.a + transform.b * __worldTransform.c;
-					__matrix[1] = transform.a * __worldTransform.b + transform.b * __worldTransform.d;
-					__matrix[2] = 0;
-					__matrix[3] = 0;
-					__matrix[4] = transform.c * __worldTransform.a + transform.d * __worldTransform.c;
-					__matrix[5] = transform.c * __worldTransform.b + transform.d * __worldTransform.d;
-					__matrix[6] = 0;
-					__matrix[7] = 0;
-					__matrix[8] = 0;
-					__matrix[9] = 0;
-					__matrix[10] = 1;
-					__matrix[11] = 0;
-					__matrix[12] = transform.tx * __worldTransform.a + transform.ty * __worldTransform.c + __worldTransform.tx;
-					__matrix[13] = transform.tx * __worldTransform.b + transform.ty * __worldTransform.d + __worldTransform.ty;
-					__matrix[14] = 0;
-					__matrix[15] = 1;
+			case FFun(func): switch (f.name) {
+				case "__getMatrix":
+					func.expr = macro {
+						__matrix[0] = transform.a * __worldTransform.a + transform.b * __worldTransform.c;
+						__matrix[1] = transform.a * __worldTransform.b + transform.b * __worldTransform.d;
+						__matrix[2] = 0;
+						__matrix[3] = 0;
+						__matrix[4] = transform.c * __worldTransform.a + transform.d * __worldTransform.c;
+						__matrix[5] = transform.c * __worldTransform.b + transform.d * __worldTransform.d;
+						__matrix[6] = 0;
+						__matrix[7] = 0;
+						__matrix[8] = 0;
+						__matrix[9] = 0;
+						__matrix[10] = 1;
+						__matrix[11] = 0;
+						__matrix[12] = transform.tx * __worldTransform.a + transform.ty * __worldTransform.c + __worldTransform.tx;
+						__matrix[13] = transform.tx * __worldTransform.b + transform.ty * __worldTransform.d + __worldTransform.ty;
+						__matrix[14] = 0;
+						__matrix[15] = 1;
 
-					if (pixelSnapping == openfl.display.PixelSnapping.ALWAYS ||
-						(pixelSnapping == openfl.display.PixelSnapping.AUTO
-							&& __matrix[1] == 0 && __matrix[4] == 0
-							&& __matrix[0] < 1.0000001 && __matrix[0] > 0.9999999
-						)	&& __matrix[5] < 1.0000001 && __matrix[5] > 0.9999999
-					) {
-						__matrix[12] = Math.round(__matrix[12]);
-						__matrix[13] = Math.round(__matrix[13]);
-					}
-
-					__matrix.append(__flipped ? __projectionFlipped : __projection);
-
-					for (i in 0...16) __values[i] = __matrix[i];
-					return __values;
-				}
-			}
-			else if (f.name == "__setBlendMode") {
-				func.expr = macro {
-					if (__overrideBlendMode != null) value = __overrideBlendMode;
-					if (__blendMode == value) return;
-
-					if (hasKHRBlendAdvancedExt) {
-						switch (__blendMode = value) {
-							case ADD: __context3D.setBlendFactors(ONE, ONE);
-							case MULTIPLY: __context3D.setBlendFactors(DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA);
-							case SCREEN: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_COLOR);
-							case SUBTRACT:
-								__context3D.setBlendFactors(ONE, ONE);
-								__context3D.__setGLBlendEquation(__gl.FUNC_REVERSE_SUBTRACT);
-								gl.blendEquationSeparate(__gl.FUNC_REVERSE_SUBTRACT, __gl.FUNC_ADD);
-							case INVERT: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA, ZERO, ONE);
-							case EXCLUDE: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_COLOR, ZERO, ONE);
-							case DARKEN: __context3D.__setGLBlendEquation(0x9297); // DARKEN_KHR
-							case DIFFERENCE: __context3D.__setGLBlendEquation(0x929E); // DIFFERENCE_KHR
-							case HARDLIGHT: __context3D.__setGLBlendEquation(0x929B); // HARDLIGHT_KHR
-							case LIGHTEN: __context3D.__setGLBlendEquation(0x9298); // LIGHTEN_KHR
-							case OVERLAY: __context3D.__setGLBlendEquation(0x9296); // OVERLAY_KHR
-							case SOFTLIGHT: __context3D.__setGLBlendEquation(0x929C); // SOFTLIGHT_KHR
-							case BURN: __context3D.__setGLBlendEquation(0x9299); // COLORBURN_KHR
-							case DODGE: __context3D.__setGLBlendEquation(0x929A); // COLORDODGE_KHR
-							default: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
+						if (pixelSnapping == openfl.display.PixelSnapping.ALWAYS ||
+							(pixelSnapping == openfl.display.PixelSnapping.AUTO
+								&& __matrix[1] == 0 && __matrix[4] == 0
+								&& __matrix[0] < 1.0000001 && __matrix[0] > 0.9999999
+							)	&& __matrix[5] < 1.0000001 && __matrix[5] > 0.9999999
+						) {
+							__matrix[12] = Math.round(__matrix[12]);
+							__matrix[13] = Math.round(__matrix[13]);
 						}
+
+						__matrix.append(__flipped ? __projectionFlipped : __projection);
+
+						for (i in 0...16) __values[i] = __matrix[i];
+						return __values;
 					}
-					else {
-						switch (__blendMode = value) {
-							case ADD: __context3D.setBlendFactors(ONE, ONE);
-							case MULTIPLY: __context3D.setBlendFactors(DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA);
-							case SCREEN: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_COLOR);
-							case SUBTRACT:
-								__context3D.setBlendFactors(ONE, ONE);
-								__context3D.__setGLBlendEquation(__gl.FUNC_REVERSE_SUBTRACT);
-								gl.blendEquationSeparate(__gl.FUNC_REVERSE_SUBTRACT, __gl.FUNC_ADD);
-							case INVERT: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA, ZERO, ONE);
-							case EXCLUDE: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_COLOR, ZERO, ONE);
-							case DARKEN: // TRANSPARENCY ISSUES
-								__context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
-								__context3D.__setGLBlendEquation(lime.graphics.opengl.GL.MIN);
-							case LIGHTEN:
-								__context3D.setBlendFactors(ONE, ONE);
-								__context3D.__setGLBlendEquation(lime.graphics.opengl.GL.MAX);
-							default: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
-						}
-					}
-				}
-			}
-			else if (f.name == "new") {
-				switch (func.expr.expr) {
-					case EBlock(exprs):
-						exprs.push(macro
-							if (hasKHRBlendAdvancedExt == null) {
-								hasKHRBlendAdvancedExt = gl.getSupportedExtensions().contains("KHR_blend_equation_advanced");
+				case "__setBlendMode":
+					func.expr = macro {
+						if (__overrideBlendMode != null) value = __overrideBlendMode;
+						if (__blendMode == value) return;
+
+						if (hasKHRBlendAdvancedExt) {
+							switch (__blendMode = value) {
+								case ADD: __context3D.setBlendFactors(ONE, ONE);
+								case MULTIPLY: __context3D.setBlendFactors(DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA);
+								case SCREEN: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_COLOR);
+								case SUBTRACT:
+									__context3D.setBlendFactors(ONE, ONE);
+									__context3D.__setGLBlendEquation(__gl.FUNC_REVERSE_SUBTRACT);
+									gl.blendEquationSeparate(__gl.FUNC_REVERSE_SUBTRACT, __gl.FUNC_ADD);
+								case INVERT: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA, ZERO, ONE);
+								case EXCLUDE: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_COLOR, ZERO, ONE);
+								case DARKEN: __context3D.__setGLBlendEquation(0x9297); // DARKEN_KHR
+								case DIFFERENCE: __context3D.__setGLBlendEquation(0x929E); // DIFFERENCE_KHR
+								case HARDLIGHT: __context3D.__setGLBlendEquation(0x929B); // HARDLIGHT_KHR
+								case LIGHTEN: __context3D.__setGLBlendEquation(0x9298); // LIGHTEN_KHR
+								case OVERLAY: __context3D.__setGLBlendEquation(0x9296); // OVERLAY_KHR
+								case SOFTLIGHT: __context3D.__setGLBlendEquation(0x929C); // SOFTLIGHT_KHR
+								case BURN: __context3D.__setGLBlendEquation(0x9299); // COLORBURN_KHR
+								case DODGE: __context3D.__setGLBlendEquation(0x929A); // COLORDODGE_KHR
+								default: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
 							}
-						);
-					default:
-				}
-			}
-			else if (f.name == "__render") {
-				switch (func.expr.expr) {
-					case EBlock(exprs):
-						for (i => code in exprs) switch (code.expr) {
-							case ECall(expr, _): switch (expr.expr) {
-								case EField(expr, field, _):
-									if (field == "setDepthTest") {
-										exprs[i] = macro if (object.__drawableType == openfl.display._internal.IBitmapDrawableType.STAGE) ${code};
-										break;
-									}
+						}
+						else {
+							switch (__blendMode = value) {
+								case ADD: __context3D.setBlendFactors(ONE, ONE);
+								case MULTIPLY: __context3D.setBlendFactors(DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA);
+								case SCREEN: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_COLOR);
+								case SUBTRACT:
+									__context3D.setBlendFactors(ONE, ONE);
+									__context3D.__setGLBlendEquation(__gl.FUNC_REVERSE_SUBTRACT);
+									gl.blendEquationSeparate(__gl.FUNC_REVERSE_SUBTRACT, __gl.FUNC_ADD);
+								case INVERT: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA, ZERO, ONE);
+								case EXCLUDE: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_COLOR, ZERO, ONE);
+								case DARKEN: // TRANSPARENCY ISSUES
+									__context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
+									__context3D.__setGLBlendEquation(lime.graphics.opengl.GL.MIN);
+								case LIGHTEN:
+									__context3D.setBlendFactors(ONE, ONE);
+									__context3D.__setGLBlendEquation(lime.graphics.opengl.GL.MAX);
+								default: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
+							}
+						}
+					}
+				case "new":
+					switch (func.expr.expr) {
+						case EBlock(exprs):
+							exprs.push(macro
+								if (hasKHRBlendAdvancedExt == null) {
+									hasKHRBlendAdvancedExt = gl.getSupportedExtensions().contains("KHR_blend_equation_advanced");
+								}
+							);
+						default:
+					}
+				case "__render":
+					switch (func.expr.expr) {
+						case EBlock(exprs):
+							for (i => code in exprs) switch (code.expr) {
+								case ECall(expr, _): switch (expr.expr) {
+									case EField(expr, field, _):
+										if (field == "setDepthTest") {
+											exprs[i] = macro if (object.__drawableType == openfl.display._internal.IBitmapDrawableType.STAGE) ${code};
+											break;
+										}
+									default:
+								}
 								default:
 							}
-							default:
-						}
-					default:
-				}
+						default:
+					}
 			}
+			default:
+		}
+		return fields;
+	}
+
+	// i hate set_filters
+	public static macro function buildDisplayObject():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields();
+		for (f in fields) if (f.name == "set_filters") switch (f.kind) {
+			case FFun(func):
+				func.args = [{name: "value", type: macro :Array<openfl.filters.BitmapFilter>}];
+				func.expr = macro {
+					if (__filters != value) {
+						__filters = value;
+						for (filter in __filters) filter.__renderDirty = true;
+						__setRenderDirty();
+					}
+					return value;
+				}
 			default:
 		}
 		return fields;
@@ -328,23 +346,58 @@ final class InternalCompileMacro {
 	// replace splice with swapAndPop instead in remove
 	public static macro function buildFlxTypedGroup():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
+
+		var zIndicesName = null; // GOD DAMN IT SWORDCUBE
+		for (f in fields) if (f.name == "zIndexesAllowed" || f.name == "zIndicesAllowed") {
+			zIndicesName = f.name;
+			break;
+		}
 		for (f in fields) switch (f.kind) {
-			case FFun(func): if (f.name == "remove") {
-				func.expr = macro {
-					if (members == null) return null;
+			case FFun(func): switch (f.name) {
+				case "remove":
+					func.expr = macro {
+						if (members == null) return null;
 
-					final index = members.indexOf(basic);
-					if (index < 0) return null;
+						final index = members.indexOf(basic);
+						if (index < 0) return null;
 
-					if (splice) {
-						flixel.util.FlxArrayUtil.swapAndPop(members, index);
-						length--;
+						if (splice) {
+							flixel.util.FlxArrayUtil.swapAndPop(members, index);
+							length--;
+						}
+						else
+							members[index] = null;
+
+						onMemberRemove(basic);
 					}
-					else
-						members[index] = null;
+				case "draw":
+					if (zIndicesName == null) continue;
+					func.expr = macro {
+						final oldDefaultCameras = FlxCamera._defaultCameras;
+						if (_cameras != null) FlxCamera._defaultCameras = _cameras;
+						if (zIndexesAllowed) {
+							_drawQueue.resize(members.length);
+							var basic:FlxBasic = null, len:Int = 0;
+							for (i in 0...members.length) {
+								if ((basic = members[i]) != null && basic.exists && basic.visible) {
+									_drawQueue[len] = i;
+									len++;
+								}
+							}
 
-					onMemberRemove(basic);
-				}
+							_drawQueue.sort(_drawQueueSort);
+
+							for (i in 0...len) {
+								if ((basic = members[_drawQueue[i]]) != null && basic.exists && basic.visible) basic.draw();
+							}
+						}
+						else {
+							for (basic in members) {
+								if (basic != null && basic.exists && basic.visible) basic.draw();
+							}
+						}
+						FlxCamera._defaultCameras = oldDefaultCameras;
+					}
 			}
 			default:
 		}
@@ -352,80 +405,224 @@ final class InternalCompileMacro {
 		return fields;
 	}
 
-	// for to add new function skewing
-	// TODO: Maybe don't do this and instead use using haxe for Matrices?
-	public static macro function buildFlxMatrix():Array<Field> {
+	// add offset
+	public static macro function buildFlxAnimation():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
-		return fields.concat([
-			{name: "skew", access: [APublic, AInline], pos: pos, kind: FFun({
-				args: [{name: "xtheta", type: macro :Float}, {name: "ytheta", type: macro :Float}], ret: macro :flixel.math.FlxMatrix,
-				expr: macro {
-					final b1 = Math.tan(xtheta), c1 = Math.tan(ytheta);
-					b = a * b1 + b;
-					c = c + d * c1;
+		
+		var destroyFunc:Function = null;
+		for (f in fields) {
+			if (f.name == "offset") return fields;
+			else if (f.name == "destroy") switch (f.kind) {
+				case FFun(func): destroyFunc = func;
+				default: fields.remove(f);
+			}
+		}
 
-					final y1 = ty;
-					ty = tx * b1 + y1;
-					tx = tx + y1 * c1;
-
-					return this;
-				}
-			})},
-			{name: "skewByTrigs", access: [APublic, AInline], pos: pos, kind: FFun({
-				args: [{name: "b1", type: macro :Float}, {name: "c1", type: macro :Float}], ret: macro :flixel.math.FlxMatrix,
-				expr: macro {
-					b = a * b1 + b;
-					c = c + d * c1;
-
-					final y1 = ty;
-					ty = tx * b1 + y1;
-					tx = tx + y1 * c1;
-
-					return this;
-				}
-			})}
-		]);
-	}
-
-	// adds createPost
-	public static macro function buildFlxState():Array<Field> {
-		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
-
-		var createField:Field = null;
-		for (f in fields) switch (f.name) {
-			case "createPost": return fields;
-			case "create": createField = f;
+		fields.push({name: "offset", access: [APublic], pos: pos, kind: FVar(macro: flixel.math.FlxPoint, macro flixel.math.FlxPoint.get())});
+		if (destroyFunc == null) {
+			fields.push({name: "destroy", access: [APublic], pos: pos, kind: FFun({args: [], expr: macro {
+				super.destroy();
+				offset = flixel.util.FlxDestroyUtil.put(offset);
+			}})});
+		}
+		else switch (destroyFunc.expr.expr) {
+			case EBlock(exprs): exprs.insert(0, macro offset = flixel.util.FlxDestroyUtil.put(offset));
 			default:
 		}
-		for (f in fields) {
-			if (f.name == "createPost") return fields;
-			else if (f.name == "create") createField = f;
-		}
+		return fields;
+	}
 
-		if (createField != null) {
-			switch (createField.kind) {
-				case FFun(func): switch (func.expr.expr) {
-					case EBlock(exprs):
-						exprs.push(macro FlxG.signals.postStateSwitch.addOnce(createPost));
-					default:
-				}
+	// add frameOffsetAngle, frameOffset
+	public static macro function buildFlxSprite():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
+		
+		var initVarsExprs:Array<Expr> = null, destroyExprs:Array<Expr> = null, drawFrameComplexFunction:Function = null, updateTrigFunction:Function = null;
+		var f:Field, i:Int = fields.length;
+		while (i-- > 0) {
+			f = fields[i];
+			if (f.name == "frameOffsetAngle" || f.name == "frameOffset") fields.remove(f);
+			else switch (f.kind) {
+				case FFun(func):
+					if (f.name == "drawFrameComplex") drawFrameComplexFunction = func;
+					else if (f.name == "updateTrig") updateTrigFunction = func;
+					else switch (func.expr.expr) {
+						case EBlock(exprs):
+							if (f.name == "initVars") initVarsExprs = exprs;
+							else if (f.name == "destroy") destroyExprs = exprs;
+						default:
+					}
 				default:
 			}
 		}
 
-		fields.push({name: "createPost", access: [APublic], pos: pos, kind: FFun({args: [], expr: macro {}})});
+		fields.push({name: "frameOffset", access: [APublic], pos: pos, kind: FProp("default", "null", macro :flixel.math.FlxPoint)});
+		fields.push({name: "frameOffsetAngle", access: [APublic], pos: pos, kind: FProp("get", "set", macro :Null<Float>), meta: [{pos: pos, name: ":isVar"}]});
+		fields.push({name: "_frameOffsetAngleChanged", access: [], pos: pos, kind: FVar(macro :Bool, macro true)});
+		fields.push({name: "_sinFrameOffsetAngle", access: [], pos: pos, kind: FVar(macro :Float)});
+		fields.push({name: "_cosFrameOffsetAngle", access: [], pos: pos, kind: FVar(macro :Float)});
+		fields.push({name: "updateFrameOffsetTrig", access: [AInline], pos: pos, kind: FFun({args: [], expr: macro {
+			if (_frameOffsetAngleChanged) {
+				final radians = (frameOffsetAngle - angle) * 0.017453292519943295/*FlxAngle.TO_RAD*/;
+				_sinFrameOffsetAngle = Math.sin(radians);
+				_cosFrameOffsetAngle = Math.cos(radians);
+				_frameOffsetAngleChanged = false;
+			}
+		}})});
+		fields.push({name: "get_frameOffsetAngle", access: [APublic], pos: pos, kind: FFun({ret: macro :Float, args: [], expr: macro return frameOffsetAngle})});
+		fields.push({name: "set_frameOffsetAngle", access: [APublic], pos: pos, kind: FFun({ret: macro :Float, args: [{name: "value", type: macro :Float}], expr: macro {
+			if (frameOffsetAngle != (frameOffsetAngle = value)) _frameOffsetAngleChanged = true;
+			return value;
+		}})});
+
+		if (initVarsExprs != null) initVarsExprs.push(macro frameOffset = flixel.math.FlxPoint.get());
+		if (destroyExprs != null) destroyExprs.push(macro frameOffset = flixel.util.FlxDestroyUtil.put(frameOffset));
+		if (updateTrigFunction != null) {
+			updateTrigFunction.expr = macro {
+				if (_angleChanged) {
+					final radians = angle * 0.017453292519943295/*FlxAngle.TO_RAD*/;
+					_sinAngle = Math.sin(radians);
+					_cosAngle = Math.cos(radians);
+					_angleChanged = false;
+
+					_frameOffsetAngleChanged = true;
+					updateFrameOffsetTrig();
+				}
+			};
+		}
+		if (drawFrameComplexFunction != null) {
+			drawFrameComplexFunction.args = [{name: "frame", type: macro :flixel.graphics.frames.FlxFrame}, {name: "camera", type: macro :flixel.FlxCamera}];
+			drawFrameComplexFunction.expr = macro {
+				frame.prepareMatrix(_matrix, flixel.graphics.frames.FlxFrame.FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
+				_matrix.translate(-origin.x, -origin.y);
+
+				updateTrig();
+				_matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);
+				_matrix.translate(-frameOffset.x, -frameOffset.y);
+				if (animation.curAnim != null) {
+					if (animation.curAnim.offset != null) _matrix.translate(-animation.curAnim.offset.x, -animation.curAnim.offset.y);
+				}
+				_matrix.rotateWithTrig(_cosFrameOffsetAngle, -_sinFrameOffsetAngle);
+
+				_matrix.scale(scale.x, scale.y);
+				if (bakedRotationAngle <= 0) {
+					if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
+				}
+				
+				getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
+				_matrix.translate(_point.x, _point.y);
+				
+				if (isPixelPerfectRender(camera)) {
+					_matrix.tx = Math.floor(_matrix.tx);
+					_matrix.ty = Math.floor(_matrix.ty);
+				}
+
+				camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
+			};
+		}
 		return fields;
 	}
 
-	// for BLSprite & Character stageFlips
-	public static macro function buildFlxSprite():Array<Field> {
+	// aAGAGHGHG
+	public static macro function buildFlxAnimate():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields();
-		for (f in fields) switch (f.name) {
-			case "centerOrigin": f.access.remove(AInline);
-			case "checkFlipX": f.access.remove(AInline);
-			case "checkFlipY": f.access.remove(AInline);
+		for (f in fields) switch (f.kind) {
+			case FFun(func): if (f.name == "drawFrameComplex") {
+				func.args = [{name: "frame", type: macro :flixel.graphics.frames.FlxFrame}, {name: "camera", type: macro :flixel.FlxCamera}];
+				func.expr = macro {
+					frame.prepareMatrix(_matrix, flixel.graphics.frames.FlxFrame.FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
+					_matrix.translate(-origin.x, -origin.y);
+
+					updateTrig();
+					_matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);
+					_matrix.translate(-frameOffset.x, -frameOffset.y);
+					if (animation.curAnim != null) {
+						if (animation.curAnim.offset != null) _matrix.translate(-animation.curAnim.offset.x, -animation.curAnim.offset.y);
+					}
+					_matrix.rotateWithTrig(_cosFrameOffsetAngle, -_sinFrameOffsetAngle);
+
+					_matrix.scale(scale.x, scale.y);
+					if (bakedRotationAngle <= 0) {
+						if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
+					}
+
+					if (skew.x != 0 || skew.y != 0) {
+						//FlxAngle.TO_RAD
+						_skewMatrix.setTo(1, Math.tan(skew.y * 0.017453292519943295), Math.tan(skew.x * 0.017453292519943295), 1, 0, 0);
+						_matrix.concat(_skewMatrix);
+					}
+					
+					getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
+					_matrix.translate(_point.x, _point.y);
+					
+					if (isPixelPerfectRender(camera)) {
+						_matrix.tx = Math.floor(_matrix.tx);
+						_matrix.ty = Math.floor(_matrix.ty);
+					}
+
+					camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
+				};
+			}
+			else if (f.name == "drawAnimate") {
+				func.args = [{name: "camera", type: macro :flixel.FlxCamera}];
+				func.expr = macro {
+					@:privateAccess _matrix.setTo(1, 0, 0, 1, -timeline._bounds.x, -timeline._bounds.y);
+
+					if (checkFlipX()) {
+						_matrix.scale(-1, 1);
+						_matrix.translate(frame.sourceSize.x, 0);
+					}
+
+					if (checkFlipY()) {
+						_matrix.scale(1, -1);
+						_matrix.translate(0, frame.sourceSize.y);
+					}
+
+					if (applyStageMatrix) _matrix.concat(library.matrix);
+
+					_matrix.translate(-origin.x, -origin.y);
+
+					updateTrig();
+					_matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);
+					_matrix.translate(-frameOffset.x, -frameOffset.y);
+					if (animation.curAnim != null) {
+						if (animation.curAnim.offset != null) _matrix.translate(-animation.curAnim.offset.x, -animation.curAnim.offset.y);
+					}
+					_matrix.rotateWithTrig(_cosFrameOffsetAngle, -_sinFrameOffsetAngle);
+
+					_matrix.scale(scale.x, scale.y);
+					if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
+
+					if (skew.x != 0 || skew.y != 0) {
+						//FlxAngle.TO_RAD
+						_skewMatrix.setTo(1, Math.tan(skew.y * 0.017453292519943295), Math.tan(skew.x * 0.017453292519943295), 1, 0, 0);
+						_matrix.concat(_skewMatrix);
+					}
+
+					getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
+					_matrix.translate(_point.x, _point.y);
+
+					if (isPixelPerfectRender(camera)) {
+						_matrix.tx = Math.floor(_matrix.tx);
+						_matrix.ty = Math.floor(_matrix.ty);
+					}
+
+					if (renderStage) drawStage(camera);
+
+					timeline.currentFrame = animation.frameIndex;
+					timeline.draw(camera, _matrix, colorTransform, blend, antialiasing, shader);
+				}
+			}
 			default:
 		}
+		return fields;
+	}
+
+	// adds createPost
+	public static macro function buildFlxState():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields();
+		for (f in fields) if (f.name == "createPost") return fields;
+
+		fields.push({name: "createPost", access: [APublic], pos: Context.currentPos(), kind: FFun({args: [], expr: macro {}})});
 		return fields;
 	}
 
@@ -442,6 +639,7 @@ final class InternalCompileMacro {
 	}
 	*/
 
+	// fix resolution, add createPost
 	public static macro function buildFlxGame():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
 		final f:Function = {
@@ -449,18 +647,24 @@ final class InternalCompileMacro {
 			expr: macro r.setTo(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y)
 		};
 
-		/*for (f in fields) if (f.name == "resizeGame") switch (f.kind) {
-			case FFun(func): switch (func.expr.expr) {
-				case EBlock(exprs): //attachBitmapCacheFix(0, exprs);
-					exprs.push(macro graphics.clear());
-					exprs.push(macro graphics.beginFill(0, 1));
-					//exprs.push(macro graphics.drawRect(-1, -1, FlxG.scaleMode.gameSize.x + 2, FlxG.scaleMode.gameSize.y + 2));
-					exprs.push(macro graphics.drawRect(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y));
-					exprs.push(macro graphics.endFill());
-				default:
+		for (f in fields) switch (f.kind) {
+			case FFun(func): switch (f.name) {
+				/*case "resizeGame": switch (func.expr.expr) {
+					case EBlock(exprs): //attachBitmapCacheFix(0, exprs);
+						exprs.push(macro graphics.clear());
+						exprs.push(macro graphics.beginFill(0, 1));
+						exprs.push(macro graphics.drawRect(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y));
+						exprs.push(macro graphics.endFill());
+					default:
+				}*/
+				case "switchState": switch (func.expr.expr) {
+					case EBlock(exprs):
+						exprs.insert(exprs.length - 1, macro if (_state != null) _state.createPost());
+					default:
+				}
 			}
 			default:
-		}*/
+		}
 
 		for (name in ["__getBounds", "__getFilterBounds", "__getRenderBounds"])
 			fields.push({name: name, access: [AOverride], pos: pos, kind: FFun(f)});
@@ -468,31 +672,24 @@ final class InternalCompileMacro {
 		return fields;
 	}
 
-	// for BLCamera
+	// bring or patch shit stuff from potential fork flixel that likes to fuck shit up
 	public static macro function buildFlxCamera():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos(), fieldNames:Array<String> = [];
-		for (f in fields) switch (f.name) {
-			case "calcMarginX" | "calcMarginY" | "updateBlitMatrix": f.access.remove(AInline);
-			case "set_followLerp" | "_filters" | "set_filters" | "get_filters" | "addShader" | "removeShader": fields.remove(f);
-			case "filters": f.kind = FVar(macro :Null<Array<openfl.filters.BitmapFilter>>, macro null);
-			case "followLerp": f.kind = FVar(macro :Float, macro 1);
-			/*case "onResize": switch (f.kind) {
-				case FFun(func): switch (func.expr.expr) {
+		var f:Field, i:Int = fields.length;
+		while (i-- > 0) switch ((f = fields[i]).kind) {
+			case FFun(func): switch (f.name) {
+				case "set_followLerp" | "set_filters" | "get_filters" | "addShader" | "removeShader": fields.remove(f);
+				/*case "onResize": switch (func.expr.expr) {
 					case EBlock(exprs): attachBitmapCacheFix(0, exprs, ["flashSprite"]);
 					default:
-				}
-				default:
-			}*/
-			default:
-				fieldNames.push(f.name);
-		}
-
-		// just add stuff idc, these flixel forks pmo
-		if (!fieldNames.contains("followEnabled")) fields.push({name: "followEnabled", access: [APublic], pos: pos, kind: FVar(macro :Bool, macro true)});
-		if (!fieldNames.contains("paused")) fields.push({name: "paused", access: [APublic], pos: pos, kind: FVar(macro :Bool, macro false)});
-
-		for (f in fields) switch (f.kind) {
-			case FFun(func): switch (f.name) {
+				}*/
+				case "set_zoom":
+					func.args = [{name: "value", type: macro :Float}];
+					func.expr = macro {
+						zoom = (value == 0) ? defaultZoom : value;
+						setScale(getActualZoom(), getActualZoom());
+						return value;
+					};
 				case "startQuadBatch":
 					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
 					func.expr = macro {
@@ -585,19 +782,32 @@ final class InternalCompileMacro {
 						return item;
 					}
 			}
-			default:
+			default: switch (f.name) {
+				case "_filters": fields.remove(f);
+				case "filters": f.kind = FVar(macro :Null<Array<openfl.filters.BitmapFilter>>, macro null);
+				case "followLerp": f.kind = FVar(macro :Float, macro 1);
+				default:
+					fieldNames.push(f.name);
+			}
 		}
-		return fields;
-	}
 
-	// for Object3D
-	public static macro function buildFlxObject():Array<Field> {
-		final fields:Array<Field> = Context.getBuildFields();
-		for (f in fields) switch (f.name) {
-			case "initMotionVars": f.access.remove(AInline);
-			case "screenCenter": f.access.remove(AInline);
-			default:
+		// just add stuff idc, these flixel forks pmo
+		if (!fieldNames.contains("followEnabled")) fields.push({name: "followEnabled", access: [APublic], pos: pos, kind: FVar(macro :Bool, macro true)});
+		if (!fieldNames.contains("paused")) fields.push({name: "paused", access: [APublic], pos: pos, kind: FVar(macro :Bool, macro false)});
+		if (!fieldNames.contains("zoomMultiplier")) {
+			fields.push({name: "zoomMultiplier", access: [APublic], pos: pos, kind: FProp("default", "set", macro :Float, macro 1.0)});
+			fields.push({name: "set_zoomMultiplier", access: [APublic], pos: pos, kind: FFun({
+				args: [{name: "value", type: macro :Float}], ret: macro :Float, expr: macro {
+					zoomMultiplier = value;
+					setScale(getActualZoom(), getActualZoom());
+					return value;
+				}
+			})});
+			fields.push({name: "getActualZoom", access: [APublic, AInline], pos: pos, kind: FFun({
+				args: [], ret: macro :Float, expr: macro return zoom * zoomMultiplier
+			})});
 		}
+
 		return fields;
 	}
 

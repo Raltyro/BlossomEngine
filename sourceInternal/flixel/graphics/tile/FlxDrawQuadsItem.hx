@@ -13,39 +13,44 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 	static inline var VERTICES_PER_QUAD = 4;
 
 	public var shader:FlxShader;
-	var angles:Array<Float>;
-	var alphas:Array<Float>;
-	var colorMultipliers:Array<Float>;
-	var colorOffsets:Array<Float>;
-
 	public var rects:Vector<Float> = new Vector<Float>();
 	public var transforms:Vector<Float> = new Vector<Float>();
 
+	var angles:Array<Float>;
+	var alphas:Array<Float>;
+
+	var colorMultipliers:Array<Float>;
+	var colorOffsets:Array<Float>;
+
 	public function new() {
 		super();
-		type = FlxDrawItemType.TILES;
+		type = TILES;
 		angles = [];
 		alphas = [];
 	}
 
 	override public function reset() {
 		super.reset();
+
 		rects.length = 0;
 		transforms.length = 0;
 
 		angles.resize(0);
 		alphas.resize(0);
+
 		colorMultipliers?.resize(0);
 		colorOffsets?.resize(0);
 	}
 
 	override public function dispose() {
 		super.dispose();
+
 		rects = null;
 		transforms = null;
 
 		angles = null;
 		alphas = null;
+
 		colorMultipliers = null;
 		colorOffsets = null;
 	}
@@ -101,7 +106,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		final shader = shader != null ? shader : graphics.shader;
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
-		shader.frameRect.value = @:privateAccess untyped (rects).__array;
+		shader.frameRect.value = untyped (rects).__array;
 		shader.frameAngle.value = angles;
 		shader.alpha.value = alphas;
 		if (colored || hasColorOffsets) {
@@ -117,6 +122,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		if (depthCompareMode == null) camera.canvas.graphics.overrideDepthTest(false, null);
 		else camera.canvas.graphics.overrideDepthTest(true, depthCompareMode);
 		camera.canvas.graphics.drawQuads(rects, null, transforms);
+		camera.canvas.graphics.endFill();
 
 		super.render(camera);
 	}

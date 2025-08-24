@@ -148,18 +148,38 @@ class Assets
 		var image = LimeAssets.getImage(id, false);
 		if (image != null) return cast image.src;
 		#else
-		var image:Image;
-		if (hardware = hardware != null ? hardware : defaultHardware) {
+		var image:Image = null;
+		if (hardware = hardware != null ? hardware : defaultHardware) @:privateAccess {
 			if (mainImage == null) mainImage = new Image();
 			mainImage.height = mainImage.width = -1;
-			@:privateAccess if (!(image = mainImage).__fromFile(getPath(id))) return null;
+
+			id = getPath(id);
+			#if (sys && lime_cffi && !disable_cffi && !macro && !cs)
+			if (lime.system.CFFI.enabled) {
+				var buffer = mainImage.buffer;
+				if (buffer?.data == null) buffer = new lime.graphics.ImageBuffer(new lime.utils.UInt8Array(haxe.io.Bytes.alloc(0)));
+				else {
+					buffer.format = 0;
+					buffer.premultiplied = false;
+				}
+				buffer = lime._internal.backend.native.NativeCFFI.lime_image_load_file(id, buffer);
+
+				if (buffer != null) (image = mainImage).__fromImageBuffer(buffer);
+				else if (mainImage.__fromFile(id)) image = mainImage;
+			}
+			else #end if (mainImage.__fromFile(id)) image = mainImage;
 		}
 		else
 			image = LimeAssets.getImage(id, false);
 
 		if (image != null) {
 			var bitmapData = BitmapData.fromImage(image);
-			if (hardware) BitmapDataUtil.toHardware(bitmapData);
+			if (hardware) {
+				BitmapDataUtil.toHardware(bitmapData);
+				#if cpp
+				if (mainImage == image) cpp.NativeArray.setSize(untyped image.data.buffer.b, 0);
+				#end
+			}
 			return bitmapData;
 		}
 		#end

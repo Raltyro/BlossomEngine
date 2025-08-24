@@ -15,8 +15,11 @@
 	<!--Disable Camera Buffers unless needed-->
 	<!--<define name="CAMERA_NO_BUFFER"/>-->
 
+	<!--Disable Full Screen Scale Mode-->
+	<!--<define name="SCALEMODE_NO_FULLSCREEN"/>-->
+
 	<!--Disable Videos-->
-	<define name="NO_VIDEOS" unless="cpp"/>
+	<!--<define name="NO_VIDEOS"/>-->
 
 	<!--Disable Discord RPC-->
 	<define name="NO_DISCORD" unless="desktop"/>
@@ -77,9 +80,9 @@
 	<haxelib name="hscript-improved"/>
 	<haxedef name="hscriptPos"/>
 
-	<section if="cpp" unless="NO_DISCORD">
+	<section if="cpp">
 		<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
-		<haxelib name="hxdiscord_rpc"/>
+		<haxelib name="hxdiscord_rpc" unless="NO_DISCORD"/>
 	</section>
 
 	<haxelib name="hxcpp-debug-server" if="debug"/>
@@ -103,19 +106,21 @@
 	<haxedef name="HXCPP_GC_BIG_BLOCKS"/>
 	<haxedef name="HXCPP_CATCH_SEGV"/>
 	<haxedef name="HXCPP_ALIGN_ALLOC"/>
+	<haxedef name="HXCPP_DEBUG_LINK"/>
 	<haxedef name="analyzer-optimize" unless="debug"/>
 	<section if="debug">
-		<haxedef name="HXCPP_DEBUG_LINK"/>
 		<haxedef name="HXCPP_DEBUG"/>
 		<section if="summary">
 			<haxedef name="HXCPP_GC_SUMMARY"/>
 			<haxedef name="HXCPP_GC_DEBUG_LEVEL" value="3"/>
 		</section>
+
+		<haxedef name="openfl_debug"/>
 	</section>
 
 	<!-- Haxe 4.3.0+: Enable pretty syntax errors and stuff. -->
 	<!-- <haxedef name="message.reporting" value="pretty"/> -->
-	<haxedef name="openfl_dpi_aware" if="openfl_dpi_aware"/>
+	<haxedef name="openfl_dpi_aware"/>
 	<!-- <haxedef name="openfl_enable_experimental_update_queue"/> -->
 	<haxedef name="openfl_pool_events"/>
 	<haxedef name="openfl-enable-handle-error"/>

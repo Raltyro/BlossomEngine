@@ -287,12 +287,12 @@ final class BitmapDataUtil {
 
 		#if openfl_power_of_two bitmap.image.powerOfTwo = true; #end
 		bitmap.image.premultiplied = true;
+		bitmap.image.format = BGRA32;
 
 		if (bitmap.__texture == null) bitmap.__texture = context3D.createTexture(bitmap.width, bitmap.height, BGRA, true);
 		bitmap.__textureContext = context3D.__context;
 		bitmap.getTexture(context3D);
 		bitmap.readable = false;
-		bitmap.image.data = null;
 		bitmap.image = null;
 	}
 

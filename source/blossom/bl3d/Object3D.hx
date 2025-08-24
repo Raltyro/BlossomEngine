@@ -1,4 +1,4 @@
-package blossom.3d;
+package blossom.bl3d;
 
 import openfl.display.BlendMode;
 import openfl.display.Shader;
@@ -12,8 +12,8 @@ import flixel.FlxCamera;
 import flixel.FlxObject;
 import flixel.FlxSprite;
 
-import blossom.3d.Container3D;
 import blossom.backend.util.MathUtil;
+import blossom.math.Vector3;
 
 using flixel.util.FlxColorTransformUtil;
 
@@ -28,11 +28,11 @@ class Object3D extends FlxObject {
 		matrix.identity();
 
 		if (rotation != null) {
-			for (axis in rotationOrder) {
+			/*for (axis in rotationOrder) {
 				case Z: if (Math.abs(rotation.z) > FlxMath.EPSILON) matrix.appendRotation(rotation.z, Vector3.Z_AXIS.copyToFlash(_tempVector3D2), _tempVector3D);
 				case Y: if (Math.abs(rotation.y) > FlxMath.EPSILON) matrix.appendRotation(rotation.y, Vector3.Y_AXIS.copyToFlash(_tempVector3D2), _tempVector3D);
 				case X: if (Math.abs(rotation.x) > FlxMath.EPSILON) matrix.appendRotation(rotation.x, Vector3.X_AXIS.copyToFlash(_tempVector3D2), _tempVector3D);
-			}
+			}*/
 			rotation.putWeak();
 		}
 

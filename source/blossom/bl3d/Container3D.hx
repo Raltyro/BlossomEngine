@@ -1,4 +1,4 @@
-package blossom.3d;
+package blossom.bl3d;
 
 import flixel.group.FlxContainer;
 import flixel.util.FlxDestroyUtil;

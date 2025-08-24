@@ -4,6 +4,7 @@ import openfl.display.BlendMode;
 import openfl.display.ShaderParameter;
 import openfl.display3D.Context3DCompareMode;
 import openfl.geom.ColorTransform;
+import openfl.Vector;
 
 import flixel.graphics.frames.FlxFrame;
 import flixel.math.FlxMatrix;

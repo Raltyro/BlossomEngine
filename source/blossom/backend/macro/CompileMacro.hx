@@ -19,6 +19,9 @@ final class CompileMacro {
 		#if (!display)
 		final compileMacro = 'blossom.backend.macro.CompileMacro';
 		Compiler.addMetadata('@:build($compileMacro.buildCameraFrontEnd())', 'flixel.system.frontEnds.CameraFrontEnd');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxCamera())', 'flixel.FlxCamera');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxObject())', 'flixel.FlxObject');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxSprite())', 'flixel.FlxSprite');
 		#end
 	}
 
@@ -35,6 +38,38 @@ final class CompileMacro {
 					(flixel.FlxG.camera = add(newCamera == null ? new blossom.BLCamera() : newCamera)).ID = 0;
 					flixel.FlxCamera._defaultCameras = defaults;
 				};
+			default:
+		}
+		return fields;
+	}
+
+	// for BLCamera
+	public static macro function buildFlxCamera():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields();
+		for (f in fields) switch (f.name) {
+			case "calcMarginX" | "calcMarginY" | "updateBlitMatrix": f.access.remove(AInline);
+		}
+		return fields;
+	}
+
+	// for Object3D
+	public static macro function buildFlxObject():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields();
+		for (f in fields) switch (f.name) {
+			case "initMotionVars": f.access.remove(AInline);
+			case "screenCenter": f.access.remove(AInline);
+			default:
+		}
+		return fields;
+	}
+
+	// for BLSprite & Character stageFlips
+	public static macro function buildFlxSprite():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields();
+		for (f in fields) switch (f.name) {
+			case "centerOrigin": f.access.remove(AInline);
+			case "checkFlipX": f.access.remove(AInline);
+			case "checkFlipY": f.access.remove(AInline);
 			default:
 		}
 		return fields;

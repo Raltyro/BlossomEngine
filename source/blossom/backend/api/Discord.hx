@@ -3,7 +3,7 @@ package blossom.backend.api;
 import flixel.graphics.FlxGraphic;
 import flixel.util.FlxSignal;
 
-#if !NO_DISCORD
+#if hxdiscord_rpc
 import cpp.Function;
 import cpp.RawPointer;
 import cpp.RawConstPointer;
@@ -63,7 +63,7 @@ class Discord {
 	public static var onDisconnected(default, null):FlxTypedSignal<Int->String->Void> = new FlxTypedSignal<Int->String->Void>();
 	public static var onError(default, null):FlxTypedSignal<Int->String->Void> = new FlxTypedSignal<Int->String->Void>();
 
-	#if !NO_DISCORD
+	#if hxdiscord_rpc
 	private static var presence:DiscordRichPresence = new DiscordRichPresence();
 	private static var requestSignals:Deque<{type:DiscordSignalType, ?data:Array<Dynamic>}> = new Deque();
 

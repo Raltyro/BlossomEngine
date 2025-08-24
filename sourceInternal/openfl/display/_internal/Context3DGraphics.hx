@@ -38,6 +38,7 @@ class Context3DGraphics
 	private static var blankBitmapData:BitmapData;//= new BitmapData(1, 1, false, 0xFFFFFF);
 	private static var maskRender:Bool;
 	private static var tempColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
+	private static var tempReader = new DrawCommandReader(null);
 
 	private static function buildBuffer(graphics:Graphics, renderer:OpenGLRenderer):Void
 	{
@@ -46,7 +47,7 @@ class Context3DGraphics
 		var vertexBufferPosition = 0;
 		var vertexBufferPositionUVT = 0;
 
-		var data = new DrawCommandReader(graphics.__commands);
+		tempReader.set(graphics.__commands);
 
 		var context = renderer.__context3D;
 
@@ -60,15 +61,15 @@ class Context3DGraphics
 			switch (type)
 			{
 				case BEGIN_BITMAP_FILL:
-					var c = data.readBeginBitmapFill();
+					var c = tempReader.readBeginBitmapFill();
 					bitmap = c.bitmap;
 
 				case BEGIN_FILL:
 					bitmap = null;
-					data.skip(type);
+					tempReader.skip(type);
 
 				case BEGIN_SHADER_FILL:
-					var c = data.readBeginShaderFill();
+					var c = tempReader.readBeginShaderFill();
 					var shaderBuffer = c.shaderBuffer;
 
 					bitmap = null;
@@ -90,9 +91,9 @@ class Context3DGraphics
 
 					if (bitmap != null)
 					{
-						var c = data.readDrawQuads();
+						var c = tempReader.readDrawQuads();
 
-						#if cpp
+						#if (cpp || hl)
 						var rects:Array<Float> = c.rects == null ? null : untyped (c.rects).__array;
 						var indices:Array<Int> = c.indices == null ? null : untyped (c.indices).__array;
 						var transforms:Array<Float> = c.transforms == null ? null : untyped (c.transforms).__array;
@@ -253,7 +254,7 @@ class Context3DGraphics
 					}
 
 				case DRAW_TRIANGLES:
-					var c = data.readDrawTriangles();
+					var c = tempReader.readDrawTriangles();
 					var vertices = c.vertices;
 					var indices = c.indices;
 					var uvtData = c.uvtData;
@@ -324,7 +325,7 @@ class Context3DGraphics
 					bitmap = null;
 
 				default:
-					data.skip(type);
+					tempReader.skip(type);
 			}
 		}
 
@@ -394,7 +395,7 @@ class Context3DGraphics
 			return false;
 		}
 
-		var data = new DrawCommandReader(graphics.__commands);
+		tempReader.set(graphics.__commands);
 		var hasColorFill = false, hasBitmapFill = false, hasShaderFill = false;
 
 		for (type in graphics.__commands.types)
@@ -405,50 +406,50 @@ class Context3DGraphics
 					hasBitmapFill = true;
 					hasColorFill = false;
 					hasShaderFill = false;
-					data.skip(type);
+					tempReader.skip(type);
 
 				case BEGIN_FILL:
 					hasBitmapFill = false;
 					hasColorFill = true;
 					hasShaderFill = false;
-					data.skip(type);
+					tempReader.skip(type);
 
 				case BEGIN_SHADER_FILL:
 					hasBitmapFill = false;
 					hasColorFill = false;
 					hasShaderFill = true;
-					data.skip(type);
+					tempReader.skip(type);
 
 				case DRAW_QUADS:
 					if (hasBitmapFill || hasShaderFill)
 					{
-						data.skip(type);
+						tempReader.skip(type);
 					}
 					else
 					{
-						data.destroy();
+						tempReader.destroy();
 						return false;
 					}
 
 				case DRAW_RECT:
 					if (hasColorFill)
 					{
-						data.skip(type);
+						tempReader.skip(type);
 					}
 					else
 					{
-						data.destroy();
+						tempReader.destroy();
 						return false;
 					}
 
 				case DRAW_TRIANGLES:
 					if (hasBitmapFill || hasShaderFill)
 					{
-						data.skip(type);
+						tempReader.skip(type);
 					}
 					else
 					{
-						data.destroy();
+						tempReader.destroy();
 						return false;
 					}
 
@@ -456,24 +457,24 @@ class Context3DGraphics
 					hasBitmapFill = false;
 					hasColorFill = false;
 					hasShaderFill = false;
-					data.skip(type);
+					tempReader.skip(type);
 
 				case MOVE_TO:
-					data.skip(type);
+					tempReader.skip(type);
 
 				case OVERRIDE_BLEND_MODE:
-					data.skip(type);
+					tempReader.skip(type);
 
 				case OVERRIDE_DEPTH_TEST:
-					data.skip(type);
+					tempReader.skip(type);
 
 				default:
-					data.destroy();
+					tempReader.destroy();
 					return false;
 			}
 		}
 
-		data.destroy();
+		tempReader.destroy();
 		return true;
 	}
 
@@ -545,7 +546,7 @@ class Context3DGraphics
 					buildBuffer(graphics, renderer);
 				}
 
-				var data = new DrawCommandReader(graphics.__commands);
+				tempReader.set(graphics.__commands);
 
 				var context = renderer.__context3D;
 				var gl = context.gl;
@@ -571,7 +572,7 @@ class Context3DGraphics
 					switch (type)
 					{
 						case BEGIN_BITMAP_FILL:
-							var c = data.readBeginBitmapFill();
+							var c = tempReader.readBeginBitmapFill();
 							bitmap = c.bitmap;
 							repeat = c.repeat;
 							smooth = c.smooth;
@@ -579,7 +580,7 @@ class Context3DGraphics
 							fill = null;
 
 						case BEGIN_FILL:
-							var c = data.readBeginFill();
+							var c = tempReader.readBeginFill();
 							var color = Std.int(c.color);
 							var alpha = Std.int(c.alpha * 0xFF);
 
@@ -588,7 +589,7 @@ class Context3DGraphics
 							bitmap = null;
 
 						case BEGIN_SHADER_FILL:
-							var c = data.readBeginShaderFill();
+							var c = tempReader.readBeginShaderFill();
 							shaderBuffer = c.shaderBuffer;
 							shaderBufferOffset = 0;
 
@@ -606,18 +607,18 @@ class Context3DGraphics
 						case DRAW_QUADS:
 							if (bitmap != null)
 							{
-								var c = data.readDrawQuads();
+								var c = tempReader.readDrawQuads();
 
 								var length:Int;
 								if (c.indices != null) {
-									#if cpp
+									#if (cpp || hl)
 									length = (untyped (c.indices).__array).length;
 									#else
 									length = c.indices.length;
 									#end
 								}
 								else if (c.rects != null) {
-									#if cpp
+									#if (cpp || hl)
 									length = Math.floor((untyped (c.rects).__array).length / 4);
 									#else
 									length = Math.floor(c.rects.length / 4);
@@ -684,7 +685,7 @@ class Context3DGraphics
 						case DRAW_RECT:
 							if (fill != null)
 							{
-								var c = data.readDrawRect();
+								var c = tempReader.readDrawRect();
 								var x = c.x;
 								var y = c.y;
 								var width = c.width;
@@ -733,7 +734,7 @@ class Context3DGraphics
 							}
 
 						case DRAW_TRIANGLES:
-							var c = data.readDrawTriangles();
+							var c = tempReader.readDrawTriangles();
 							var vertices = c.vertices;
 							var indices = c.indices;
 							var uvtData = c.uvtData;
@@ -840,27 +841,27 @@ class Context3DGraphics
 							bitmap = null;
 							fill = null;
 							shaderBuffer = null;
-							data.skip(type);
+							tempReader.skip(type);
 							context.setCulling(NONE);
 							context.__setGLDepthTest(false);
 							context.setDepthTest(false, ALWAYS);
 
 						case MOVE_TO:
-							var c = data.readMoveTo();
+							var c = tempReader.readMoveTo();
 							positionX = c.x;
 							positionY = c.y;
 
 						case OVERRIDE_BLEND_MODE:
-							var c = data.readOverrideBlendMode();
+							var c = tempReader.readOverrideBlendMode();
 							renderer.__setBlendMode(c.blendMode);
 
 						case OVERRIDE_DEPTH_TEST:
-							var c = data.readOverrideDepthTest();
+							var c = tempReader.readOverrideDepthTest();
 							context.__setGLDepthTest(c.depthTest);
 							context.setDepthTest(c.depthTest, c.compareMode);
 
 						default:
-							data.skip(type);
+							tempReader.skip(type);
 					}
 				}
 

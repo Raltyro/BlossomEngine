@@ -185,7 +185,7 @@ import openfl.geom.Vector3D;
 }
 
 @:noCompletion
-@:allow(bl3d.math.Vector3)
+@:allow(blossom.math.Vector3)
 class BaseVector3 implements IFlxPooled {
 	#if FLX_POINT_POOL
 	static var pool:FlxPool<BaseVector3> = new FlxPool(BaseVector3.new.bind(0, 0, 0));
@@ -223,9 +223,9 @@ class BaseVector3 implements IFlxPooled {
 		set(x, y, z);
 
 	public function set(x = 0.0, y = 0.0, z = 0.0):BaseVector3 {
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		@:bypassAccessor this.x = x;
+		@:bypassAccessor this.y = y;
+		@:bypassAccessor this.z = z;
 		return this;
 	}
 

@@ -474,37 +474,35 @@ final class AudioAnalyzer {
 		final backend = sound._source.__backend;
 
 		// TODO: Wrap it with try until i figured it out an effective way to do this...
+		// So... sometimes it just uses the decoder even if it looks good?? please help
 		var n = Math.floor((endPos - startPos) * __toBits);
-		try {
-			var i = backend.bufferSizes.length - backend.queuedBuffers - 1, time:Float;
-			while (++i < backend.bufferSizes.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
-				var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferSizes[i], c = 0;
-				while (pos >= size) {
+		var i = backend.bufferSizes.length - backend.queuedBuffers - 1, time:Float;
+		while (++i < backend.bufferSizes.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
+			var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferSizes[i], c = 0;
+			while (pos >= size) {
+				if (++i >= backend.bufferSizes.length) break;
+				pos -= size;
+				buf = backend.bufferDatas[i].buffer;
+				size = backend.bufferSizes[i];
+			}
+			if (i >= backend.bufferSizes.length) break;
+			if ((pos -= pos % __sampleSize) < 0) pos = 0;
+			n -= pos % __sampleSize;
+
+			while (n > 0) {
+				callback(getByte(buf, pos, __wordSize), c);
+				if (++c > buffer.channels) c = 0;
+				if ((pos += __wordSize) >= size) {
 					if (++i >= backend.bufferSizes.length) break;
-					pos -= size;
+					pos = 0;
 					buf = backend.bufferDatas[i].buffer;
 					size = backend.bufferSizes[i];
 				}
-				if (i >= backend.bufferSizes.length) break;
-				if ((pos -= pos % __sampleSize) < 0) pos = 0;
-				n -= pos % __sampleSize;
-
-				while (n > 0) {
-					callback(getByte(buf, pos, __wordSize), c);
-					if (++c > buffer.channels) c = 0;
-					if ((pos += __wordSize) >= size) {
-						if (++i >= backend.bufferSizes.length) break;
-						pos = 0;
-						buf = backend.bufferDatas[i].buffer;
-						size = backend.bufferSizes[i];
-					}
-					n -= __wordSize;
-				}
-
-				break;
+				n -= __wordSize;
 			}
+
+			break;
 		}
-		catch (e:haxe.Exception) trace(e.stack, e.message);
 
 		return endPos - (n / __toBits);
 	}
@@ -556,6 +554,7 @@ final class AudioAnalyzer {
 					}
 				}
 				else {
+					trace(pos, __bufferLastSize, __buffer?.length ?? -1);
 					while (pos < __bufferLastSize) {
 						callback(getByte(__buffer, pos, __wordSize), c);
 						if (++c > buffer.channels) c = 0;

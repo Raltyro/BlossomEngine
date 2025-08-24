@@ -36,8 +36,12 @@ class DrawCommandReader
 
 	public function new(buffer:DrawCommandBuffer)
 	{
-		this.buffer = buffer;
+		inline set(buffer);
+	}
 
+	public function set(buffer:DrawCommandBuffer)
+	{
+		this.buffer = buffer;
 		bPos = iPos = fPos = oPos = ffPos = iiPos = tsPos = 0;
 		prev = UNKNOWN;
 	}

@@ -310,7 +310,6 @@ class AudioBuffer
 		if (vorbisFile == null) return null;
 
 		var info = vorbisFile.info();
-		if (info == null) return null;
 
 		var audioBuffer = new AudioBuffer();
 		audioBuffer.channels = info.channels;
@@ -332,7 +331,8 @@ class AudioBuffer
 
 			audioBuffer.data = new UInt8Array(bytes);
 		}
-		else audioBuffer.__srcVorbisFile = vorbisFile;
+		else
+			audioBuffer.__srcVorbisFile = vorbisFile;
 
 		return audioBuffer;
 	}

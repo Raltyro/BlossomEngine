@@ -57,6 +57,8 @@ class BLState extends flixel.FlxSubState {
 	override function create() {
 		super.create();
 
+		if (_parentState == null) bgColor = FlxColor.BLACK;
+
 		if (conductor == null && _parentState == null) conductor = Conductor.instance;
 		else updateConductor = false;
 
@@ -113,7 +115,7 @@ class BLState extends flixel.FlxSubState {
 	}
 
 	override function draw() {
-		if (_bgSprite != null) @:privateAccess _bgSprite._cameras = _cameras;
+		//if (_bgSprite != null) @:privateAccess _bgSprite._cameras = _cameras;
 		if (curTrans != null) {
 			if (curTrans.parentDraw) super.draw();
 			curTrans.draw();

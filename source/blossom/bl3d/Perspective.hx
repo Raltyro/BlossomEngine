@@ -1,4 +1,4 @@
-package blossom.3d;
+package blossom.bl3d;
 
 import openfl.display.Shader;
 import openfl.geom.Matrix3D;
@@ -7,6 +7,7 @@ import flixel.math.FlxAngle;
 import flixel.util.FlxDestroyUtil;
 
 import blossom.backend.util.ShaderUtil;
+import blossom.math.Vector3;
 
 class Perspective implements IFlxDestroyable {
 	/**
