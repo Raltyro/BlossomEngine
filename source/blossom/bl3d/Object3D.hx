@@ -28,29 +28,27 @@ class Object3D extends FlxObject {
 		matrix.identity();
 
 		if (rotation != null) {
-			/*for (axis in rotationOrder) {
+			for (axis in rotationOrder) switch (axis) {
 				case Z: if (Math.abs(rotation.z) > FlxMath.EPSILON) matrix.appendRotation(rotation.z, Vector3.Z_AXIS.copyToFlash(_tempVector3D2), _tempVector3D);
 				case Y: if (Math.abs(rotation.y) > FlxMath.EPSILON) matrix.appendRotation(rotation.y, Vector3.Y_AXIS.copyToFlash(_tempVector3D2), _tempVector3D);
 				case X: if (Math.abs(rotation.x) > FlxMath.EPSILON) matrix.appendRotation(rotation.x, Vector3.X_AXIS.copyToFlash(_tempVector3D2), _tempVector3D);
-			}*/
+			}
 			rotation.putWeak();
 		}
 
 		if (scale != null) {
-			matrix.appendTranslation(-_tempVector3D.x, -_tempVector3D.y, -_tempVector3D.z);
 			matrix.rawData[0] *= scale.x;
 			matrix.rawData[1] *= scale.x;
 			matrix.rawData[2] *= scale.x;
-			matrix.rawData[12] *= scale.x;
+			matrix.rawData[12] = (matrix.rawData[12] - _tempVector3D.x) * scale.x + _tempVector3D.x;
 			matrix.rawData[4] *= scale.y;
 			matrix.rawData[5] *= scale.y;
 			matrix.rawData[6] *= scale.y;
-			matrix.rawData[13] *= scale.y;
+			matrix.rawData[13] = (matrix.rawData[13] - _tempVector3D.y) * scale.y + _tempVector3D.y;
 			matrix.rawData[8] *= scale.z;
 			matrix.rawData[9] *= scale.z;
 			matrix.rawData[10] *= scale.z;
-			matrix.rawData[14] *= scale.z;
-			matrix.appendTranslation(_tempVector3D.x, _tempVector3D.y, _tempVector3D.z);
+			matrix.rawData[14] = (matrix.rawData[14] - _tempVector3D.z) * scale.z + _tempVector3D.z;
 
 			scale.putWeak();
 		}

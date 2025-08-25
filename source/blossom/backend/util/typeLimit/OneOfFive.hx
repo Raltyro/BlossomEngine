@@ -1,4 +1,4 @@
-package flixel.util.typeLimit;
+package blossom.backend.util.typeLimit;
 
 /**
  * Useful to limit a Dynamic function argument's type to the specified

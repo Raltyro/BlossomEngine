@@ -1,4 +1,4 @@
-package blossom.transition;
+package blossom.graphic.transitions;
 
 import flixel.FlxCamera;
 
@@ -17,6 +17,8 @@ class TransitionData {
 		this.duration = duration;
 		this.data = data;
 	}
+
+	public function copy():TransitionData return new TransitionData(transition, duration, Reflect.copy(data));
 
 	public function createTransition(status:TransitionStatus, finishCallback:()->Void):Transition
 		return Reflect.callMethod(null, Reflect.field(transition, 'construct') ?? Transition.construct, [transition, status, finishCallback, duration, data]);

@@ -15,26 +15,26 @@ final class ParseUtil {
 		else if (data is Int) {
 			#if openfljs
 			return switch (data) {
-				case 0: BlendMode.ADD;
-				case 1: BlendMode.ALPHA;
-				case 2: BlendMode.DARKEN;
-				case 3: BlendMode.DIFFERENCE;
-				case 4: BlendMode.ERASE;
-				case 5: BlendMode.HARDLIGHT;
-				case 6: BlendMode.INVERT;
-				case 7: BlendMode.LAYER;
-				case 8: BlendMode.LIGHTEN;
-				case 9: BlendMode.MULTIPLY;
-				case 10: BlendMode.NORMAL;
-				case 11: BlendMode.OVERLAY;
-				case 12: BlendMode.SCREEN;
-				case 13: BlendMode.SHADER;
-				case 14: BlendMode.SUBTRACT;
+				case 0: ADD;
+				case 1: ALPHA;
+				case 2: DARKEN;
+				case 3: DIFFERENCE;
+				case 4: ERASE;
+				case 5: HARDLIGHT;
+				case 6: INVERT;
+				case 7: LAYER;
+				case 8: LIGHTEN;
+				case 9: MULTIPLY;
+				case 10: NORMAL;
+				case 11: OVERLAY;
+				case 12: SCREEN;
+				case 13: SHADER;
+				case 14: SUBTRACT;
 
-				case 15: BlendMode.EXCLUDE;
-				case 16: BlendMode.SOFTLIGHT;
-				case 17: BlendMode.BURN;
-				case 18: BlendMode.DODGE;
+				case 15: EXCLUDE;
+				case 16: SOFTLIGHT;
+				case 17: BURN;
+				case 18: DODGE;
 				default: defaultBlendMode;
 			}
 			#else

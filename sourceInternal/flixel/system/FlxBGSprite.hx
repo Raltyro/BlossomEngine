@@ -7,7 +7,7 @@ import flixel.FlxBasic;
 class FlxBGSprite extends FlxSprite {
 	@:access(flixel.FlxCamera)
 	override public function draw():Void {
-		_frame = FlxG.bitmap.whitePixel;
+		if ((_frame = FlxG.bitmap.whitePixel) == null || _frame.parent == null || _frame.parent.isDestroyed) return;
 		for (camera in getCamerasLegacy()) {
 			if (!camera.visible || !camera.exists) continue;
 

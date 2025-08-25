@@ -14,19 +14,19 @@ class SpectrumTestState extends BLState {
 		super.create();
 
 		//SoundUtil.playMusic(Paths.music('suspended'));
-		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('aquatemp')));
-		//voices = FlxG.sound.play(AssetUtil.getMusic(Paths.voices('the uprising')), 1.0, true, false);
+		FlxG.sound.playMusic(AssetUtil.getMusic(Paths.inst('the uprising')));
+		voices = FlxG.sound.play(AssetUtil.getMusic(Paths.voices('the uprising')), 1.0, true, false);
 
-		//FlxG.sound.music.onComplete = () -> voices.play(true, 0);
+		FlxG.sound.music.onComplete = () -> voices.play(true, 0);
 
-		var spectrum = new Spectrum([FlxG.sound.music]);
+		var spectrum = new Spectrum([FlxG.sound.music, voices]);
 		spectrum.screenCenter();
 		add(spectrum);
 
 		var path = Paths.atlas("characters/GF_assets", "shared");
 		trace(path);
 		add(sprite = new FlxAnimate(path));
-		
+
 		sprite.anim.addBySymbol("idle", "GF Dancing Left", 24);
 
 		/*var path = Paths.atlas("characters/BOYFRIEND", "shared");
@@ -40,7 +40,7 @@ class SpectrumTestState extends BLState {
 
 		sprite.updateHitbox();
 		sprite.screenCenter();
-		sprite.blend = openfl.display.BlendMode.BURN;
+		//sprite.blend = openfl.display.BlendMode.BURN;
 		/*sprite.shader = new blossom.graphic.shaders.BlossomShader("
 #pragma header
 uniform float time;

@@ -470,7 +470,10 @@ final class InternalCompileMacro {
 		}})});
 		fields.push({name: "get_frameOffsetAngle", access: [APublic], pos: pos, kind: FFun({ret: macro :Float, args: [], expr: macro return frameOffsetAngle})});
 		fields.push({name: "set_frameOffsetAngle", access: [APublic], pos: pos, kind: FFun({ret: macro :Float, args: [{name: "value", type: macro :Float}], expr: macro {
-			if (frameOffsetAngle != (frameOffsetAngle = value)) _frameOffsetAngleChanged = true;
+			if (frameOffsetAngle != value) {
+				frameOffsetAngle = value;
+				_frameOffsetAngleChanged = true;
+			}
 			return value;
 		}})});
 

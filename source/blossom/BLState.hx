@@ -1,7 +1,7 @@
 package blossom;
 
+import blossom.graphic.transitions.Transition;
 import blossom.input.Controls;
-import blossom.transition.Transition;
 
 // It's a FlxSubstate instead so it can be a substate and a normal state
 // and theres no need for it having a seperate class for substate too

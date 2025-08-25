@@ -64,13 +64,17 @@ class BLGame extends flixel.FlxGame {
 	override function create(_) {
 		if (stage == null) return;
 		super.create(_);
-		addChild(statsCounter = new StatsCounter(3, 3));
+		addChildAt(statsCounter = new StatsCounter(3, 3), getChildIndex(_inputContainer) + 1);
 	}
 }
 
 final class Initial extends flixel.FlxState {
 	override function create() {
-		if (!blossom.backend.util.CommandLineHandler.parse(Sys.args()))
-			FlxG.switchState(GameConstants.INITIAL_STATE);
+		BLState.defaultTransIn = GameConstants.DEFAULT_TRANSITION_IN?.copy();
+		BLState.defaultTransOut = GameConstants.DEFAULT_TRANSITION_OUT?.copy();
+		BLState.skipNextTransIn = BLState.skipNextTransOut = true;
+
+		if (!blossom.backend.util.CommandLineHandler.parse(Sys.args())) @:privateAccess
+			FlxG.game._nextState = GameConstants.INITIAL_STATE;
 	}
 }
