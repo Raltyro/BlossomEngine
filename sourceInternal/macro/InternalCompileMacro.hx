@@ -510,10 +510,10 @@ final class InternalCompileMacro {
 				if (bakedRotationAngle <= 0) {
 					if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
 				}
-				
+
 				getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
 				_matrix.translate(_point.x, _point.y);
-				
+
 				if (isPixelPerfectRender(camera)) {
 					_matrix.tx = Math.floor(_matrix.tx);
 					_matrix.ty = Math.floor(_matrix.ty);
@@ -553,10 +553,10 @@ final class InternalCompileMacro {
 						_skewMatrix.setTo(1, Math.tan(skew.y * 0.017453292519943295), Math.tan(skew.x * 0.017453292519943295), 1, 0, 0);
 						_matrix.concat(_skewMatrix);
 					}
-					
+
 					getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
 					_matrix.translate(_point.x, _point.y);
-					
+
 					if (isPixelPerfectRender(camera)) {
 						_matrix.tx = Math.floor(_matrix.tx);
 						_matrix.ty = Math.floor(_matrix.ty);

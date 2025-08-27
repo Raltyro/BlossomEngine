@@ -45,7 +45,7 @@
 	<set name="BUILD_DIR" value="export/32bit" if="32bit"/>
 	<!--<set name="SWF_VERSION" value="11.8"/>-->
 
-	<app main="Main" preloader="flixel.system.FlxBasePreloader"/>
+	<app main="blossom.backend.BLGame" preloader="flixel.system.FlxBasePreloader"/>
 	<classpath name="sourceInternal"/>
 	<classpath name="source"/>
 

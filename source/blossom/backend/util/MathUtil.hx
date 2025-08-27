@@ -10,7 +10,7 @@ final class MathUtil {
 	 * 
 	 * @return Bool
 	**/
-	public static function lessThan(a:Float, b:Float, margin:Float = 0.0000001):Bool {
+	public static inline function lessThan(a:Float, b:Float, margin:Float = 0.0000001):Bool {
 		return a < b - margin;
 	}
 
@@ -23,7 +23,7 @@ final class MathUtil {
 	 * 
 	 * @return Bool
 	**/
-	public static function lessThanEqual(a:Float, b:Float, margin:Float = 0.0000001):Bool {
+	public static inline function lessThanEqual(a:Float, b:Float, margin:Float = 0.0000001):Bool {
 		return a <= b - margin;
 	}
 
@@ -36,7 +36,7 @@ final class MathUtil {
 	 * 
 	 * @return Bool
 	**/
-	public static function greaterThan(a:Float, b:Float, margin:Float = 0.0000001):Bool {
+	public static inline function greaterThan(a:Float, b:Float, margin:Float = 0.0000001):Bool {
 		return a > b + margin;
 	}
 
@@ -49,7 +49,7 @@ final class MathUtil {
 	 * 
 	 * @return Bool
 	**/
-	public static function greaterThanEqual(a:Float, b:Float, margin:Float = 0.0000001):Bool {
+	public static inline function greaterThanEqual(a:Float, b:Float, margin:Float = 0.0000001):Bool {
 		return a >= b + margin;
 	}
 
@@ -62,21 +62,8 @@ final class MathUtil {
 	 * 
 	 * @return Bool
 	**/
-	public static function equal(a:Float, b:Float, margin:Float = 0.0000001):Bool {
+	public static inline function equal(a:Float, b:Float, margin:Float = 0.0000001):Bool {
 		return Math.abs(a - b) <= margin;
-	}
-
-	/**
-	 * Checks if a are not approximately equal to b.
-	 * 
-	 * @param a Float
-	 * @param b Float
-	 * @param margin Float (Default: EPSILON)
-	 * 
-	 * @return Bool
-	**/
-	public static function notEqual(a:Float, b:Float, margin:Float = 0.0000001):Bool {
-		return Math.abs(a - b) > margin;
 	}
 
 	public static function maxInt(v0:Int, v1:Int)

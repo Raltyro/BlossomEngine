@@ -53,7 +53,7 @@ class Perspective implements IFlxDestroyable {
 	/**
 	 * Rotation order for this Perspective view.
 	 */
-	public var rotationOrder:RotationOrder = ZYX;
+	public var rotationOrder:RotationOrder = DEFAULT;
 
 	/**
 	 * Scaling of this perspective view.

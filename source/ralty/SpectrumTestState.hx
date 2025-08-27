@@ -1,14 +1,11 @@
 package ralty;
 
-import flixel.graphics.frames.FlxAtlasFrames;
-import animate.FlxAnimate;
-
 import blossom.backend.util.AudioAnalyzer;
 import blossom.backend.util.BitmapDataUtil;
 
 class SpectrumTestState extends BLState {
 	var voices:FlxSound;
-	var sprite:FlxAnimate;
+	var sprite:BLSprite;
 
 	override function create() {
 		super.create();
@@ -25,7 +22,7 @@ class SpectrumTestState extends BLState {
 
 		var path = Paths.atlas("characters/GF_assets", "shared");
 		trace(path);
-		add(sprite = new FlxAnimate(path));
+		add(sprite = new BLSprite(path));
 
 		sprite.anim.addBySymbol("idle", "GF Dancing Left", 24);
 

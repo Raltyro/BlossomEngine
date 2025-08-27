@@ -1,5 +1,7 @@
 package blossom.backend.util;
 
+import haxe.io.Path;
+
 import lime.app.Future;
 import lime.app.Promise;
 import lime.utils.Bytes;
@@ -9,7 +11,13 @@ import openfl.media.Sound;
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
 
+import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.FlxGraphic;
+import flixel.system.FlxAssets.FlxGraphicAsset;
+
+#if flixel_animate
+import animate.FlxAnimateFrames;
+#end
 
 using StringTools;
 
@@ -116,6 +124,20 @@ final class AssetUtil {
 		return Future.withValue(null);
 	}
 
+	public static function loadHTTPBitmap(path:String, hardware = true, useCache = true):Future<BitmapData> {
+		var bitmap = Assets.cache.getBitmapData(path);
+		if (bitmap != null) {
+			usedGraphics.push(path);
+			return Future.withValue(bitmap);
+		}
+
+		return Bytes.loadFromFile(path).then((bytes) -> {
+			bitmap = Assets.registerBitmapData(BitmapData.fromBytes(bytes), path);
+			if (hardware) BitmapDataUtil.toHardware(bitmap);
+			return Future.withValue(bitmap);
+		});
+	}
+
 	public static function getGraphic(path:String, persist = false, hardware = true):FlxGraphic {
 		var graphic = FlxG.bitmap.get(path);
 		if (graphic != null) {
@@ -183,9 +205,67 @@ final class AssetUtil {
 		return true;
 	}
 
+	public static function loadHTTPGraphic(path:String, persist = false, hardware = true):Future<FlxGraphic> {
+		var graphic = FlxG.bitmap.get(path);
+		if (graphic != null) {
+			usedGraphics.push(path);
+			return Future.withValue(graphic);
+		}
+
+		return loadHTTPBitmap(path, hardware).then((bitmap) -> {
+			if (bitmap == null) return Future.withValue(null);
+			else {
+				usedGraphics.push(path);
+				return Future.withValue(registerGraphic(bitmap, path, persist));
+			}
+		});
+	}
+
 	public static function graphicExists(path:String):Bool return Assets.exists(path, AssetType.IMAGE);
 	public static function bitmapCached(path:String):Bool return Assets.cache.hasBitmapData(path);
 	public static function graphicCached(path:String):Bool return FlxG.bitmap.get(path) != null;
+
+	// SparrowAtlas
+	public static function getSparrowAtlas(asset:FlxGraphicAsset, persist = false, hardware = true):Null<FlxAtlasFrames> {
+		if (asset == null) return null;
+		else if (asset is BitmapData) throw "BitmapData is unsupported";
+
+		var path = asset is String ? asset : null, graphic:FlxGraphic;
+		if (path != null) graphic = getGraphic((Paths.extension(path).toLowerCase() == "xml" ? Paths.replaceExtension : Paths.fix)(path, Paths.EXT_IMAGE));
+		else path = (graphic = cast asset).assetsKey;
+
+		return FlxAtlasFrames.fromSparrow(graphic, getText(Paths.replaceExtension(path, "xml")));
+	}
+
+	// AnimateAtlas
+	#if flixel_animate
+	public static function getAnimateAtlas(asset:FlxGraphicAsset, ?settings:FlxAnimateSettings, persist = false, hardware = true):Null<FlxAnimateFrames>
+	@:privateAccess {
+		if (asset == null) return null;
+		else if (asset is BitmapData) throw "BitmapData is unsupported";
+
+		final path = asset is String ? asset : Path.directory(cast(asset, FlxGraphic).assetsKey);
+		if (FlxAnimateFrames._cachedAtlases.exists(path)) {
+			var cachedAtlas = FlxAnimateFrames._cachedAtlases.get(path), isAtlasDestroyed = false;
+			for (spritemap in cast(cachedAtlas.parent, FlxAnimateSpritemapCollection).spritemaps) {
+				if (spritemap.isDestroyed) {
+					isAtlasDestroyed = true;
+					break;
+				}
+			}
+
+			// Destroy previously cached atlas if incomplete, and create a new instance
+			if (isAtlasDestroyed) {
+				cachedAtlas.destroy();
+				FlxAnimateFrames._cachedAtlases.remove(path);
+			}
+			else
+				return cachedAtlas;
+		}
+
+		return FlxAnimateFrames._fromAnimatePath(path, path, settings);
+	}	
+	#end
 
 	// Texts
 	public static function getText(path:String):String return Assets.getText(path, true);

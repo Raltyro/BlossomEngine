@@ -1,8 +1,12 @@
 package blossom.math;
 
-import flixel.util.FlxPool;
-import flixel.util.FlxStringUtil;
 import openfl.geom.Vector3D;
+#if !macro
+import flixel.util.FlxStringUtil;
+#if FLX_POINT_POOL
+import flixel.util.FlxPool;
+#end
+#end
 
 @:forward abstract Vector3(BaseVector3) to BaseVector3 from BaseVector3 {
 	public static inline var EPSILON:Float = 0.0000001;
@@ -95,54 +99,76 @@ import openfl.geom.Vector3D;
 	public inline function clone(?v:Vector3):Vector3 return copyTo(v);
 	public inline function set(x:Float = 0, y:Float = 0, z:Float = 0):Vector3 return this.set(x, y, z);
 
-	public inline function add(x:Float = 0, y:Float = 0, z:Float = 0):Vector3 return set(this.x + x, this.y + y, this.z + z);
-	public inline function subtract(x:Float = 0, y:Float = 0, z:Float = 0):Vector3 return set(this.x - x, this.y - y, this.z - z);
-	public inline function scale(x:Float, ?y:Float, ?z:Float):Vector3 {
-		if (y == null) y = x;
-		if (z == null) z = y;
-		return set(this.x * x, this.y * y, this.z * z);
-	}
-
-	public inline function addVector3(v:Vector3):Vector3 {
-		add(v.x, v.y, v.z);
+	public overload extern inline function add(x:Float = 0, y:Float = 0, z:Float = 0):Vector3 return set(this.x + x, this.y + y, this.z + z);
+	public overload extern inline function add(v:Vector3):Vector3 {
+		set(this.x + v.x, this.y + v.y, this.z + v.z);
 		v.putWeak();
 		return this;
 	}
+	public overload extern inline function add(v:Vector3D):Vector3 return set(this.x + v.x, this.y + v.y, this.z + v.z);
+	public inline function addVector3(v:Vector3):Vector3 return add(v);
+	public inline function addFromFlash(v:Vector3D):Vector3 return add(v);
+	public inline function addToFlash(v:Vector3D):Vector3D {
+		v.x += x;
+		v.y += y;
+		v.y += z;
+		return v;
+	}
 
-	public inline function subtractVector3(v:Vector3):Vector3 {
-		subtract(v.x, v.y, v.z);
+	public overload extern inline function subtract(x:Float = 0, y:Float = 0, z:Float = 0):Vector3 return set(this.x - x, this.y - y, this.z - z);
+	public overload extern inline function subtract(v:Vector3):Vector3 {
+		set(this.x - v.x, this.y - v.y, this.z - v.z);
 		v.putWeak();
 		return this;
 	}
+	public overload extern inline function subtract(v:Vector3D):Vector3 return set(this.x - v.x, this.y - v.y, this.z - v.z);
+	public inline function subtractVector3(v:Vector3):Vector3 return subtract(v);
+	public inline function subtractFromFlash(v:Vector3D):Vector3 return subtract(v);
+	public inline function subtractToFlash(v:Vector3D):Vector3D {
+		v.x -= x;
+		v.y -= y;
+		v.y -= z;
+		return v;
+	}
 
-	public inline function scaleVector3(v:Vector3):Vector3 {
-		scale(v.x, v.y, v.z);
+	public overload extern inline function scale(x:Float, y:Float, z:Float):Vector3 return set(this.x * x, this.y * y, this.z * z);
+	public overload extern inline function scale(amount:Float):Vector3 return set(this.x * amount, this.y * amount, this.z * amount);
+	public overload extern inline function scale(v:Vector3):Vector3 {
+		set(this.x * v.x, this.y * v.y, this.z * v.z);
 		v.putWeak();
 		return this;
 	}
+	public overload extern inline function scale(v:Vector3D):Vector3 return set(this.x * v.x, this.y * v.y, this.z * v.z);
+	public inline function scaleVector3(v:Vector3):Vector3 return scale(v);
+	public inline function scaleFromFlash(v:Vector3D):Vector3 return scale(v);
+	public inline function scaleToFlash(v:Vector3D):Vector3D {
+		v.x *= x;
+		v.y *= y;
+		v.z *= z;
+		return v;
+	}
 
-	public inline function addNew(v:Vector3):Vector3 return clone().addVector3(v);
-	public inline function subtractNew(v:Vector3):Vector3 return clone().subtractVector3(v);
-	public inline function scaleNew(k:Float):Vector3 return clone().scale(k);
+	public inline function addNew(v:Vector3):Vector3 return clone().add(v);
+	public inline function subtractNew(v:Vector3):Vector3 return clone().subtract(v);
+	public overload extern inline function scaleNew(x:Float, y:Float, z:Float):Vector3 return clone().scale(x, y, z);
+	public overload extern inline function scaleNew(amount:Float):Vector3 return clone().scale(amount);
 
-	public inline function copyTo(?v:Vector3):Vector3 return (v ?? get()).set(x, y);
+	public overload extern inline function copyTo(?v:Vector3):Vector3 return (v ?? get()).set(x, y, z);
+	public overload extern inline function copyTo(v:Vector3D):Vector3D {
+		v.x = x;
+		v.y = y;
+		v.z = z;
+		return v;
+	}
+	public inline function copyToFlash(?v:Vector3D):Vector3D return v != null ? copyTo(v) : new Vector3D(x, y, z);
 
-	public inline function copyFrom(v:Vector3):Vector3 {
+	public overload extern inline function copyFrom(v:Vector3):Vector3 {
 		set(v.x, v.y, v.z);
 		v.putWeak();
 		return this;
 	}
-
-	public inline function copyToFlash(?v:Vector3D):Vector3D {
-		if (v == null) return new Vector3D(x, y, z);
-		v.x = x;
-		v.y = y;
-		v.z = z;
-		this.putWeak();
-		return v;
-	}
-
-	public inline function copyFromFlash(v:Vector3D):Vector3 return set(v.x, v.y, v.z);
+	public overload extern inline function copyFrom(v:Vector3D):Vector3 return set(v.x, v.y, v.z);
+	public inline function copyFromFlash(v:Vector3D):Vector3 return copyFrom(v);
 
 	public inline function isZero():Bool return Math.abs(x) < EPSILON && Math.abs(y) < EPSILON && Math.abs(z) < EPSILON;
 	public inline function isValid():Bool return !Math.isNaN(x) && !Math.isNaN(y) && !Math.isNaN(z) && Math.isFinite(x) && Math.isFinite(y)&& Math.isFinite(z);
@@ -182,17 +208,31 @@ import openfl.geom.Vector3D;
 
 	//@:deprecated("angleBetween is deprecated, use degreesTo instead")
 	//public inline function angleBetween(v:Vector3):Float return degreesTo(v);
+
+	@:arrayAccess public inline function getAtIndex(index:Int):Float return switch (index) {
+		case 0: x;
+		case 1: y;
+		case 2: z;
+		default: 0.0;
+	}
+
+	@:arrayAccess public inline function setAtIndex(index:Int, value:Float):Float return switch (index) {
+		case 0: x = value;
+		case 1: y = value;
+		case 2: z = value;
+		default: value;
+	}
 }
 
 @:noCompletion
 @:allow(blossom.math.Vector3)
 class BaseVector3 implements IFlxPooled {
-	#if FLX_POINT_POOL
+	#if (FLX_POINT_POOL && !macro)
 	static var pool:FlxPool<BaseVector3> = new FlxPool(BaseVector3.new.bind(0, 0, 0));
 	#end
 
 	public static inline function get(x = 0.0, y = 0.0, z = 0.0):BaseVector3 {
-		#if FLX_POINT_POOL
+		#if (FLX_POINT_POOL && !macro)
 		var vector3 = pool.get().set(x, y, z);
 		vector3._inPool = false;
 		return vector3;
@@ -203,7 +243,7 @@ class BaseVector3 implements IFlxPooled {
 
 	public static inline function weak(x = 0.0, y = 0.0, z = 0.0):BaseVector3 {
 		var vector3 = get(x, y, z);
-		#if FLX_POINT_POOL
+		#if (FLX_POINT_POOL && !macro)
 		vector3._weak = true;
 		#end
 		return vector3;
@@ -213,7 +253,7 @@ class BaseVector3 implements IFlxPooled {
 	public var y(default, set):Float; function set_y(v:Float):Float return y = v;
 	public var z(default, set):Float; function set_z(v:Float):Float return z = v;
 
-	#if FLX_POINT_POOL
+	#if (FLX_POINT_POOL && !macro)
 	var _weak:Bool = false;
 	var _inPool:Bool = false;
 	#end
@@ -230,7 +270,7 @@ class BaseVector3 implements IFlxPooled {
 	}
 
 	public function put():Void {
-		#if FLX_POINT_POOL
+		#if (FLX_POINT_POOL && !macro)
 		if (!_inPool) {
 			_inPool = true;
 			_weak = false;
@@ -239,9 +279,10 @@ class BaseVector3 implements IFlxPooled {
 		#end
 	}
 
-	public inline function putWeak() {
-		#if FLX_POINT_POOL if (_weak) put(); #end
-	}
+	public inline function putWeak()
+		#if (FLX_POINT_POOL && !macro)
+		if (_weak) put();
+		#end
 
 	public inline function equals(vector3:BaseVector3):Bool {
 		var result = FlxMath.equal(x, vector3.x) && FlxMath.equal(y, vector3.y) && FlxMath.equal(z, vector3.z);
@@ -252,11 +293,15 @@ class BaseVector3 implements IFlxPooled {
 	public function destroy() {}
 
 	public inline function toString():String
+		#if !macro
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("x", x),
 			LabelValuePair.weak("y", y),
 			LabelValuePair.weak("z", z)
 		]);
+		#else
+		return '(x: $x | y: $y | z: $z)';
+		#end
 }
 
 class CallbackVector3 extends BaseVector3 {

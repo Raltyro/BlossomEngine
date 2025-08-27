@@ -22,7 +22,7 @@ typedef MusicData = {
 	?endTime:Float
 }
 
-typedef MusicAsset = flixel.util.typeLimit.OneOfTwo<String, MusicData>;
+typedef MusicAsset = OneOfTwo<String, MusicData>;
 
 class Music extends FlxSound {
 	public static function getMusicData(asset:String):MusicData {
