@@ -21,10 +21,7 @@ import flixel.system.debug.watch.Tracker.TrackerProfile;
 import flixel.system.debug.watch.Tracker;
 #end
 
-#if linux
-@:cppInclude("./gamemode_client.h")
-@:cppFileCode("#define GAMEMODE_AUTO")
-#elseif (windows && cpp)
+#if (windows && cpp)
 @:cppFileCode("#include <windows.h>
 #include <psapi.h>")
 #end
