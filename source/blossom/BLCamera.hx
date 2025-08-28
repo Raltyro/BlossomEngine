@@ -130,6 +130,7 @@ class BLCamera extends flixel.FlxCamera {
 	var _presented:Bool;
 	var _freeze:Bool;
 	var _useBuffer:Bool;
+	var _usedFill:Bool;
 
 	var _fxTintColor:FlxColor = FlxColor.TRANSPARENT;
 	var _fxTintAlpha:Float = 0;
@@ -340,20 +341,6 @@ class BLCamera extends flixel.FlxCamera {
 		return bitmap;
 	}
 
-	function drawScreen(?applyFilters:Bool, skipDrawStack = false, skipGrab = false) {
-		if (!skipGrab) buffer = grabScreen(buffer, applyFilters, false, true);
-		if (!appliedFilters) appliedFilters = applyFilters;
-		_frame.sourceSize.set(buffer.width, buffer.height);
-		_frame.frame = _frame.frame.set(0, 0, buffer.width, buffer.height);
-
-		clearDrawStack();
-		grabbed = true;
-
-		canvas.graphics.clear();
-		drawFill(_frame, buffer, null, null, smoothing);
-		if (skipDrawStack) _continueDrawStack = _headOfDrawStack;
-	}
-
 	override function snapToTarget() {
 		super.snapToTarget();
 
@@ -547,47 +534,62 @@ class BLCamera extends flixel.FlxCamera {
 		if (!visible) return;
 
 		if (!_freeze) {
-			if (_headOfDrawStack == null) {
-				if (_presented = useBgAlphaBlending && bgColor.alpha != 0) BitmapDataUtil.draw(buffer, canvas, canvas.__transform, false, true);
-				if (!appliedFilters && filtersEnabled && filters != null && filters.length > 0) {
-					BitmapDataUtil.applyFilters(buffer, filters);
-					_presented = true;
+			if (useBuffer || freezed || grabbed) {
+				if (_headOfDrawStack == null) {
+					if (_useBuffer = useBgAlphaBlending || _usedFill) BitmapDataUtil.draw(buffer, canvas, canvas.__transform, false, true);
+					if (!appliedFilters && filtersEnabled && filters != null && filters.length != 0) {
+						BitmapDataUtil.applyFilters(buffer, filters);
+						appliedFilters = _useBuffer = true;
+					}
+					if (_useBuffer) present();
+					else _flashBitmap.visible = canvas.visible = false;
 				}
-				if (_presented) present();
-				else _flashBitmap.visible = canvas.visible = false;
-			}
-			else if (_useBuffer = useBuffer || freezed || grabbed) {
-				if (grabbed && !appliedFilters && filtersEnabled) BitmapDataUtil.applyFilters(buffer, filters);
-				else drawScreen(filtersEnabled);
-				present();
+				else {
+					if (grabbed && !appliedFilters && filtersEnabled) {
+						BitmapDataUtil.applyFilters(buffer, filters);
+						appliedFilters = true;
+					}
+					else drawScreen(filtersEnabled);
+					present();
+				}
 			}
 			else {
 				continueDraw();
-				canvas.visible = true;
-				_flashBitmap.visible = false;
+				_flashBitmap.visible = _useBuffer = false;
+				canvas.visible = _continueDrawStack != null || _usedFill;
 			}
-
-			#if FLX_DEBUG
-			FlxBasic.visibleCount++;
-			#end
 			_freeze = freezed;
 		}
-		else if (canvas.visible || _flashBitmap.visible) {
+		else if (canvas.visible || _flashBitmap.visible)
 			present();
-			#if FLX_DEBUG
-			FlxBasic.visibleCount++;
-			#end
-		}
+
+		#if FLX_DEBUG
+		FlxBasic.visibleCount++;
+		#end
 	}
 
 	function present() {
 		canvas.graphics.clear();
-		_flashBitmap.bitmapData = buffer;
+		@:privateAccess _flashBitmap.__bitmapData = buffer;
 		_flashBitmap.scaleX = width / buffer.width;
 		_flashBitmap.scaleY = height / buffer.height;
 		_flashBitmap.smoothing = smoothing;
 		_useBuffer = _flashBitmap.visible = _presented = true;
-		canvas.visible = false;
+		_usedFill = canvas.visible = false;
+	}
+
+	function drawScreen(?applyFilters:Bool, skipDrawStack = false, skipGrab = false) {
+		if (!skipGrab) buffer = grabScreen(buffer, applyFilters, false, true);
+		if (!appliedFilters) appliedFilters = applyFilters;
+		_frame.sourceSize.set(buffer.width, buffer.height);
+		_frame.frame = _frame.frame.set(0, 0, buffer.width, buffer.height);
+
+		clearDrawStack();
+		grabbed = true;
+
+		canvas.graphics.clear();
+		drawFill(_frame, buffer, null, null, smoothing);
+		if (skipDrawStack) _continueDrawStack = _headOfDrawStack;
 	}
 
 	override function clearDrawStack() {
@@ -658,6 +660,8 @@ class BLCamera extends flixel.FlxCamera {
 			targetGraphics.beginFill(color, fxAlpha);
 			targetGraphics.drawRect(viewMarginLeft - 1, viewMarginTop - 1, viewWidth + 2, viewHeight + 2);
 			targetGraphics.endFill();
+
+			_usedFill = true;
 		}
 	}
 

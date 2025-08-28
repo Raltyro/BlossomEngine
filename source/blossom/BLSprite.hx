@@ -267,44 +267,47 @@ class BLSprite extends flixel.FlxSprite {
 
 	override function drawFrameComplex(frame:FlxFrame, camera:FlxCamera) {
 		frame.prepareMatrix(_matrix, ANGLE_0, checkFlipX(), checkFlipY());
+		applyMatrixDrawing(_matrix, camera);
+		camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
+	}
+
+	inline function applyMatrixDrawing(matrix:FlxMatrix, camera:FlxCamera) {
 		_matrix.translate(-origin.x, -origin.y);
 
 		updateTrig();
-		_matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);
-		_matrix.translate(-frameOffset.x, -frameOffset.y);
+		matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);
+		matrix.translate(-frameOffset.x, -frameOffset.y);
 		if (animation.curAnim != null) {
-			if (animation.curAnim.offset != null) _matrix.translate(-animation.curAnim.offset.x, -animation.curAnim.offset.y);
+			if (animation.curAnim.offset != null) matrix.translate(-animation.curAnim.offset.x, -animation.curAnim.offset.y);
 		}
-		_matrix.rotateWithTrig(_cosFrameOffsetAngle, -_sinFrameOffsetAngle);
-		_matrix.scale(scale.x, scale.y);
+		matrix.rotateWithTrig(_cosFrameOffsetAngle, -_sinFrameOffsetAngle);
+		matrix.scale(scale.x, scale.y);
 
-		if (matrixExposed) _matrix.concat(transformMatrix);
+		if (matrixExposed) matrix.concat(transformMatrix);
 		else {
 			if (bakedRotationAngle <= 0) {
-				if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
+				if (angle != 0) matrix.rotateWithTrig(_cosAngle, _sinAngle);
 			}
-			if (skew.x != 0 || skew.y != 0) _matrix.skew(skew.x, skew.y);
+			if (skew.x != 0 || skew.y != 0) matrix.skew(skew.x, skew.y);
 		}
 
 		getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
-		_matrix.translate(_point.x, _point.y);
+		matrix.translate(_point.x, _point.y);
 
 		if (!isSimpleZoomFactor()) {
 			prepareZoomFactor(_rect2, camera);
-			_matrix.setTo(
-				_matrix.a * _rect2.width, _matrix.b * _rect2.height,
-				_matrix.c * _rect2.width, _matrix.d * _rect2.height,
-				(_matrix.tx - _rect2.x) * _rect2.width + _rect2.x,
-				(_matrix.ty - _rect2.y) * _rect2.height + _rect2.y,
+			matrix.setTo(
+				matrix.a * _rect2.width, matrix.b * _rect2.height,
+				matrix.c * _rect2.width, matrix.d * _rect2.height,
+				(matrix.tx - _rect2.x) * _rect2.width + _rect2.x,
+				(matrix.ty - _rect2.y) * _rect2.height + _rect2.y,
 			);
 		}
 
 		if (isPixelPerfectRender(camera)) {
-			_matrix.tx = Math.floor(_matrix.tx);
-			_matrix.ty = Math.floor(_matrix.ty);
+			matrix.tx = Math.floor(matrix.tx);
+			matrix.ty = Math.floor(matrix.ty);
 		}
-
-		camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
 	}
 
 	function drawTimeline(timeline:Timeline, camera:FlxCamera) {
@@ -322,40 +325,7 @@ class BLSprite extends flixel.FlxSprite {
 
 		if (applyStageMatrix) _matrix.concat(library.matrix);
 
-		_matrix.translate(-origin.x, -origin.y);
-
-		updateTrig();
-		_matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);
-		_matrix.translate(-frameOffset.x, -frameOffset.y);
-		if (animation.curAnim != null) {
-			if (animation.curAnim.offset != null) _matrix.translate(-animation.curAnim.offset.x, -animation.curAnim.offset.y);
-		}
-		_matrix.rotateWithTrig(_cosFrameOffsetAngle, -_sinFrameOffsetAngle);
-		_matrix.scale(scale.x, scale.y);
-
-		if (matrixExposed) _matrix.concat(transformMatrix);
-		else {
-			if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
-			if (skew.x != 0 || skew.y != 0) _matrix.skew(skew.x, skew.y);
-		}
-
-		getScreenPosition(_point, camera).subtract(offset).add(origin.x, origin.y);
-		_matrix.translate(_point.x, _point.y);
-
-		if (!isSimpleZoomFactor()) {
-			prepareZoomFactor(_rect2, camera);
-			_matrix.setTo(
-				_matrix.a * _rect2.width, _matrix.b * _rect2.height,
-				_matrix.c * _rect2.width, _matrix.d * _rect2.height,
-				(_matrix.tx - _rect2.x) * _rect2.width + _rect2.x,
-				(_matrix.ty - _rect2.y) * _rect2.height + _rect2.y,
-			);
-		}
-
-		if (isPixelPerfectRender(camera)) {
-			_matrix.tx = Math.floor(_matrix.tx);
-			_matrix.ty = Math.floor(_matrix.ty);
-		}
+		applyMatrixDrawing(_matrix, camera);
 
 		if (renderStage) {
 			final frame = FlxG.bitmap.whitePixel;

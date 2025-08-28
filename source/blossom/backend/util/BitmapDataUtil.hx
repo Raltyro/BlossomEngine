@@ -259,6 +259,7 @@ final class BitmapDataUtil {
 
 			if (color != 0) {
 				context3D.__flushGLFramebuffer();
+				//context3D.__flushGLViewport();
 				context3D.gl.bindFramebuffer(context3D.gl.FRAMEBUFFER, bitmap.__texture.__glFramebuffer);
 				context3D.gl.colorMask(
 					context3D.__contextState.colorMaskRed = true,
@@ -268,7 +269,7 @@ final class BitmapDataUtil {
 				);
 				context3D.gl.clearColor(color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat);
 
-				context3D.gl.disable(context3D.gl.SCISSOR_TEST);
+				context3D.__setGLScissorTest(false);
 				context3D.gl.clear(context3D.gl.COLOR_BUFFER_BIT);
 
 				context3D.gl.bindFramebuffer(context3D.gl.FRAMEBUFFER, null);
@@ -310,7 +311,7 @@ final class BitmapDataUtil {
 		final context = texture.__context;
 
 		context.__flushGLFramebuffer();
-		context.__flushGLViewport();
+		//context.__flushGLViewport();
 
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, texture.__glFramebuffer);
 
@@ -333,7 +334,7 @@ final class BitmapDataUtil {
 			context.gl.clearStencil(0);
 			flag |= context.gl.STENCIL_BUFFER_BIT;
 		}
-		context.gl.disable(context.gl.SCISSOR_TEST);
+		context.__setGLScissorTest(false);
 		context.gl.clear(flag);
 
 		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);

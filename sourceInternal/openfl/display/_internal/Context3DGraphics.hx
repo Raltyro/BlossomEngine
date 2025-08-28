@@ -35,7 +35,7 @@ import openfl.display._internal.stats.DrawCallContext;
 @SuppressWarnings("checkstyle:FieldDocComment")
 class Context3DGraphics
 {
-	private static var blankBitmapData:BitmapData;//= new BitmapData(1, 1, false, 0xFFFFFF);
+	private static var blankBitmapData:BitmapData = new BitmapData(1, 1, false, 0xFFFFFF);
 	private static var maskRender:Bool;
 	private static var tempColorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, 0);
 	private static var tempReader = new DrawCommandReader(null);
@@ -709,7 +709,6 @@ class Context3DGraphics
 								matrix.ty = y;
 								matrix.concat(graphics.__owner.__renderTransform);
 
-								if (blankBitmapData == null) blankBitmapData = blossom.backend.util.BitmapDataUtil.create(1, 1, 0xFFFFFFFF);
 								var shader = maskRender ? renderer.__maskShader : renderer.__initGraphicsShader(null);
 								renderer.setShader(shader);
 								renderer.applyMatrix(renderer.__getMatrix(matrix, AUTO));
