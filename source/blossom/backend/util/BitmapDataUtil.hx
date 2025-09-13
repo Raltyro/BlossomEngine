@@ -173,7 +173,7 @@ final class BitmapDataUtil {
 	}
 
 	public static function draw(dst:BitmapData, src:IBitmapDrawable, ?matrix:Matrix, smoothing = false, onlyGraphics = false) @:privateAccess {
-		if (dst?.__texture == null) return dst.draw(src, matrix, smoothing);
+		if (dst == null) return;
 
 		prepareGfxRenderer();
 		if (gfxRenderer == null) return dst.draw(src, matrix, smoothing);
@@ -186,31 +186,32 @@ final class BitmapDataUtil {
 
 		inline function _preDraw() {
 			dst.__textureContext = context.__context;
-			gfxRenderer.__setBlendMode(NORMAL);
-			gfxRenderer.__setRenderTarget(dst);
-
-			context.setRenderToTexture(dst.__texture, true);
+			context.setRenderToTexture(dst.getTexture(context), true);
 			context.setColorMask(true, true, true, true);
 			context.setCulling(NONE);
 			context.setStencilActions();
 			context.setStencilReferenceValue(0, 0, 0);
 			context.setScissorRectangle(null);
 
+			gfxRenderer.__blendMode = null;
+			gfxRenderer.__setBlendMode(NORMAL);
+			gfxRenderer.__setRenderTarget(dst);
 			gfxRenderer.__allowSmoothing = smoothing;
 			gfxRenderer.__pixelRatio = #if openfl_disable_hdpi 1 #else FlxG.stage.window.scale #end;
+
+			gfxRenderer.__worldTransform.copyFrom(src.__renderTransform);
+			gfxRenderer.__worldTransform.invert();
+			if (matrix != null) gfxRenderer.__worldTransform.concat(matrix);
 
 			gfxSprite.__cacheBitmapColorTransform.__copyFrom(src.__worldColorTransform);
 			gfxSprite.__mask = src.__mask; gfxSprite.__scrollRect = src.__scrollRect;
 
 			src.__worldColorTransform.__identity();
 			src.__worldAlpha = 1; src.__mask = null; src.__scrollRect = null;
-
-			gfxRenderer.__worldTransform.copyFrom(src.__renderTransform);
-			gfxRenderer.__worldTransform.invert();
-			if (matrix != null) gfxRenderer.__worldTransform.concat(matrix);
 		}
 
 		inline function _postDraw() {
+			context.present();
 			src.__worldColorTransform.__copyFrom(gfxSprite.__cacheBitmapColorTransform);
 			src.__mask = gfxSprite.__mask; src.__scrollRect = gfxSprite.__scrollRect;
 			gfxSprite.__mask = null; gfxSprite.__scrollRect = null;

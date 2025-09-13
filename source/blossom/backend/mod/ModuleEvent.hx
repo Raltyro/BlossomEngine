@@ -2,7 +2,7 @@ package blossom.backend.mod;
 
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
-//@:autoBuild(blossom.backend.mod.ModuleEvent.build())
+@:autoBuild(blossom.backend.macro.ModuleMacro.autoBuildModuleEvent())
 class ModuleEvent implements IFlxDestroyable {
 	static final caches:ObjectMap<Dynamic, Array<ModuleEvent>> = new ObjectMap<Dynamic, Array<ModuleEvent>>();
 
@@ -24,12 +24,12 @@ class ModuleEvent implements IFlxDestroyable {
 		return event;
 	}
 
-	@:dox(hide) public var callbackName:Null<String>;
+	public var callbackName:Null<String>;
 
-	@:dox(hide) public var cancelled:Bool;
-	@:dox(hide) public var continueCalls:Bool;
+	public var cancelled:Bool;
+	public var continueCalls:Bool;
 
-	@:dox(hide) public var weak:Bool;
+	public var weak:Bool;
 
 	public var data:Dynamic;
 

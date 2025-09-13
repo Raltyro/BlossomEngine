@@ -2,6 +2,7 @@ package blossom.backend.mod;
 
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
+@:build(blossom.backend.macro.ModuleMacro.buildModule())
 class Module implements IFlxDestroyable {
 	public var exists(default, set):Bool = true;
 	@:noCompletion function set_exists(v) return exists = v;

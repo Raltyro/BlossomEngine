@@ -5,7 +5,6 @@ import blossom.backend.util.BitmapDataUtil;
 
 @:access(openfl.display.BitmapData)
 final class BitmapDataPool {
-	/* a copy of FlxPool, just for buffers */
 	public static final MAX_BUFFERS = 32;
 
 	public static var length(get, never):Int; static inline function get_length() return _pool.length;

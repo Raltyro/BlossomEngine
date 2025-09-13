@@ -22,6 +22,8 @@ final class CompileMacro {
 		Compiler.addMetadata('@:build($compileMacro.buildFlxCamera())', 'flixel.FlxCamera');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxObject())', 'flixel.FlxObject');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxSprite())', 'flixel.FlxSprite');
+		Compiler.addMetadata('@:build($compileMacro.buildFlxSprite())', 'flixel.FlxSprite');
+		Compiler.addMetadata('@:build($compileMacro.buildTimeline())', 'animate.internal.Timeline');
 		#end
 	}
 
@@ -70,6 +72,23 @@ final class CompileMacro {
 			case "centerOrigin": f.access.remove(AInline);
 			case "checkFlipX": f.access.remove(AInline);
 			case "checkFlipY": f.access.remove(AInline);
+			default:
+		}
+		return fields;
+	}
+
+	// for BLAnimationController
+	public static macro function buildTimeline():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields(), pos = Context.currentPos();
+		for (f in fields) if (f.name == "signalFrameChange") switch (f.kind) {
+			case FFun(func): {
+				fields.push({name: "signalFrameChangeBlossom", access: [APrivate], pos: pos, kind: FFun({
+					args: [{name: "frameIndex", type: macro :Int}, {name: "animation", type: macro :blossom.BLSprite.BLAnimationController}],
+					ret: func.ret,
+					expr: func.expr
+				})});
+				return fields;
+			}
 			default:
 		}
 		return fields;

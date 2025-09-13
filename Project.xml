@@ -82,7 +82,7 @@
 
 	<section if="cpp">
 		<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
-		<haxelib name="hxdiscord_rpc" unless="NO_DISCORD"/>
+		<haxelib name="hxdiscord_rpc" version="1.3.0" unless="NO_DISCORD"/>
 	</section>
 
 	<haxelib name="hxcpp-debug-server" if="debug"/>
@@ -103,10 +103,14 @@
 	<!-- Disable the Flixel core debugger. Automatically gets set whenever you compile in release mode! -->
 	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
 
-	<haxedef name="HXCPP_GC_BIG_BLOCKS"/>
+	<!-- Uses flixel quads to triangles conversion instead of openfl's -->
+	<!-- <haxedef name="FLX_RENDER_TRIANGLE" unless="web"/> -->
+
+	<!-- <haxedef name="HXCPP_GC_BIG_BLOCKS"/> -->
 	<haxedef name="HXCPP_CATCH_SEGV"/>
 	<haxedef name="HXCPP_ALIGN_ALLOC"/>
 	<haxedef name="HXCPP_DEBUG_LINK"/>
+	<haxedef name="hxcpp_smart_strings"/>
 	<haxedef name="analyzer-optimize" unless="debug"/>
 	<section if="debug">
 		<haxedef name="HXCPP_DEBUG"/>
@@ -124,6 +128,9 @@
 	<!-- <haxedef name="openfl_enable_experimental_update_queue"/> -->
 	<haxedef name="openfl_pool_events"/>
 	<haxedef name="openfl-enable-handle-error"/>
+
+	<!-- <haxedef name="openfl_no_custom_render_event"/> -->
+
 	<!-- <haxedef name='no-deprecation-warnings'/> -->
 	<!-- <haxedef name="gl_stats"/> -->
 </project>

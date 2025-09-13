@@ -105,6 +105,9 @@ class DisplayObjectRenderer extends EventDispatcher
 
 	@:noCompletion private function __render(object:IBitmapDrawable):Void {}
 
+	#if openfl_no_custom_render_event
+	@:noCompletion private function __renderEvent(displayObject:DisplayObject):Void {}
+	#else
 	@:noCompletion private function __renderEvent(displayObject:DisplayObject):Void
 	{
 		var renderer = this;
@@ -162,6 +165,7 @@ class DisplayObjectRenderer extends EventDispatcher
 		}
 		#end
 	}
+	#end
 
 	@:noCompletion private function __resize(width:Int, height:Int):Void {}
 
@@ -246,9 +250,7 @@ class DisplayObjectRenderer extends EventDispatcher
 		return false;
 		#end
 
-		var colorTransform = ColorTransform.__pool.get();
-		colorTransform.__copyFrom(displayObject.__worldColorTransform);
-		if (renderer.__worldColorTransform != null) colorTransform.__combine(renderer.__worldColorTransform);
+		var colorTransform = __getColorTransform(displayObject.__worldColorTransform);
 		var updated = false;
 
 		// TODO: Do not force cacheAsBitmap on OpenGL once Scale-9 is properly supported in Context3DShape
@@ -455,8 +457,6 @@ class DisplayObjectRenderer extends EventDispatcher
 				}
 				else
 				{
-					ColorTransform.__pool.release(colorTransform);
-
 					displayObject.__cacheBitmap = null;
 					displayObject.__cacheBitmapData = null;
 					displayObject.__cacheBitmapData2 = null;
@@ -860,8 +860,6 @@ class DisplayObjectRenderer extends EventDispatcher
 
 			updated = true;
 		}
-
-		ColorTransform.__pool.release(colorTransform);
 
 		if (updated && displayObject.__drawableType == TEXT_FIELD)
 		{

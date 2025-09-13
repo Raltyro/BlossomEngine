@@ -13,7 +13,7 @@ import flixel.FlxCamera;
 class FlxDrawBaseItem<T> {
 	public static var drawCalls:Int = 0;
 
-	// why is it here
+	// UNUSED
 	public static function blendToInt(blend:BlendMode):Int return 0;
 	public var blending:Int = 0;
 

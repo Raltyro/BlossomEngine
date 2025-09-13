@@ -14,6 +14,8 @@ import openfl.Lib;
 
 import blossom.backend.api.Discord;
 import blossom.backend.debug.StatsCounter;
+import blossom.backend.mod.events.StateEvent;
+import blossom.backend.mod.ModuleGroup;
 import blossom.input.Controls;
 
 #if FLX_DEBUG
@@ -21,17 +23,24 @@ import flixel.system.debug.watch.Tracker.TrackerProfile;
 import flixel.system.debug.watch.Tracker;
 #end
 
+import flixel.FlxState;
+
 #if (windows && cpp)
 @:cppFileCode("#include <windows.h>
 #include <psapi.h>")
 #end
 
 class BLGame extends flixel.FlxGame {
-	var statsCounter:StatsCounter;
+	public var statsCounter:StatsCounter;
+
+	var _oldState:FlxState;
 
 	public function new() {
 		@:bypassAccessor FlxG.scaleMode = new FullScreenScaleMode();
 		FlxG.signals.postGameReset.add(postGameReset);
+		FlxG.signals.preStateSwitch.add(preStateSwitch);
+		FlxG.signals.postStateSwitch.add(postStateSwitch);
+		FlxG.signals.preStateCreate.add(preStateCreate);
 		//borderTiles = new BorderTiles(AssetUtil.getBitmap(Paths.image("border"), true, false));
 
 		super(GameConstants.WIDTH, GameConstants.HEIGHT, Initial, GameConstants.FRAMERATE, GameConstants.FRAMERATE, true);
@@ -79,6 +88,21 @@ class BLGame extends flixel.FlxGame {
 		#end
 	}
 
+	function preStateSwitch() {
+		ModuleGroup.global.event(ModuleEvent.get(StateSwitch).recycle());
+		ModuleGroup.global.event(ModuleEvent.get(StateDestroy).recycle(_oldState = _state));
+	}
+
+	function preStateCreate() {
+		ModuleGroup.global.eventPost(ModuleEvent.get(StateDestroy).recycle(_oldState));
+		ModuleGroup.global.event(ModuleEvent.get(StateCreate).recycle(_state));
+	}
+
+	function postStateSwitch() {
+		ModuleGroup.global.eventPost(ModuleEvent.get(StateCreate).recycle(_state));
+		ModuleGroup.global.eventPost(ModuleEvent.get(StateSwitch).recycle());
+	}
+
 	override function create(_) {
 		if (stage == null) return;
 		setupCrashHandler();
@@ -108,7 +132,6 @@ class BLGame extends flixel.FlxGame {
 	// https://github.com/gedehari/IzzyEngine/blob/master/source/Main.hx
 	// thanks ari (sqirradotdev)!!
 	public static function crashHandler(inWhat:String = "unknown", ?exception:Exception) {
-		trace("Blossom Engine Crashed");
 		var now:String = StringTools.replace(StringTools.replace(Date.now().toString(), " ", "_"), ":", "'");
 		var path:String = './crash/BlossomCrashLog_${now}.txt';
 

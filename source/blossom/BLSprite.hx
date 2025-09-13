@@ -16,6 +16,7 @@ import flixel.math.FlxMatrix;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.util.FlxAxes;
 import flixel.util.FlxDestroyUtil;
+import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.FlxCamera;
 
 using flixel.util.FlxColorTransformUtil;
@@ -90,7 +91,7 @@ class BLSprite extends flixel.FlxSprite {
 	#if flixel_animate
 	public var library(default, null):FlxAnimateFrames;
 	public var timeline(default, null):Timeline;
-	public var applyStageMatrix:Bool = false;
+	public var applyStageMatrix(default, set):Bool = false;
 	public var renderStage:Bool = false;
 	#end
 
@@ -236,16 +237,24 @@ class BLSprite extends flixel.FlxSprite {
 			else isSimpleZoomFactor() && isSimpleRenderBlit(camera) && (skew.x == 0) && (skew.y == 0) && !matrixExposed;
 	}
 
+	override function getScreenPosition(?result:FlxPoint, ?camera:FlxCamera):FlxPoint {
+		result = super.getScreenPosition(result, camera);
+
+		final origin = getAnimateOrigin();
+		result.add(origin.x, origin.y);
+		origin.put();
+
+		return result;
+	}
+
 	override function getScreenBounds(?newRect:FlxRect, ?camera:FlxCamera):FlxRect {
 		if (camera == null) camera = getDefaultCamera();
 		newRect = super.getScreenBounds(newRect, camera);
 
-		#if flixel_animate
-		if (isAnimate) {
-			// TODO: add skewed bounds expansion
-			if (applyStageMatrix) Timeline.applyMatrixToRect(newRect, library.matrix);
-		}
-		#end
+		final origin = getAnimateOrigin();
+		newRect.x += origin.x;
+		newRect.y += origin.y;
+		origin.put();
 
 		if (!isSimpleZoomFactor()) {
 			prepareZoomFactor(_rect2, camera);
@@ -311,20 +320,24 @@ class BLSprite extends flixel.FlxSprite {
 	}
 
 	function drawTimeline(timeline:Timeline, camera:FlxCamera) {
-		@:privateAccess _matrix.setTo(1, 0, 0, 1, -timeline._bounds.x, -timeline._bounds.y);
+		final bounds = @:privateAccess timeline._bounds;
+		_matrix.setTo(1, 0, 0, 1, -bounds.x, -bounds.y);
 
 		if (checkFlipX()) {
 			_matrix.scale(-1, 1);
-			_matrix.translate(frame.sourceSize.x, 0);
+			_matrix.translate(bounds.width, 0);
 		}
 
 		if (checkFlipY()) {
 			_matrix.scale(1, -1);
-			_matrix.translate(0, frame.sourceSize.y);
+			_matrix.translate(0, bounds.height);
 		}
 
-		if (applyStageMatrix) _matrix.concat(library.matrix);
+		if (applyStageMatrix) {
+			_matrix.concat(library.matrix);
+			_matrix.translate(-library.matrix.tx, -library.matrix.ty);
 
+		}
 		applyMatrixDrawing(_matrix, camera);
 
 		if (renderStage) {
@@ -346,9 +359,29 @@ class BLSprite extends flixel.FlxSprite {
 		timeline.draw(camera, _matrix, colorTransform, blend, antialiasing, shader);
 	}
 
+	function getAnimateOrigin(?result:FlxPoint):FlxPoint {
+		if (result == null) result = FlxPoint.get();
+		else result.set();
+
+		#if flixel_animate
+		if (isAnimate) {
+			if (applyStageMatrix) @:privateAccess
+				result.add(library.matrix.tx + timeline._bounds.x * library.matrix.a, library.matrix.ty + timeline._bounds.y * library.matrix.d);
+		}
+		#end
+
+		return result;
+	}
+
 	inline function set_anim(controller:BLAnimationController):BLAnimationController {
 		animation = controller;
 		return anim = controller;
+	}
+
+	inline function set_applyStageMatrix(v:Bool):Bool {
+		applyStageMatrix = v;
+		if (isAnimate) anim.updateTimelineBounds();
+		return v;
 	}
 
 	override function set_frames(frames:FlxFramesCollection):FlxFramesCollection {
@@ -367,21 +400,53 @@ class BLSprite extends flixel.FlxSprite {
 	override function get_numFrames():Int
 		return if (isAnimate) animation.curAnim != null ? timeline.frameCount : 0;
 			else frames != null ? frames.numFrames : 0;
+
+	// TODO: Implement updateFramePixels from FlxAnimate
+	override function updateFramePixels():BitmapData {
+		return updateFramePixels();
+	}
 }
 
 @:access(blossom.BLSprite)
 class BLAnimationController extends FlxAnimationController {
 	// re-invent the wheel from FlxAnimateController...
 	#if flixel_animate
+	/**
+	 * Dispatches each time the current animation's frame label changes.
+	 * Exclusive to Texture Atlas animations.
+	 *
+	 * @param frameLabel The label of the current frame
+	 */
+	public final onFrameLabel = new FlxTypedSignal<(frameLabel:String) -> Void>();
+
 	public function addByFrameLabel(name:String, label:String, ?frameRate:Float, ?looped:Bool = true, ?flipX:Bool, ?flipY:Bool, ?timeline:Timeline) {
 		if (!blSprite.isAnimate) return animateError();
 
 		var usedTimeline = timeline ?? getDefaultTimeline();
 		var foundFrames = findFrameLabelIndices(label, usedTimeline);
 
-		if (foundFrames.length <= 0) {
-			FlxG.log.warn('No frames found with label "$label" in timeline "${usedTimeline.name}".');
-			return;
+		if (foundFrames.length <= 0)
+		{
+			var collectionTimelines = getCollectionTimelines();
+			if (collectionTimelines.length > 0)
+			{
+				for (timeline in collectionTimelines)
+				{
+					var newFrames = findFrameLabelIndices(label, timeline);
+					if (newFrames.length > 0)
+					{
+						FlxG.log.notice('Found frame label ${label} in timeline ${timeline.name} from another texture atlas');
+						foundFrames = newFrames;
+						usedTimeline = timeline;
+						break;
+					}
+				}
+			}
+			else
+			{
+				FlxG.log.warn('No frames found with label "$label" in timeline "${usedTimeline.name}".');
+				return;
+			}
 		}
 
 		final anim = new FlxAnimateAnimation(this, name, foundFrames, frameRate ?? getDefaultFramerate(), looped, flipX, flipY);
@@ -397,6 +462,25 @@ class BLAnimationController extends FlxAnimationController {
 		var usedTimeline = timeline ?? getDefaultTimeline();
 		var foundFrames:Array<Int> = findFrameLabelIndices(label, usedTimeline);
 		var useableFrames:Array<Int> = [];
+
+		if (foundFrames.length <= 0)
+		{
+			var collectionTimelines = getCollectionTimelines();
+			if (collectionTimelines.length > 0)
+			{
+				for (timeline in collectionTimelines)
+				{
+					var newFrames = findFrameLabelIndices(label, timeline);
+					if (newFrames.length > 0)
+					{
+						FlxG.log.notice('Found frame label ${label} in timeline ${timeline.name} from another texture atlas');
+						foundFrames = newFrames;
+						usedTimeline = timeline;
+						break;
+					}
+				}
+			}
+		}
 
 		for (index in indices) {
 			var frameIndex:Null<Int> = foundFrames[index];
@@ -550,7 +634,7 @@ class BLAnimationController extends FlxAnimationController {
 			if (blSprite.isAnimate) {
 				blSprite.timeline = cast(_curAnim, FlxAnimateAnimation).timeline;
 				blSprite.timeline.currentFrame = frame;
-				@:privateAccess blSprite.timeline.signalFrameChange(frame);
+				@:privateAccess blSprite.timeline.signalFrameChangeBlossom(frame, this);
 
 				updateTimelineBounds();
 			}
@@ -576,6 +660,16 @@ class BLAnimationController extends FlxAnimationController {
 	#if flixel_animate
 	public inline function getDefaultTimeline():Timeline
 		return blSprite.library?.timeline;
+
+	public inline function getCollectionTimelines():Array<Timeline> {
+		var timelines:Array<Timeline> = [];
+		if (blSprite.library == null) return timelines;
+
+		@:privateAccess
+		for (collection in blSprite.library.addedCollections) timelines.push(collection.timeline);
+
+		return timelines;
+	}
 	#end
 
 	override function destroy() {

@@ -10,23 +10,21 @@ import flixel.system.FlxAssets.FlxShader;
 import flixel.FlxCamera;
 
 class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
-	static inline var VERTICES_PER_QUAD = 4;
+	static inline final VERTICES_PER_QUAD = 4;
 
 	public var shader:FlxShader;
 	public var rects:Vector<Float> = new Vector<Float>();
 	public var transforms:Vector<Float> = new Vector<Float>();
 
-	var angles:Array<Float>;
-	var alphas:Array<Float>;
+	var angles:Array<Float> = [];
+	var alphas:Array<Float> = [];
 
-	var colorMultipliers:Array<Float>;
-	var colorOffsets:Array<Float>;
+	var colorMultipliers:Array<Float> = [];
+	var colorOffsets:Array<Float> = [];
 
 	public function new() {
 		super();
 		type = TILES;
-		angles = [];
-		alphas = [];
 	}
 
 	override public function reset() {
@@ -38,8 +36,8 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		angles.resize(0);
 		alphas.resize(0);
 
-		colorMultipliers?.resize(0);
-		colorOffsets?.resize(0);
+		colorMultipliers.resize(0);
+		colorOffsets.resize(0);
 	}
 
 	override public function dispose() {
@@ -62,45 +60,49 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		transforms.push(matrix.a); transforms.push(matrix.b); transforms.push(matrix.c);
 		transforms.push(matrix.d); transforms.push(matrix.tx); transforms.push(matrix.ty);
 
-		final alpha = transform?.alphaMultiplier ?? 1;
-		for (i in 0...VERTICES_PER_QUAD) {
-			angles.push(frame.angle);
-			alphas.push(alpha);
-		}
+		final alpha = transform?.alphaMultiplier ?? 1.0;
+		var i = 0;
 
 		if (colored || hasColorOffsets) {
-			if (colorMultipliers == null) colorMultipliers = [];
-			if (colorOffsets == null) colorOffsets = [];
+			var redMultiplier = 1.0, greenMultiplier = 1.0, blueMultiplier = 1.0;
+			var redOffset = 1.0, greenOffset = 1.0, blueOffset = 1.0, alphaOffset = 1.0;
 
-			for (i in 0...VERTICES_PER_QUAD) {
-				if (transform == null) {
-					colorMultipliers.push(1);
-					colorMultipliers.push(1);
-					colorMultipliers.push(1);
+			if (transform != null) {
+				redMultiplier = transform.redMultiplier;
+				greenMultiplier = transform.greenMultiplier;
+				blueMultiplier = transform.blueMultiplier;
 
-					colorOffsets.push(1);
-					colorOffsets.push(1);
-					colorOffsets.push(1);
-					colorOffsets.push(1);
-				}
-				else {
-					colorMultipliers.push(transform.redMultiplier);
-					colorMultipliers.push(transform.greenMultiplier);
-					colorMultipliers.push(transform.blueMultiplier);
-
-					colorOffsets.push(transform.redOffset);
-					colorOffsets.push(transform.greenOffset);
-					colorOffsets.push(transform.blueOffset);
-					colorOffsets.push(transform.alphaOffset);
-				}
-
-				colorMultipliers.push(1);
+				redOffset = transform.redOffset;
+				greenOffset = transform.greenOffset;
+				blueOffset = transform.blueOffset;
+				alphaOffset = transform.alphaOffset;
 			}
+
+			while (i < VERTICES_PER_QUAD) {
+				colorMultipliers.push(redMultiplier);
+				colorMultipliers.push(greenMultiplier);
+				colorMultipliers.push(blueMultiplier);
+				colorMultipliers.push(1.0);
+
+				colorOffsets.push(redOffset);
+				colorOffsets.push(greenOffset);
+				colorOffsets.push(blueOffset);
+				colorOffsets.push(alphaOffset);
+
+				angles.push(frame.angle);
+				alphas.push(alpha);
+				i++;
+			}
+		}
+		else while (i < VERTICES_PER_QUAD) {
+			angles.push(frame.angle);
+			alphas.push(alpha);
+			i++;
 		}
 	}
 
 	override public function render(camera:FlxCamera):Void {
-		if (graphics.isDestroyed) throw 'Attempting to draw a destroyed FlxGraphic as Quads';
+		if (graphics.isDestroyed) throw 'Attempted to render an invalid FlxDrawQaudsItem, did you destroy a cached sprite?';
 		if (rects.length == 0) return;
 
 		final shader = shader != null ? shader : graphics.shader;
@@ -109,13 +111,19 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		shader.frameRect.value = untyped (rects).__array;
 		shader.frameAngle.value = angles;
 		shader.alpha.value = alphas;
+
 		if (colored || hasColorOffsets) {
+			setParameterValue(shader.hasColorTransform, true);
 			shader.colorMultiplier.value = colorMultipliers;
 			shader.colorOffset.value = colorOffsets;
 		}
+		else {
+			setParameterValue(shader.hasColorTransform, false);
+			shader.colorMultiplier.value = null;
+			shader.colorOffset.value = null;
+		}
 
 		setParameterValue(shader.hasTransform, true);
-		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
 
 		camera.canvas.graphics.overrideBlendMode(blend);
 		camera.canvas.graphics.beginShaderFill(shader);
@@ -126,4 +134,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 
 		super.render(camera);
 	}
+
+	override function get_numVertices():Int return rects.length;
+	override function get_numTriangles():Int return Math.floor(rects.length / 2);
 }

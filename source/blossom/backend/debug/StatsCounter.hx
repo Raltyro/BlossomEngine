@@ -16,7 +16,7 @@ final class StatsCounter extends DisplayObjectContainer {
 	public var flixelCounter:FlixelCounter;
 	public var memoryCounter:MemoryCounter;
 	public var drawCounter:DrawCounter;
-	public var updateRateDuration:Float = 0.5;
+	public var updateRateDuration:Float = 50;
 
 	var debounceUpdate:Float;
 

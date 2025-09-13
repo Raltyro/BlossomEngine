@@ -9,6 +9,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 
 import blossom.backend.constants.*;
+import blossom.backend.mod.ModuleEvent;
 import blossom.backend.util.typeLimit.*;
 import blossom.backend.util.typeLimit.Types;
 import blossom.backend.util.AssetUtil;

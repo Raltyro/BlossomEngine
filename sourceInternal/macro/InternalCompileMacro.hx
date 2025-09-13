@@ -373,8 +373,8 @@ final class InternalCompileMacro {
 				case "draw":
 					if (zIndicesName == null) continue;
 					func.expr = macro {
-						final oldDefaultCameras = FlxCamera._defaultCameras;
-						if (_cameras != null) FlxCamera._defaultCameras = _cameras;
+						final oldDefaultCameras = flixel.FlxCamera._defaultCameras;
+						if (_cameras != null) flixel.FlxCamera._defaultCameras = _cameras;
 						if (zIndexesAllowed) {
 							_drawQueue.resize(members.length);
 							var basic:FlxBasic = null, len:Int = 0;
@@ -396,7 +396,7 @@ final class InternalCompileMacro {
 								if (basic != null && basic.exists && basic.visible) basic.draw();
 							}
 						}
-						FlxCamera._defaultCameras = oldDefaultCameras;
+						flixel.FlxCamera._defaultCameras = oldDefaultCameras;
 					}
 			}
 			default:
@@ -456,7 +456,7 @@ final class InternalCompileMacro {
 		}
 
 		fields.push({name: "frameOffset", access: [APublic], pos: pos, kind: FProp("default", "null", macro :flixel.math.FlxPoint)});
-		fields.push({name: "frameOffsetAngle", access: [APublic], pos: pos, kind: FProp("get", "set", macro :Null<Float>), meta: [{pos: pos, name: ":isVar"}]});
+		fields.push({name: "frameOffsetAngle", access: [APublic], pos: pos, kind: FProp("get", "set", macro :Float), meta: [{pos: pos, name: ":isVar"}]});
 		fields.push({name: "_frameOffsetAngleChanged", access: [], pos: pos, kind: FVar(macro :Bool, macro true)});
 		fields.push({name: "_sinFrameOffsetAngle", access: [], pos: pos, kind: FVar(macro :Float)});
 		fields.push({name: "_cosFrameOffsetAngle", access: [], pos: pos, kind: FVar(macro :Float)});
@@ -695,13 +695,16 @@ final class InternalCompileMacro {
 					};
 				case "startQuadBatch":
 					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
-					func.expr = macro {
+					if (Context.defined("FLX_RENDER_TRIANGLE")) {
+						f.access.push(AInline);
+						func.expr = macro return startTrianglesBatch(graphic, smooth, colored, blend, hasColorOffsets, shader, depthCompareMode);
+					}
+					else func.expr = macro {
 						if (_currentDrawItem != null
 							&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TILES
 							&& _headTiles.graphics == graphic
 							&& _headTiles.colored == colored
 							&& _headTiles.hasColorOffsets == hasColorOffsets
-							&& _headTiles.blend == blend
 							&& _headTiles.antialiasing == smooth
 							&& _headTiles.shader == shader
 							&& _headTiles.depthCompareMode == depthCompareMode
@@ -721,7 +724,6 @@ final class InternalCompileMacro {
 						item.antialiasing = smooth;
 						item.colored = colored;
 						item.hasColorOffsets = hasColorOffsets;
-						item.blend = blend;
 						item.shader = shader;
 						item.depthCompareMode = depthCompareMode;
 
@@ -743,7 +745,6 @@ final class InternalCompileMacro {
 							&& _headTriangles.graphics == graphic
 							&& _headTriangles.antialiasing == smoothing
 							&& _headTriangles.colored == isColored
-							&& _headTriangles.blend == blend
 							&& _headTriangles.hasColorOffsets == hasColorOffsets
 							&& _headTriangles.shader == shader
 							&& _headTriangles.culling == culling
@@ -770,7 +771,6 @@ final class InternalCompileMacro {
 						item.antialiasing = smoothing;
 						item.colored = isColored;
 						item.hasColorOffsets = hasColorOffsets;
-						item.blend = blend;
 						item.shader = shader;
 						item.culling = culling;
 						item.depthCompareMode = depthCompareMode;

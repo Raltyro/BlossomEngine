@@ -154,13 +154,16 @@ class Controls extends FlxActionSet {
 		return input.device == GAMEPAD && (deviceID == FlxInputDeviceID.ALL || input.deviceID == deviceID);
 }
 
-@:build(blossom.backend.macro.BuildMacro.buildFunkinControlList()) // Builds the actual key list fields, enums:Map<Control, String> var
+@:build(blossom.input.Controls.FunkinControlList.build()) // Builds the actual key list fields into enums
 class FunkinControlList {
-	var status:FlxInputState; var manager:Controls;
+	public static var enums:Map<Control, String>;
 
-	public function new(Status, Manager) {
-		status = Status;
-		manager = Manager;
+	var status:FlxInputState;
+	var manager:Controls;
+
+	public function new(status, manager) {
+		this.status = status;
+		this.manager = manager;
 	}
 
 	public var ANY(get, never):Bool;

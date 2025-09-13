@@ -1,5 +1,8 @@
 package blossom;
 
+import blossom.backend.mod.events.ConductorEvent;
+import blossom.backend.mod.events.StateEvent;
+import blossom.backend.mod.ModuleGroup;
 import blossom.graphic.transitions.Transition;
 import blossom.input.Controls;
 
@@ -29,6 +32,13 @@ class BLState extends flixel.FlxSubState {
 	var _controls:Controls;
 	inline function get_controls() return _controls ?? Controls.instance;
 	inline function set_controls(controls) return _controls = controls;
+
+	var _modules:ModuleGroup;
+	public var modules(get, set):ModuleGroup;
+	function get_modules() 
+		if (_modules == null) return parent != null ? parent.modules : (_modules = new ModuleGroup());
+		else return _modules;
+	function set_modules(newModules) return _modules = newModules;
 
 	public var updateConductor:Bool = true;
 	public var conductor(default, set):Null<Conductor>;
@@ -98,6 +108,8 @@ class BLState extends flixel.FlxSubState {
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 		if (updateConductor) conductor?.update();
+
+		modules.call1('update', elapsed);
 	}
 
 	override function tryUpdate(elapsed:Float) {
@@ -115,17 +127,22 @@ class BLState extends flixel.FlxSubState {
 	}
 
 	override function draw() {
-		//if (_bgSprite != null) @:privateAccess _bgSprite._cameras = _cameras;
 		if (curTrans != null) {
-			if (curTrans.parentDraw) super.draw();
+			if (curTrans.parentDraw) {
+				super.draw();
+				modules.call('draw');
+			}
 			curTrans.draw();
 		}
-		else
+		else {
 			super.draw();
+			modules.call('draw');
+		}
 	}
 
 	override function destroy():Void {
 		super.destroy();
+		if (parent?.modules != modules) modules.destroy();
 
 		transIn = null;
 		transOut = null;
@@ -142,31 +159,35 @@ class BLState extends flixel.FlxSubState {
 		}
 	}
 
-	public function stepHit() {}
+	public function stepHit():Bool
+		return !modules.event(ModuleEvent.get(StepHit).recycle(conductor.currentStep)).cancelled;
 
-	public function beatHit() {}
+	public function beatHit():Bool
+		return !modules.event(ModuleEvent.get(BeatHit).recycle(conductor.currentBeat)).cancelled;
 
-	public function measureHit() {}
+	public function measureHit():Bool
+		return !modules.event(ModuleEvent.get(MeasureHit).recycle(conductor.currentMeasure)).cancelled;
 
-	public function metronomeHit(measureTicked:Bool) {}
+	public function metronomeHit(measureTicked:Bool):Bool
+		return !modules.event(ModuleEvent.get(MetronomeHit).recycle(measureTicked, conductor.currentMeasure, conductor.currentBeat)).cancelled;
 
 	function _stepHit() {
 		stepHit();
-		//modules.eventPost(ModuleEvent.get(StepHit).recycle(conductor.currentStep));
+		modules.eventPost(ModuleEvent.get(StepHit).recycle(conductor.currentStep));
 	}
 
 	function _beatHit() {
 		beatHit();
-		//modules.eventPost(ModuleEvent.get(BeatHit).recycle(conductor.currentBeat));
+		modules.eventPost(ModuleEvent.get(BeatHit).recycle(conductor.currentBeat));
 	}
 
 	function _measureHit() {
 		measureHit();
-		//modules.eventPost(ModuleEvent.get(MeasureHit).recycle(conductor.currentMeasure));
+		modules.eventPost(ModuleEvent.get(MeasureHit).recycle(conductor.currentMeasure));
 	}
 
 	function _metronomeHit(measureTicked:Bool) {
 		metronomeHit(measureTicked);
-		//modules.eventPost(ModuleEvent.get(MetronomeHit).recycle(measureTicked, conductor.currentMeasure, conductor.currentBeat));
+		modules.eventPost(ModuleEvent.get(MetronomeHit).recycle(measureTicked, conductor.currentMeasure, conductor.currentBeat));
 	}
 }

@@ -65,6 +65,7 @@ import js.html.CanvasRenderingContext2D;
 
 	@:noCompletion private var __bounds:Rectangle;
 	@:noCompletion private var __commands:DrawCommandBuffer;
+	@:noCompletion private var __reader:DrawCommandReader;
 	@:noCompletion private var __dirty(default, set):Bool = true;
 	@:noCompletion private var __hardwareDirty:Bool;
 	@:noCompletion private var __height:Int;
@@ -1805,7 +1806,9 @@ import js.html.CanvasRenderingContext2D;
 
 	@:noCompletion private function __readGraphicsData(graphicsData:Vector<IGraphicsData>):Void
 	{
-		var data = new DrawCommandReader(__commands);
+		if (__reader == null) __reader = new DrawCommandReader(__commands);
+		else __reader.set(__commands);
+
 		var path:GraphicsPath = null;
 		var stroke:GraphicsStroke;
 
@@ -1830,41 +1833,41 @@ import js.html.CanvasRenderingContext2D;
 			switch (type)
 			{
 				case CUBIC_CURVE_TO:
-					var c = data.readCubicCurveTo();
+					var c = __reader.readCubicCurveTo();
 					path.cubicCurveTo(c.controlX1, c.controlY1, c.controlX2, c.controlY2, c.anchorX, c.anchorY);
 
 				case CURVE_TO:
-					var c = data.readCurveTo();
+					var c = __reader.readCurveTo();
 					path.curveTo(c.controlX, c.controlY, c.anchorX, c.anchorY);
 
 				case LINE_TO:
-					var c = data.readLineTo();
+					var c = __reader.readLineTo();
 					path.lineTo(c.x, c.y);
 
 				case MOVE_TO:
-					var c = data.readMoveTo();
+					var c = __reader.readMoveTo();
 					path.moveTo(c.x, c.y);
 
 				case DRAW_CIRCLE:
-					var c = data.readDrawCircle();
+					var c = __reader.readDrawCircle();
 					path.__drawCircle(c.x, c.y, c.radius);
 
 				case DRAW_ELLIPSE:
-					var c = data.readDrawEllipse();
+					var c = __reader.readDrawEllipse();
 					path.__drawEllipse(c.x, c.y, c.width, c.height);
 
 				case DRAW_RECT:
-					var c = data.readDrawRect();
+					var c = __reader.readDrawRect();
 					path.__drawRect(c.x, c.y, c.width, c.height);
 
 				case DRAW_ROUND_RECT:
-					var c = data.readDrawRoundRect();
+					var c = __reader.readDrawRoundRect();
 					path.__drawRoundRect(c.x, c.y, c.width, c.height, c.ellipseWidth, c.ellipseHeight != null ? c.ellipseHeight : c.ellipseWidth);
 
 				case LINE_GRADIENT_STYLE:
 					// TODO
 
-					var c = data.readLineGradientStyle();
+					var c = __reader.readLineGradientStyle();
 				// stroke = new GraphicsStroke (c.thickness, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
 				// stroke.fill = new GraphicsGradientFill (c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod, c.focalPointRatio);
 				// graphicsData.push (stroke);
@@ -1872,39 +1875,39 @@ import js.html.CanvasRenderingContext2D;
 				case LINE_BITMAP_STYLE:
 					// TODO
 
-					var c = data.readLineBitmapStyle();
+					var c = __reader.readLineBitmapStyle();
 					path = null;
 				// stroke = new GraphicsStroke (c.thickness, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
 				// stroke.fill = new GraphicsBitmapFill (c.bitmap, c.matrix, c.repeat, c.smooth);
 				// graphicsData.push (stroke);
 
 				case LINE_STYLE:
-					var c = data.readLineStyle();
+					var c = __reader.readLineStyle();
 					stroke = new GraphicsStroke(c.thickness, c.pixelHinting, c.scaleMode, c.caps, c.joints, c.miterLimit);
 					stroke.fill = new GraphicsSolidFill(c.color, c.alpha);
 					graphicsData.push(stroke);
 
 				case END_FILL:
-					data.readEndFill();
+					__reader.readEndFill();
 					graphicsData.push(new GraphicsEndFill());
 
 				case BEGIN_BITMAP_FILL:
-					var c = data.readBeginBitmapFill();
+					var c = __reader.readBeginBitmapFill();
 					graphicsData.push(new GraphicsBitmapFill(c.bitmap, c.matrix, c.repeat, c.smooth));
 
 				case BEGIN_FILL:
-					var c = data.readBeginFill();
+					var c = __reader.readBeginFill();
 					graphicsData.push(new GraphicsSolidFill(c.color, c.alpha));
 
 				case BEGIN_GRADIENT_FILL:
-					var c = data.readBeginGradientFill();
+					var c = __reader.readBeginGradientFill();
 					graphicsData.push(new GraphicsGradientFill(c.type, c.colors, c.alphas, c.ratios, c.matrix, c.spreadMethod, c.interpolationMethod,
 						c.focalPointRatio));
 
 				case BEGIN_SHADER_FILL:
 
 				default:
-					data.skip(type);
+					__reader.skip(type);
 			}
 		}
 

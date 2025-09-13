@@ -5,6 +5,7 @@ import flixel.util.FlxSignal.FlxTypedSignal;
 
 typedef ModuleGroup = TypedModuleGroup<Module>;
 
+@:build(blossom.backend.macro.ModuleMacro.buildModuleGroup())
 class TypedModuleGroup<T:Module> implements IFlxDestroyable {
 	public static var global:ModuleGroup = new ModuleGroup();
 
@@ -35,30 +36,43 @@ class TypedModuleGroup<T:Module> implements IFlxDestroyable {
 		}
 	}
 
-	public function call(func:String, ?parameters:Array<Dynamic>) {
-		if (global != cast this) global.call(func, parameters);
-		for (module in members) if (module.active) module.call(func, parameters);
-		return null;
+	// for optimization reason, it wont return anything if results is not passed
+	public function call(func:String, ?parameters:Array<Dynamic>, ?results:Array<Dynamic>):Array<Dynamic> {
+		if (global != cast this) results = global.call(func, parameters, results);
+
+		if (results == null) {
+			for (module in members) if (module.active) module.call(func, parameters);
+		}
+		else {
+			var r:Dynamic;
+			for (module in members) if (module.active) {
+				if ((r = module.call(func, parameters)) != null)
+					results.push(r);
+			}
+		}
+		return results;
 	}
 
-	public function event<T:ModuleEvent>(event:T, ?func:String):T {
+	public function event<T:ModuleEvent>(event:T, ?func:String, ?prefix:String, ?suffix:String):T {
 		if ((func = func ?? event.callbackName) == null) return event;
+		if (prefix != null) func = prefix + func;
+		if (suffix != null) func += suffix;
 
 		if (global != cast this) {
 			global.event(event, func);
 			if (event.cancelled && !event.continueCalls) return event;
 		}
 
-		final arr = [event];
 		for (module in members) if (module.active) {
-			module.call(func, arr);
+			module.call1(func, event);
 			if (event.cancelled && !event.continueCalls) break;
 		}
+
 		return event;
 	}
 
 	inline public function eventPost<T:ModuleEvent>(event:T, ?func:String):T
-		return this.event(event, (func ?? event.callbackName) + 'Post');
+		return this.event(event, null, null, "Post");
 
 	public function add(module:T):T {
 		if (module == null || !module.exists || members == null || members.indexOf(module) >= 0) return module;
