@@ -1,6 +1,8 @@
 package flixel.system.debug.log;
 
 #if FLX_DEBUG
+import blossom.backend.util.BitmapDataUtil;
+
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.system.ui.FlxSystemButton;
@@ -48,7 +50,7 @@ class BitmapLog extends Window
 		minSize.y = Window.HEADER_HEIGHT * 2 + 1;
 		
 		//canvas = new Bitmap(new BitmapData(Std.int(width), Std.int(height - 15), true, FlxColor.TRANSPARENT));
-		canvas = new Bitmap(blossom.backend.util.BitmapDataUtil.create(Std.int(width), Std.int(height - 15)));
+		canvas = new Bitmap(BitmapDataUtil.create(Std.int(width), Std.int(height - 15)));
 		canvas.x = 0;
 		canvas.y = 15;
 		addChild(canvas);
@@ -155,7 +157,7 @@ class BitmapLog extends Window
 		
 		if (canvasWidth > 0 && canvasHeight > 0)
 		{
-			blossom.backend.util.BitmapDataUtil.resize(canvas.bitmapData, canvasWidth, canvasHeight);
+			BitmapDataUtil.resize(canvas.bitmapData, canvasWidth, canvasHeight);
 			canvas.bitmapData = canvas.bitmapData;
 			//canvas.bitmapData = new BitmapData(canvasWidth, canvasHeight, true, FlxColor.TRANSPARENT);
 			drawCanvas();
@@ -284,8 +286,8 @@ class BitmapLog extends Window
 		);
 
 		//canvasBmd.fillRect(canvasBmd.rect, FlxColor.TRANSPARENT);
-		blossom.backend.util.BitmapDataUtil.clear(canvasBmd, FlxColor.TRANSPARENT);
-		//blossom.backend.util.BitmapDataUtil.draw(canvasBmd, bitmap, matrix);
+		BitmapDataUtil.clear(canvasBmd, FlxColor.TRANSPARENT);
+		//BitmapDataUtil.draw(canvasBmd, bitmap, matrix);
 		canvasBmd.draw(bitmap, matrix, null, null, canvasBmd.rect, false);
 		
 		drawBoundingBox(bitmap);

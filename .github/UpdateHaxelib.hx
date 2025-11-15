@@ -14,14 +14,17 @@ typedef Library = {
 
 class UpdateHaxelib {
 	static var libraries:Array<Library> = [
-		{name: "lime", url: "https://github.com/Raltyro/lime", ref: "0c57d218c310a16456d12aa7d3c904556ea72080"},
-		{name: "openfl", url: "https://github.com/Raltyro/openfl", ref: "26a2e25e3cbabfe7ce928985781f1c39f000d972"},
-		{name: "flixel", url: "https://github.com/swordcubes-grave-of-shite/flixel"},
+		{name: "lime", version: "8.3.0"},
+		{name: "openfl", version: "9.5.0"},
+		{name: "flixel", version: "6.1.1"},
 		{name: "flixel-addons", version: "3.3.2"},
-		{name: "hscript-improved", url: "https://github.com/CodenameCrew/hscript-improved"},
 		{name: "flixel-animate", url: "https://github.com/MaybeMaru/flixel-animate"},
-		{name: "hxvlc", version: "2.2.2"},
-		{name: "hxdiscord_rpc"}
+		{name: "moonchart", url: "https://github.com/MaybeMaru/moonchart"},
+		{name: "hxjson5"},
+		//{name: "hscript-improved", url: "https://github.com/CodenameCrew/hscript-improved"},
+		{name: "rulescript", url: "https://github.com/Kriptel/RuleScript", ref: "dev"},
+		{name: "hxvlc", version: "2.2.4"},
+		{name: "hxdiscord_rpc", version: "1.3.0"},
 	];
 
 	public static function main() {

@@ -28,7 +28,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 	}
 
 	override public function reset() {
-		super.reset();
+		baseReset();
 
 		rects.length = 0;
 		transforms.length = 0;
@@ -41,7 +41,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 	}
 
 	override public function dispose() {
-		super.dispose();
+		baseDispose();
 
 		rects = null;
 		transforms = null;
@@ -108,8 +108,8 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		final shader = shader != null ? shader : graphics.shader;
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
-		shader.frameRect.value = untyped (rects).__array;
-		shader.frameAngle.value = angles;
+		//shader.frameRect.value = untyped (rects).__array;
+		//shader.frameAngle.value = angles;
 		shader.alpha.value = alphas;
 
 		if (colored || hasColorOffsets) {
@@ -132,7 +132,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		camera.canvas.graphics.drawQuads(rects, null, transforms);
 		camera.canvas.graphics.endFill();
 
-		super.render(camera);
+		FlxDrawBaseItem.drawCalls++;
 	}
 
 	override function get_numVertices():Int return rects.length;

@@ -13,7 +13,6 @@ import openfl.events.UncaughtErrorEvent;
 import openfl.Lib;
 
 import blossom.backend.api.Discord;
-import blossom.backend.debug.StatsCounter;
 import blossom.backend.mod.events.StateEvent;
 import blossom.backend.mod.ModuleGroup;
 import blossom.input.Controls;
@@ -31,8 +30,6 @@ import flixel.FlxState;
 #end
 
 class BLGame extends flixel.FlxGame {
-	public var statsCounter:StatsCounter;
-
 	var _oldState:FlxState;
 
 	public function new() {
@@ -41,7 +38,6 @@ class BLGame extends flixel.FlxGame {
 		FlxG.signals.preStateSwitch.add(preStateSwitch);
 		FlxG.signals.postStateSwitch.add(postStateSwitch);
 		FlxG.signals.preStateCreate.add(preStateCreate);
-		//borderTiles = new BorderTiles(AssetUtil.getBitmap(Paths.image("border"), true, false));
 
 		super(GameConstants.WIDTH, GameConstants.HEIGHT, Initial, GameConstants.FRAMERATE, GameConstants.FRAMERATE, true);
 
@@ -84,7 +80,6 @@ class BLGame extends flixel.FlxGame {
 		FlxG.game.debugger.console.registerObject('ShaderUtil', blossom.backend.util.ShaderUtil);
 		FlxG.game.debugger.console.registerObject('SoundUtil', blossom.backend.util.SoundUtil);
 		FlxG.game.debugger.console.registerObject('Conductor', blossom.backend.Conductor);
-		FlxG.game.debugger.console.registerObject('gl', openfl.display.OpenGLRenderer);
 		#end
 	}
 
@@ -93,7 +88,7 @@ class BLGame extends flixel.FlxGame {
 		ModuleGroup.global.event(ModuleEvent.get(StateDestroy).recycle(_oldState = _state));
 	}
 
-	function preStateCreate() {
+	function preStateCreate(_) {
 		ModuleGroup.global.eventPost(ModuleEvent.get(StateDestroy).recycle(_oldState));
 		ModuleGroup.global.event(ModuleEvent.get(StateCreate).recycle(_state));
 	}
@@ -112,6 +107,12 @@ class BLGame extends flixel.FlxGame {
 
 		//addChildAt(statsCounter = new StatsCounter(3, 3), getChildIndex(_inputContainer) + 1);
 	}
+
+	#if !FLX_DEBUG
+	@:noCompletion override function __hitTest(_, _, _, _, _, _):Bool return false;
+	@:noCompletion override function __hitTestHitArea(_, _, _, _, _, _):Bool return false;
+	@:noCompletion override function __hitTestMask(_, _):Bool return false;
+	#end
 
 	inline function setupCrashHandler() {
 		#if cpp

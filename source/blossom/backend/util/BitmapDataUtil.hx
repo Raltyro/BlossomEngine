@@ -1,5 +1,11 @@
 package blossom.backend.util;
 
+#if openfl
+import lime.graphics.Image;
+import lime.graphics.ImageBuffer;
+import lime.graphics.ImageType;
+import lime.graphics.PixelFormat;
+import lime.utils.ArrayBufferView;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
@@ -7,6 +13,7 @@ import openfl.display.Graphics;
 import openfl.display.IBitmapDrawable;
 import openfl.display.OpenGLRenderer;
 import openfl.display.Sprite;
+import openfl.display.Shader;
 import openfl.display3D.textures.TextureBase;
 import openfl.display3D.Context3D;
 import openfl.display3D.Context3DTextureFormat;
@@ -17,46 +24,111 @@ import openfl.geom.Point;
 import openfl.geom.Matrix;
 import flixel.math.FlxRect;
 
-import blossom.backend.util.MathUtil;
-
 final class BitmapDataUtil {
 	public static var context3D(get, never):Context3D; inline static function get_context3D():Context3D return FlxG.stage.context3D;
 
-	static var gfxBitmap:Bitmap = new Bitmap();
-	static var gfxSprite:Sprite;
-	static var gfxRenderer:OpenGLRenderer;
+	public static var gfxBitmap:Bitmap;
+	public static var gfxSprite:Sprite;
+	public static var gfxRenderer:OpenGLRenderer;
 
-	static function prepareGfxSprite() if (gfxSprite == null) @:privateAccess {
-		(gfxSprite = new Sprite()).addChild(gfxBitmap);
-		gfxSprite.__cacheBitmapMatrix = new Matrix();
-		gfxSprite.__cacheBitmapColorTransform = new ColorTransform();
+	public static function prepareGfxSprite() @:privateAccess {
+		if (gfxSprite == null) {
+			(gfxSprite = new Sprite()).addChild(gfxBitmap = new Bitmap());
+			gfxSprite.__cacheBitmapMatrix = new Matrix();
+			gfxSprite.__cacheBitmapColorTransform = new ColorTransform();
+		}
+		else {
+			gfxSprite.__cacheBitmapMatrix.identity();
+			gfxSprite.__cacheBitmapColorTransform.__identity();
+		}
 	}
 
-	static function prepareGfxRenderer() if (gfxRenderer == null) @:privateAccess {
-		if (FlxG.stage.__renderer == null || FlxG.stage.__renderer.__type != OPENGL) return;
-
+	public static function prepareGfxRenderer() @:privateAccess {
 		prepareGfxSprite();
-		gfxRenderer = cast gfxSprite.__cacheBitmapRenderer;
-		if (gfxRenderer == null || gfxRenderer.__type != OPENGL) {
-			gfxSprite.__cacheBitmapRenderer = cast gfxRenderer = new OpenGLRenderer(context3D);
+
+		if (gfxRenderer == null) {
+			if ((gfxRenderer = cast gfxSprite.__cacheBitmapRenderer) == null || gfxRenderer.__type != OPENGL) {
+				gfxSprite.__cacheBitmapRenderer = cast gfxRenderer = new OpenGLRenderer(context3D);
+			}
 			gfxRenderer.__worldTransform = new Matrix();
 			gfxRenderer.__worldColorTransform = new ColorTransform();
+			gfxRenderer.__allowSmoothing = (gfxRenderer.__stage = FlxG.stage).__renderer.__allowSmoothing;
 		}
 		else {
 			gfxRenderer.__worldTransform.identity();
-			@:privateAccess gfxRenderer.__worldColorTransform.__identity();
+			gfxRenderer.__worldColorTransform.__identity();
 			gfxRenderer.__worldAlpha = 1;
-			gfxRenderer.__overrideBlendMode = null;
-			gfxRenderer.__blendMode = null;
+			gfxRenderer.__overrideBlendMode = gfxRenderer.__blendMode = null;
+
+			gfxRenderer.__clearShader();
+			//gfxRenderer.__copyShader(cast FlxG.stage.__gfxRenderer);
+		}
+	}
+
+	public static function copyFrom(dst:BitmapData, src:BitmapData, ?alpha:Float, ?matrix:Matrix, smoothing = false) @:privateAccess {
+		if (dst.image != null && src.image != null && alpha == null && matrix == null) {
+			dst.copyPixels(src, dst.rect, gfxSprite.__tempPoint = gfxSprite.__tempPoint ?? new Point());
+		}
+		else {
+			prepareGfxRenderer();
+
+			final context = gfxRenderer.__context3D;
+			final cacheRTT = context.__state.renderToTexture,
+				cacheRTTDepthStencil = context.__state.renderToTextureDepthStencil,
+				cacheRTTAntiAlias = context.__state.renderToTextureAntiAlias,
+				cacheRTTSurfaceSelector = context.__state.renderToTextureSurfaceSelector;
+
+			gfxRenderer.__setRenderTarget(dst);
+			if (alpha != null) gfxRenderer.__worldAlpha = alpha;
+			if (matrix != null) gfxRenderer.__worldTransform.concat(matrix);
+			gfxRenderer.__renderFilterPass(src, gfxRenderer.__defaultDisplayShader, smoothing, false);
+
+			if (cacheRTT != null) context.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
+			else context.setRenderToBackBuffer();
+		}
+	}
+
+	public inline static function prepareCacheBitmapData(bitmap:BitmapData, width:Int, height:Int):BitmapData {
+		if (bitmap == null) return create(width, height);
+		resize(bitmap, width, height);
+		return bitmap;
+	}
+
+	public static function applyShaders(bitmap:BitmapData, shaders:Array<Shader>) @:privateAccess {
+		prepareGfxRenderer();
+
+		final context = gfxRenderer.__context3D;
+		final cacheRTT = context.__state.renderToTexture,
+			cacheRTTDepthStencil = context.__state.renderToTextureDepthStencil,
+			cacheRTTAntiAlias = context.__state.renderToTextureAntiAlias,
+			cacheRTTSurfaceSelector = context.__state.renderToTextureSurfaceSelector;
+
+		bitmap.getTexture(context);
+
+		var bitmap2 = gfxSprite.__cacheBitmapData2 = prepareCacheBitmapData(gfxSprite.__cacheBitmapData2, bitmap.width, bitmap.height);
+		var cacheBitmap:BitmapData;
+		for (shader in shaders) {
+			gfxRenderer.__setRenderTarget(bitmap2);
+
+			clear(bitmap2);
+			gfxRenderer.__renderFilterPass(cacheBitmap = bitmap, shader, false, false);
+
+			bitmap = bitmap2;
+			bitmap2 = cacheBitmap;
 		}
 
-		gfxRenderer.__allowSmoothing = (gfxRenderer.__stage = FlxG.stage).__renderer.__allowSmoothing;
-		gfxRenderer.__clearShader();
-		//gfxRenderer.__copyShader(cast FlxG.stage.__gfxRenderer);
+		if (bitmap == gfxSprite.__cacheBitmapData2) {
+			gfxRenderer.__setRenderTarget(bitmap2);
+			gfxRenderer.__renderFilterPass(bitmap, gfxRenderer.__defaultDisplayShader, false, false);
+		}
+
+		if (cacheRTT != null) context.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
+		else context.setRenderToBackBuffer();
 	}
 
 	public static function applyFilters(bitmap:BitmapData, filters:Array<BitmapFilter>, resizeBitmap = false, ?rect:FlxRect) @:privateAccess {
 		if (filters == null || filters.length == 0) return;
+		prepareGfxRenderer();
 
 		var width = bitmap.width, height = bitmap.height;
 		if (resizeBitmap) {
@@ -73,16 +145,9 @@ final class BitmapDataUtil {
 		else if (rect != null)
 			rect.set(0, 0, width, height);
 
-		inline function prepareCacheBitmapData(bitmap:BitmapData):BitmapData {
-			if (bitmap == null) return create(width, height);
-			resize(bitmap, width, height);
-			return bitmap;
-		}
-
-		var bitmap2 = gfxSprite.__cacheBitmapData2 = prepareCacheBitmapData(gfxSprite.__cacheBitmapData2);
+		var bitmap2 = gfxSprite.__cacheBitmapData2 = prepareCacheBitmapData(gfxSprite.__cacheBitmapData2, width, height);
 		var bitmap3 = gfxSprite.__cacheBitmapData3, cacheBitmap:BitmapData;
 
-		prepareGfxRenderer();
 		if (bitmap.__texture != null && gfxRenderer != null) {
 			final context = gfxRenderer.__context3D;
 			final cacheRTT = context.__state.renderToTexture,
@@ -92,7 +157,7 @@ final class BitmapDataUtil {
 
 			for (filter in filters) {
 				if (filter.__preserveObject) {
-					gfxRenderer.__setRenderTarget(bitmap3 = prepareCacheBitmapData(bitmap3));
+					gfxRenderer.__setRenderTarget(bitmap3 = prepareCacheBitmapData(bitmap3, width, height));
 					gfxRenderer.__renderFilterPass(bitmap, gfxRenderer.__defaultDisplayShader, false, false);
 				}
 
@@ -114,69 +179,17 @@ final class BitmapDataUtil {
 			if (bitmap == gfxSprite.__cacheBitmapData2) {
 				gfxRenderer.__setRenderTarget(bitmap2);
 				gfxRenderer.__renderFilterPass(bitmap, gfxRenderer.__defaultDisplayShader, false, false);
-				//bitmap = bitmap2;
 			}
 
 			if (cacheRTT != null) context.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
 			else context.setRenderToBackBuffer();
 		}
-		else {
-			final destPoint = gfxSprite.__tempPoint = gfxSprite.__tempPoint ?? new Point();
-			for (filter in filters) {
-				if (filter.__preserveObject)
-					(bitmap3 = prepareCacheBitmapData(bitmap3)).copyPixels(bitmap, bitmap.rect, destPoint);
-
-				cacheBitmap = filter.__applyFilter(bitmap2, bitmap, bitmap.rect, destPoint);
-
-				if (filter.__preserveObject) cacheBitmap.draw(bitmap3);
-				if (cacheBitmap == bitmap2) copyFrom(bitmap, bitmap2, false);
-			}
-		}
 
 		gfxSprite.__cacheBitmapData3 = bitmap3;
 	}
 
-	public static function copyFrom(dst:BitmapData, src:BitmapData, ?alpha:Float, resizeBitmap = false) @:privateAccess {
-		if (resizeBitmap) resize(dst, src.width, src.height);
-
-		if (dst.image != null && src.image != null && alpha == null)
-			dst.copyPixels(src, dst.rect, gfxSprite.__tempPoint = gfxSprite.__tempPoint ?? new Point());
-		else {
-			prepareGfxRenderer();
-			if (gfxRenderer == null) {
-				gfxBitmap.bitmapData = src;
-				if (alpha != null) { // TODO: this doesnt work, need fix
-					final colorTransform = new ColorTransform(1, 1, 1, alpha);
-					dst.draw(gfxSprite, colorTransform);
-				}
-				else {
-					clear(dst);
-					dst.draw(gfxSprite);
-				}
-			}
-			else {
-				final context = gfxRenderer.__context3D;
-				final cacheRTT = context.__state.renderToTexture,
-					cacheRTTDepthStencil = context.__state.renderToTextureDepthStencil,
-					cacheRTTAntiAlias = context.__state.renderToTextureAntiAlias,
-					cacheRTTSurfaceSelector = context.__state.renderToTextureSurfaceSelector;
-
-				gfxRenderer.__setBlendMode(NORMAL);
-				gfxRenderer.__setRenderTarget(dst);
-				if (alpha != null) gfxRenderer.__worldAlpha = alpha;
-				gfxRenderer.__renderFilterPass(src, gfxRenderer.__defaultDisplayShader, false, false);
-		
-				if (cacheRTT != null) context.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
-				else context.setRenderToBackBuffer();
-			}
-		}
-	}
-
 	public static function draw(dst:BitmapData, src:IBitmapDrawable, ?matrix:Matrix, smoothing = false, onlyGraphics = false) @:privateAccess {
-		if (dst == null) return;
-
 		prepareGfxRenderer();
-		if (gfxRenderer == null) return dst.draw(src, matrix, smoothing);
 
 		final context = gfxRenderer.__context3D;
 		final cacheRTT = context.__state.renderToTexture,
@@ -226,7 +239,11 @@ final class BitmapDataUtil {
 			if (src.__renderable) {
 				_preDraw();
 				if (onlyGraphics && displayObject.__graphics != null) {
+					#if (openfl >= "9.5.0")
+					displayObject.__graphics.__bitmapScaleX = displayObject.__graphics.__bitmapScaleY = 1;
+					#else
 					displayObject.__graphics.__bitmapScale = 1;
+					#end
 					openfl.display._internal.Context3DShape.render(displayObject, gfxRenderer);
 				}
 				else gfxRenderer.__renderDrawable(src);
@@ -249,31 +266,33 @@ final class BitmapDataUtil {
 		else context.setRenderToBackBuffer();
 	}
 
-	public static function create(width:Int, height:Int, color:FlxColor = 0, format:Context3DTextureFormat = BGRA):BitmapData @:privateAccess {
+	public static function create(width:Int, height:Int, color:FlxColor = 0):BitmapData @:privateAccess {
 		width = MathUtil.minInt(width, FlxG.bitmap.maxTextureSize);
 		height = MathUtil.minInt(height, FlxG.bitmap.maxTextureSize);
 
 		if (context3D == null) return new BitmapData(width, height, true, color);
 		else {
 			final bitmap = new BitmapData(0, 0, true, 0);
-			bitmap.__texture = context3D.createTexture(width, height, format, true);
+			bitmap.__texture = context3D.createTexture(width, height, BGRA, true);
 
 			if (color != 0) {
+				final gl = context3D.gl;
+
 				context3D.__flushGLFramebuffer();
-				//context3D.__flushGLViewport();
-				context3D.gl.bindFramebuffer(context3D.gl.FRAMEBUFFER, bitmap.__texture.__glFramebuffer);
-				context3D.gl.colorMask(
+				gl.bindFramebuffer(gl.FRAMEBUFFER, bitmap.__texture.__glFramebuffer);
+				gl.colorMask(
 					context3D.__contextState.colorMaskRed = true,
 					context3D.__contextState.colorMaskGreen = true,
 					context3D.__contextState.colorMaskBlue = true,
 					context3D.__contextState.colorMaskAlpha = true
 				);
-				context3D.gl.clearColor(color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat);
+				gl.clearColor(color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat);
 
-				context3D.__setGLScissorTest(false);
-				context3D.gl.clear(context3D.gl.COLOR_BUFFER_BIT);
+				gl.disable(gl.SCISSOR_TEST);
+				gl.clear(gl.COLOR_BUFFER_BIT);
 
-				context3D.gl.bindFramebuffer(context3D.gl.FRAMEBUFFER, null);
+				gl.bindFramebuffer(gl.FRAMEBUFFER, context3D.__contextState.__currentGLFramebuffer);
+				if (context3D.__contextState.__enableGLScissorTest) gl.enable(gl.SCISSOR_TEST);
 			}
 
 			bitmap.__texture.__getGLFramebuffer(true, 0, 0);
@@ -283,6 +302,9 @@ final class BitmapDataUtil {
 			return bitmap;
 		}
 	}
+
+	inline public static function hardwareCheck(bitmap:BitmapData):Bool @:privateAccess 
+		return bitmap?.__texture != null;
 
 	public static function toHardware(bitmap:BitmapData) @:privateAccess {
 		if (context3D == null || bitmap.image == null) return;
@@ -298,8 +320,40 @@ final class BitmapDataUtil {
 		bitmap.image = null;
 	}
 
-	public static function hardwareCheck(bitmap:BitmapData, strict = false):Bool @:privateAccess 
-		return bitmap?.__texture != null && (!strict || (bitmap.image == null || bitmap.__textureVersion >= bitmap.image.version));
+	public static function toReadable(bitmap:BitmapData) @:privateAccess {
+		final texture = bitmap.__texture;
+		if (texture == null || texture.__glFramebuffer == null) return;
+
+		final context = texture.__context;
+		final gl = context?.gl;
+		if (gl == null) return;
+
+		var buffer:ImageBuffer = bitmap.image?.buffer;
+		if (buffer == null) {
+			buffer = new ImageBuffer(new ArrayBufferView(bitmap.width * bitmap.height * 4, TypedArrayType.Uint8), bitmap.width, bitmap.height, 4);
+			buffer.format = BGRA32;
+			buffer.premultiplied = true;
+
+			if (bitmap.image == null) bitmap.image = new Image(buffer, 0, 0, bitmap.width, bitmap.height);
+			else {
+				bitmap.image.offsetX = bitmap.image.offsetY = 0;
+				bitmap.image.width = bitmap.width;
+				bitmap.image.height = bitmap.height;
+				bitmap.image.type = DATA;
+				bitmap.image.buffer = buffer;
+			}
+		}
+
+		context.__flushGLFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, texture.__glFramebuffer);
+		gl.readPixels(0, 0, bitmap.width, bitmap.height, texture.__format, gl.UNSIGNED_BYTE, buffer.data);
+
+		bitmap.readable = true;
+		bitmap.image.version = 0;
+		bitmap.__textureVersion = -1;
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, context.__contextState.__currentGLFramebuffer);
+	}
 
 	public static function clear(bitmap:BitmapData, color = 0, depth = false, stencil = false) @:privateAccess {
 		if (bitmap.__texture != null) clearTexture(bitmap.__texture, color, depth, stencil);
@@ -310,35 +364,61 @@ final class BitmapDataUtil {
 		if (texture.__glFramebuffer == null) return;
 
 		final context = texture.__context;
+		final gl = context?.gl;
+		if (gl == null) return;
 
 		context.__flushGLFramebuffer();
-		//context.__flushGLViewport();
 
-		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, texture.__glFramebuffer);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, texture.__glFramebuffer);
 
-		context.gl.colorMask(
+		gl.colorMask(
 			context.__contextState.colorMaskRed = true,
 			context.__contextState.colorMaskGreen = true,
 			context.__contextState.colorMaskBlue = true,
 			context.__contextState.colorMaskAlpha = true
 		);
-		context.gl.clearColor(color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat);
+		gl.clearColor(color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat);
 
-		var flag = context.gl.COLOR_BUFFER_BIT;
+		var flag = gl.COLOR_BUFFER_BIT;
 		if (depth) {
-			context.gl.depthMask(context.__contextState.depthMask = true);
-			context.gl.clearDepth(1);
-			flag |= context.gl.DEPTH_BUFFER_BIT;
+			gl.depthMask(context.__contextState.depthMask = true);
+			gl.clearDepth(1);
+			flag |= gl.DEPTH_BUFFER_BIT;
 		}
 		if (stencil) {
-			context.gl.stencilMask(context.__contextState.stencilWriteMask = 0xFF);
-			context.gl.clearStencil(0);
-			flag |= context.gl.STENCIL_BUFFER_BIT;
+			gl.stencilMask(context.__contextState.stencilWriteMask = 0xFF);
+			gl.clearStencil(0);
+			flag |= gl.STENCIL_BUFFER_BIT;
 		}
-		context.__setGLScissorTest(false);
-		context.gl.clear(flag);
+		gl.disable(gl.SCISSOR_TEST);
+		gl.clear(flag);
 
-		context.gl.bindFramebuffer(context.gl.FRAMEBUFFER, null);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, context3D.__contextState.__currentGLFramebuffer);
+		if (context3D.__contextState.__enableGLScissorTest) gl.enable(gl.SCISSOR_TEST);
+	}
+
+	public static function updateFramebuffer(texture:TextureBase) @:privateAccess {
+		final context = texture.__context;
+		final gl = context?.gl;
+		if (gl == null) return;
+
+		if (texture.__glFramebuffer == null) texture.__getGLFramebuffer(false, 0, 0);
+		else {
+			gl.bindFramebuffer(gl.FRAMEBUFFER, texture.__glFramebuffer);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.__textureID, 0);
+
+			final seperate = texture.__glDepthRenderbuffer != texture.__glStencilRenderbuffer;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, texture.__glDepthRenderbuffer);
+			gl.renderbufferStorage(gl.RENDERBUFFER, seperate ? gl.DEPTH_COMPONENT16 : Context3D.__glDepthStencil, texture.__width, texture.__height);
+			if (seperate) {
+				gl.bindRenderbuffer(gl.RENDERBUFFER, texture.__glStencilRenderbuffer);
+				gl.renderbufferStorage(gl.RENDERBUFFER, gl.STENCIL_INDEX8, texture.__width, texture.__height);
+			}
+
+			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+		}
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, context.__contextState.__currentGLFramebuffer);
 	}
 
 	public static function resize(bitmap:BitmapData, width:Int, height:Int) @:privateAccess {
@@ -362,35 +442,19 @@ final class BitmapDataUtil {
 
 	public static function resizeTexture(texture:TextureBase, width:Int, height:Int) @:privateAccess {
 		if (texture.__alphaTexture != null) resizeTexture(texture.__alphaTexture, width, height);
-		if (texture.__glFramebuffer == null || texture.__width == width && texture.__height == height) return;
+		if (width < 1 || height < 1 || (texture.__width == width && texture.__height == height)) return;
 
 		final context = texture.__context;
+		final gl = context == null ? null : context.gl;
+		if (gl == null) return;
 
 		texture.__width = width = MathUtil.minInt(width, FlxG.bitmap.maxTextureSize);
 		texture.__height = height = MathUtil.minInt(height, FlxG.bitmap.maxTextureSize);
 
-		final cacheRTT = context.__state.renderToTexture,
-			cacheRTTDepthStencil = context.__state.renderToTextureDepthStencil,
-			cacheRTTAntiAlias = context.__state.renderToTextureAntiAlias,
-			cacheRTTSurfaceSelector = context.__state.renderToTextureSurfaceSelector;
-
-		context.__bindGLTexture2D(texture.__textureID);
-		context.gl.texImage2D(texture.__textureTarget, 0, texture.__internalFormat, width, height, 0, texture.__format, context.gl.UNSIGNED_BYTE, null);
-
-		if (texture.__glFramebuffer != null || texture.__glDepthRenderbuffer != null) {
-			if (texture.__glDepthRenderbuffer != null) context.gl.deleteRenderbuffer(texture.__glDepthRenderbuffer);
-			texture.__glDepthRenderbuffer = null;
-
-			if (texture.__glStencilRenderbuffer != null) context.gl.deleteRenderbuffer(texture.__glStencilRenderbuffer);
-			texture.__glStencilRenderbuffer = null;
-
-			if (texture.__glFramebuffer != null) context.gl.deleteFramebuffer(texture.__glFramebuffer);
-			texture.__glFramebuffer = null;
-
-			texture.__getGLFramebuffer(false, 0, 0);
-		}
-
-		if (cacheRTT != null) context.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
-		else context.setRenderToBackBuffer();
+		gl.bindTexture(gl.TEXTURE_2D, texture.__getTexture());
+		gl.texImage2D(texture.__textureTarget, 0, texture.__internalFormat, width, height, 0, texture.__format, gl.UNSIGNED_BYTE, null);
+		updateFramebuffer(texture);
+		gl.bindTexture(gl.TEXTURE_2D, context.__contextState.__currentGLTexture2D);
 	}
 }
+#end

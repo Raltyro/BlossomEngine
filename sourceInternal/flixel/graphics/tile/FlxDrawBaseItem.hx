@@ -13,10 +13,6 @@ import flixel.FlxCamera;
 class FlxDrawBaseItem<T> {
 	public static var drawCalls:Int = 0;
 
-	// UNUSED
-	public static function blendToInt(blend:BlendMode):Int return 0;
-	public var blending:Int = 0;
-
 	public var nextTyped:T;
 	public var next:FlxDrawBaseItem<T>;
 	public var type:FlxDrawItemType;
@@ -33,22 +29,24 @@ class FlxDrawBaseItem<T> {
 
 	public function new() {}
 
-	public function reset() {
+	inline function baseReset() {
 		graphics = null;
 		antialiasing = false;
 		depthCompareMode = null;
 		nextTyped = null;
 		next = null;
 	}
+	public function reset() baseReset();
 
-	public function dispose() {
+	inline function baseDispose() {
 		graphics = null;
 		next = null;
 		type = null;
 		nextTyped = null;
 	}
+	public function dispose() baseDispose();
 
-	public function render(camera:FlxCamera) drawCalls++;
+	public function render(camera:FlxCamera) {}
 
 	public function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {}
 

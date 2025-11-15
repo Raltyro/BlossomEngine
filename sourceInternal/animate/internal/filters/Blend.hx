@@ -49,7 +49,7 @@ class Blend {
 
 	#if !flash
 	public static function isGpuSupported(blend:BlendMode):Bool {
-		if (OpenGLRenderer.hasKHRBlendAdvancedExt) return switch (blend) {
+		if (@:privateAccess OpenGLRenderer.__KHRBlendSupported) return switch (blend) {
 			case ALPHA | ERASE | LAYER | SHADER: false;
 			default: true;
 		}

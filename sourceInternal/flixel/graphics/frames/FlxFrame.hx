@@ -683,6 +683,8 @@ class FlxFrame implements IFlxDestroyable
 			cacheFrameMatrix();
 		}
 		
+		updateUV();
+		
 		frameRect.put();
 		return this;
 	}
@@ -737,15 +739,21 @@ class FlxFrame implements IFlxDestroyable
 
 	function set_frame(value:FlxRect):FlxRect
 	{
-		if (value != null)
-		{
-			if (uv == null)
-				uv = FlxUVRect.get();
+		frame = value;
+		updateUV();
+		
+		return value;
+	}
+	
+	function updateUV()
+	{
+		if (frame == null)
+			return;
+		
+		if (uv == null)
+			uv = FlxUVRect.get();
 
-			uv.set(value.x / parent.width, value.y / parent.height, value.right / parent.width, value.bottom / parent.height);
-		}
-
-		return frame = value;
+		uv.setFromFrameRect(frame, parent);
 	}
 }
 
@@ -779,37 +787,42 @@ abstract FlxUVRect(FlxRect) from FlxRect to flixel.util.FlxPool.IFlxPooled
 	public var left(get, set):Float;
 	inline function get_left():Float { return this.x; }
 	inline function set_left(value):Float { return this.x = value; }
-
+	
 	/** Top */
 	public var right(get, set):Float;
 	inline function get_right():Float { return this.width; }
 	inline function set_right(value):Float { return this.width = value; }
-
+	
 	/** Right */
 	public var top(get, set):Float;
 	inline function get_top():Float { return this.y; }
 	inline function set_top(value):Float { return this.y = value; }
-
+	
 	/** Bottom */
 	public var bottom(get, set):Float;
 	inline function get_bottom():Float { return this.height; }
 	inline function set_bottom(value):Float { return this.height = value; }
-
+	
 	public inline function set(l, t, r, b)
 	{
 		this.set(l, t, r, b);
 	}
-
+	
+	public inline function setFromFrameRect(frame:FlxRect, parent:FlxGraphic)
+	{
+		this.set(frame.x / parent.width, frame.y / parent.height, frame.right / parent.width, frame.bottom / parent.height);
+	}
+	
 	public inline function copyTo(uv:FlxUVRect)
 	{
 		uv.set(left, top, right, bottom);
 	}
-
+	
 	public inline function copyFrom(uv:FlxUVRect)
 	{
 		set(uv.left, uv.top, uv.right, uv.bottom);
 	}
-
+	
 	public inline function toString()
 	{
 		return return FlxStringUtil.getDebugString([
@@ -819,7 +832,7 @@ abstract FlxUVRect(FlxRect) from FlxRect to flixel.util.FlxPool.IFlxPooled
 			LabelValuePair.weak("b", bottom)
 		]);
 	}
-
+	
 	public static function get(l = 0.0, t = 0.0, r = 0.0, b = 0.0)
 	{
 		return FlxRect.get(l, t, r, b);

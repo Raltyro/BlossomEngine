@@ -154,17 +154,14 @@ class CairoTextField
 			graphics.__visible = true;
 			graphics.__managed = true;
 
-			// Clear old cache immediately.
-			if(graphics.__bitmap != null)
+			if (graphics.__bitmap != null)
 			{
-				if(graphics.__bitmap.__texture != null)
-					graphics.__bitmap.__texture.dispose();
-
 				graphics.__bitmap.dispose();
 			}
 
 			graphics.__bitmap = bitmap;
-			graphics.__bitmapScale = pixelRatio;
+			graphics.__bitmapScaleX = pixelRatio;
+			graphics.__bitmapScaleY = pixelRatio;
 
 			cairo = graphics.__cairo;
 		}
@@ -419,13 +416,66 @@ class CairoTextField
 
 					if (group.format.underline)
 					{
-						// TODO: Use font underlinePosition/underlineThickness
+						var underlineThickness:Float;
+						if (font != null && font.underlineThickness != 0.0)
+						{
+							underlineThickness = (font.underlineThickness / font.unitsPerEM) * group.format.size;
+						}
+						else
+						{
+							underlineThickness = Math.max(1.0, 0.05 * group.format.size);
+						}
+
+						var underlinePosition:Float;
+						if (font != null && font.underlinePosition != 0.0)
+						{
+							underlinePosition = -(font.underlinePosition / font.unitsPerEM) * group.format.size;
+						}
+						else
+						{
+							underlinePosition = Math.floor(group.ascent * 0.185) + 0.5;
+						}
 
 						cairo.newPath();
-						cairo.lineWidth = 1;
-						var descent = Math.floor(group.ascent * 0.185);
+						cairo.lineWidth = underlineThickness;
 						var x = group.offsetX + scrollX - bounds.x;
-						var y = Math.ceil(group.offsetY + scrollY + group.ascent - bounds.y) + descent + 0.5;
+						var y = group.offsetY + scrollY + group.ascent - bounds.y + underlinePosition;
+						cairo.moveTo(x, y);
+						cairo.lineTo(x + group.width, y);
+						cairo.stroke();
+						cairo.closePath();
+					}
+
+					if (group.format.strikethrough)
+					{
+						#if (lime >= "8.3.0")
+						var strikethroughThickness:Float;
+						if (font != null && font.strikethroughThickness != 0.0)
+						{
+							strikethroughThickness = (font.strikethroughThickness / font.unitsPerEM) * group.format.size;
+						}
+						else
+						{
+							strikethroughThickness = Math.max(1.0, 0.05 * group.format.size);
+						}
+						var strikethroughPosition:Float;
+						if (font != null && font.strikethroughPosition != 0.0)
+						{
+							strikethroughPosition = -(font.strikethroughPosition / font.unitsPerEM) * group.format.size;
+						}
+						else
+						{
+							strikethroughPosition = -group.ascent / 3.0;
+						}
+						#else
+						var strikethroughThickness = Math.max(1.0, 0.05 * group.format.size);
+						var strikethroughPosition = -group.ascent / 3.0;
+						#end
+
+						cairo.newPath();
+						cairo.lineWidth = strikethroughThickness;
+						var x = group.offsetX + scrollX - bounds.x;
+						var y = group.offsetY + scrollY + group.ascent - bounds.y + strikethroughPosition;
 						cairo.moveTo(x, y);
 						cairo.lineTo(x + group.width, y);
 						cairo.stroke();

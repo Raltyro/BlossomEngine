@@ -15,9 +15,9 @@ import openfl.utils.AssetType;
 using StringTools;
 
 class Paths {
-	public static final EXT_SOUND:String = "ogg";
-	public static final EXT_IMAGE:String = "png";
-	public static final EXT_VIDEO:String = "mp4";
+	public static final DEFAULT_EXT_SOUND:String = "ogg";
+	public static final DEFAULT_EXT_IMAGE:String = "png";
+	public static final DEFAULT_EXT_VIDEO:String = "mp4";
 
 	inline public static function resolve(path:String, ?prefix:String)
 		return Path.normalize((Path.isAbsolute(path) || path.indexOf(":") != -1 || prefix == null) ? path : Path.addTrailingSlash(prefix) + path);
@@ -34,7 +34,7 @@ class Paths {
 	inline public static function setCurrentLevel(?name:String):Void
 		currentLevel = name == null ? null : name.toLowerCase();
 
-	static function getPath(file:String, ?type:AssetType, ?library:String):String {
+	static function get(file:String, ?type:AssetType, ?library:String):String {
 		#if macro
 		return getLibraryPath(file, library);
 		#else
@@ -58,28 +58,28 @@ class Paths {
 	inline static function getDefaultPath(file:String):String return 'assets/$file';
 
 	public static function txt(key:String, ?library:String):String
-		return getPath(fix('data/$key', 'txt'), TEXT, library);
+		return get(defaultExtension('data/$key', "txt"), TEXT, library);
 
 	public static function xml(key:String, ?library:String):String
-		return getPath(fix('data/$key', 'xml'), TEXT, library);
+		return get(defaultExtension('data/$key', "xml"), TEXT, library);
 
 	public static function json(key:String, ?library:String):String
-		return getPath(fix('data/$key', 'json'), TEXT, library);
+		return get(defaultExtension('data/$key', "json"), TEXT, library);
 
 	public static function character(key:String, ?library:String):String
-		return getPath(fix('data/characters/$key', 'json'), TEXT, library);
+		return get(defaultExtension('data/characters/$key', "json"), TEXT, library);
 
 	public static function shader(key:String, ?library:String):String
-		return getPath('shaders/$key', TEXT, library);
+		return get('shaders/$key', TEXT, library);
 
 	public static function frag(key:String, ?library:String):String
-		return shader(fix(key, 'frag'), library);
+		return shader(defaultExtension(key, "frag"), library);
 
 	public static function vert(key:String, ?library:String):String
-		return shader(fix(key, 'vert'), library);
+		return shader(defaultExtension(key, "vert"), library);
 
 	public static function sound(key:String, ?library:String):String
-		return getPath(fix('sounds/$key', EXT_SOUND), SOUND, library);
+		return get(defaultExtension('sounds/$key', DEFAULT_EXT_SOUND), SOUND, library);
 
 	#if !macro
 	public static function soundRandom(key:String, min:Int, max:Int, ?library:String):String
@@ -87,13 +87,13 @@ class Paths {
 	#end
 
 	public static function music(key:String, ?library:String):String
-		return getPath(fix('music/$key', EXT_SOUND), MUSIC, library);
+		return get(defaultExtension('music/$key', DEFAULT_EXT_SOUND), MUSIC, library);
 
 	public static function video(key:String, ?library:String):String
-		return getPath(fix('videos/$key', EXT_VIDEO), BINARY, library);
+		return get(defaultExtension('videos/$key', DEFAULT_EXT_VIDEO), BINARY, library);
 
 	public static function mesh(key:String, ?library:String):String
-		return getPath(fix('meshes/$key', 'obj'), BINARY, library);
+		return get(defaultExtension('meshes/$key', "obj"), BINARY, library);
 
 	// Used for songs and weeks
 	static final invalidChars = ~/[~&\\;:<>#]+/g;
@@ -105,16 +105,16 @@ class Paths {
 		return 'songs:assets/songs/' + (song != null ? '${formatPath(song)}/' : '') + suffix;
 
 	public static function voices(song:String, ?suffix:String = ''):String
-		return inline songsSuffix(fix('Voices$suffix', EXT_SOUND), song);
+		return inline songsSuffix(defaultExtension('Voices$suffix', DEFAULT_EXT_SOUND), song);
 
 	public static function inst(song:String, ?suffix:String = ''):String
-		return inline songsSuffix(fix('Inst$suffix', EXT_SOUND), song);
+		return inline songsSuffix(defaultExtension('Inst$suffix', DEFAULT_EXT_SOUND), song);
 
 	public static function skin(id:String, key:String):String
 		return getLibraryPathForce('${formatPath(id)}/$key', 'skins');
 
 	public static function image(key:String, ?library:String):String
-		return getPath(fix('images/$key', EXT_IMAGE), IMAGE, library);
+		return get(defaultExtension('images/$key', DEFAULT_EXT_IMAGE), IMAGE, library);
 
 	public static function atlas(key:String, ?library:String):String
 		return getLibraryPath('images/$key', library);

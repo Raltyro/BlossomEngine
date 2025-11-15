@@ -67,7 +67,7 @@ final class ModuleMacro {
 		return fields;
 	}
 
-	public static function autoBuildModuleEVent():Array<Field> {
+	public static function autoBuildModuleEvent():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), localClass = Context.getLocalClass(), pos:Position = Context.currentPos();
 
 		var newExprs:Array<Expr>, publics:Array<ModuleEventVar> = [], privates:Array<ModuleEventVar> = [], callbackName:Expr = null, hasRecycle = false;

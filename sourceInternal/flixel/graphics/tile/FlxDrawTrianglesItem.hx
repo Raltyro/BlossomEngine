@@ -62,7 +62,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	}
 
 	override public function reset() {
-		super.reset();
+		baseReset();
 
 		//verticesPosition = 0;
 		//indicesPosition = 0;
@@ -82,7 +82,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	}
 
 	override public function dispose() {
-		super.dispose();
+		baseDispose();
 
 		vertices = null;
 		indices = null;
@@ -324,8 +324,8 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		final shader = shader != null ? shader : graphics.shader;
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
-		shader.frameRect.value = @:privateAccess untyped (uvtData).__array;
-		shader.frameAngle.value = angles;
+		//shader.frameRect.value = @:privateAccess untyped (uvtData).__array;
+		//shader.frameAngle.value = angles;
 		shader.alpha.value = alphas;
 
 		if (colored || hasColorOffsets) {
@@ -355,7 +355,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		}
 		#end
 
-		super.render(camera);
+		FlxDrawBaseItem.drawCalls++;
 	}
 
 	override function get_numVertices():Int return Math.floor(vertices.length / 2);

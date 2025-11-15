@@ -120,6 +120,7 @@ typedef ShaderExtension = {name:String, behavior:String};
 #end
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display3D.Program3D)
+@:access(openfl.display.OpenGLRenderer)
 @:access(openfl.display.ShaderInput)
 @:access(openfl.display.ShaderParameter)
 @:access(openfl.display.Stage)
@@ -808,7 +809,7 @@ class Shader
 		var result = "";
 
 		var ver = StringTools.replace(StringTools.replace(__glVersion, " core", ""), " compatibility", "");
-		var canInjectBlendAdvancedExt = OpenGLRenderer.hasKHRBlendAdvancedExt && isFragment && 
+		var canInjectBlendAdvancedExt = OpenGLRenderer.__KHRBlendSupported && isFragment && 
 			ver != "100" && ver != "110" && ver != "120" && ver != "130" && ver != "140" && ver != "150";
 
 		if (canInjectBlendAdvancedExt) result += "#extension GL_KHR_blend_equation_advanced : enable\n";

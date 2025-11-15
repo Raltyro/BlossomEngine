@@ -100,7 +100,8 @@ import js.html.CanvasRenderingContext2D;
 	@SuppressWarnings("checkstyle:Dynamic") @:noCompletion private var __cairo:#if lime Cairo #else Dynamic #end;
 	#end
 	@:noCompletion private var __bitmap:BitmapData;
-	@:noCompletion private var __bitmapScale:Float;
+	@:noCompletion private var __bitmapScaleX:Float;
+	@:noCompletion private var __bitmapScaleY:Float;
 
 	@:noCompletion private function new(owner:DisplayObject)
 	{
@@ -116,7 +117,8 @@ import js.html.CanvasRenderingContext2D;
 		__width = 0;
 		__height = 0;
 
-		__bitmapScale = 1;
+		__bitmapScaleX = 1;
+		__bitmapScaleY = 1;
 
 		__shaderBufferPool = new ObjectPool<ShaderBuffer>(function() return new ShaderBuffer());
 
@@ -380,7 +382,7 @@ import js.html.CanvasRenderingContext2D;
 							  `pixel3` or `pixel4` output).
 		@throws ArgumentError When the shader specifies an image input that
 							  isn't provided.
-		@throws ArgumentError When a ByteArray or Vector.<Number> instance is
+		@throws ArgumentError When a ByteArray or Vector<Float> instance is
 							  used as an input and the `width` and `height`
 							  properties aren't specified for the ShaderInput,
 							  or the specified values don't match the amount
@@ -931,8 +933,8 @@ import js.html.CanvasRenderingContext2D;
 			if (maxY < tileRect.bottom) maxY = tileRect.bottom;
 		}
 
-		__inflateBounds(minX, minY);
-		__inflateBounds(maxX, maxY);
+		__inflateBounds(minX - __strokePadding, minY - __strokePadding);
+		__inflateBounds(maxX + __strokePadding, maxY + __strokePadding);
 
 		__commands.drawQuads(rects, indices, transforms);
 
@@ -1932,7 +1934,14 @@ import js.html.CanvasRenderingContext2D;
 
 		var scaleX = pixelRatio, scaleY = pixelRatio;
 
-		if (__owner.__worldScale9Grid == null)
+		#if (openfl_legacy_scale9grid && lime_cairo && !cairo && !openfl_force_hw_graphics && !force_hw_graphics)
+		var calculateScale = __owner.__worldScale9Grid == null;
+		#elseif (openfl_legacy_scale9grid && lime_canvas && !canvas && !openfl_force_hw_graphics && !force_hw_graphics)
+		var calculateScale = __owner.__worldScale9Grid == null;
+		#else
+		var calculateScale = true;
+		#end
+		if (calculateScale)
 		{
 			if (parentTransform.b == 0)
 			{
@@ -1972,12 +1981,15 @@ import js.html.CanvasRenderingContext2D;
 					scaleY *= Math.sqrt(displayMatrix.c * displayMatrix.c + displayMatrix.d * displayMatrix.d);
 				}
 			}
+		}
 
-			#if openfl_disable_graphics_upscaling
+		#if openfl_disable_graphics_upscaling
+		if (__owner.__worldScale9Grid == null)
+		{
 			if (scaleX > 1) scaleX = 1;
 			if (scaleY > 1) scaleY = 1;
-			#end
 		}
+		#end
 
 		var width = __bounds.width * scaleX;
 		var height = __bounds.height * scaleY;
@@ -2031,10 +2043,10 @@ import js.html.CanvasRenderingContext2D;
 		var tx = x * parentTransform.a + y * parentTransform.c + parentTransform.tx;
 		var ty = x * parentTransform.b + y * parentTransform.d + parentTransform.ty;
 
-		#if openfl_disable_graphics_pixel_snapping
+		//#if openfl_disable_graphics_pixel_snapping
 		__worldTransform.tx = tx;
 		__worldTransform.ty = ty;
-		#else
+		/*#else
 		// round the world position for crisp graphics rendering
 		if (pixelRatio > 1.0)
 		{
@@ -2055,7 +2067,7 @@ import js.html.CanvasRenderingContext2D;
 		// Offset the rendering with the subpixel offset removed by Math.round above
 		__renderTransform.tx = __worldTransform.__transformInverseX(tx, ty);
 		__renderTransform.ty = __worldTransform.__transformInverseY(tx, ty);
-		#end
+		#end*/
 
 		// Calculate the size to contain the graphics and an extra subpixel
 		// We used to add tx and ty from __renderTransform instead of 1.0

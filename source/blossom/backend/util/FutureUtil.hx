@@ -27,7 +27,7 @@ final class FutureUtil {
 	public static function waitTime<T>(future:Future<T>, waitTime = 8):Future<T> {
 		if (future.isComplete) return future;
 
-		
+		// TODO
 
 		return future;
 	}

@@ -24,7 +24,7 @@ typedef MusicAsset = OneOfTwo<String, MusicData>;
 
 class Music extends FlxSound {
 	public static function getMusicData(asset:String):MusicData {
-		asset = Paths.defaultExtension(asset, Paths.EXT_SOUND);
+		asset = Paths.defaultExtension(asset, Paths.DEFAULT_EXT_SOUND);
 
 		var raw:Dynamic = null, music:Sound = null, intro:Sound = null;
 		try {

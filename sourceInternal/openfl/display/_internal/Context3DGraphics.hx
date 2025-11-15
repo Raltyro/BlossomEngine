@@ -106,7 +106,7 @@ class Context3DGraphics
 						var hasIndices = (indices != null);
 						var transformABCD = false, transformXY = false;
 
-						var length = hasIndices ? indices.length : Math.floor(rects.length / 4);
+						var length = hasIndices ? indices.length : rects.length >> 2;
 						if (length == 0) return;
 
 						if (transforms != null)
@@ -538,7 +538,7 @@ class Context3DGraphics
 			var width = graphics.__width;
 			var height = graphics.__height;
 
-			if (bounds != null && width >= 1 && height >= 1)
+			if (bounds != null && width > 0 && height > 0)
 			{
 				if (graphics.__hardwareDirty
 					|| (graphics.__quadBuffer == null && graphics.__vertexBuffer == null && graphics.__vertexBufferUVT == null))
@@ -581,10 +581,7 @@ class Context3DGraphics
 
 						case BEGIN_FILL:
 							var c = tempReader.readBeginFill();
-							var color = Std.int(c.color);
-							var alpha = Std.int(c.alpha * 0xFF);
-
-							fill = (color & 0xFFFFFF) | (alpha << 24);
+							fill = (Std.int(c.color) & 0xFFFFFF) | (Std.int(c.alpha * 0xFF) << 24);
 							shaderBuffer = null;
 							bitmap = null;
 
@@ -610,22 +607,9 @@ class Context3DGraphics
 								var c = tempReader.readDrawQuads();
 
 								var length:Int;
-								if (c.indices != null) {
-									#if (cpp || hl)
-									length = (untyped (c.indices).__array).length;
-									#else
-									length = c.indices.length;
-									#end
-								}
-								else if (c.rects != null) {
-									#if (cpp || hl)
-									length = Math.floor((untyped (c.rects).__array).length / 4);
-									#else
-									length = Math.floor(c.rects.length / 4);
-									#end
-								}
-								else
-									length = 0;
+								if (c.indices != null) length = c.indices.length;
+								else if (c.rects != null) length = c.rects.length >> 2;
+								else length = 0;
 
 								var uMatrix = renderer.__getMatrix(graphics.__owner.__renderTransform, AUTO);
 								var shader:Shader;
@@ -711,8 +695,8 @@ class Context3DGraphics
 
 								var shader = maskRender ? renderer.__maskShader : renderer.__initGraphicsShader(null);
 								renderer.setShader(shader);
-								renderer.applyMatrix(renderer.__getMatrix(matrix, AUTO));
-								renderer.applyBitmapData(blankBitmapData, true, repeat);
+								renderer.applyMatrix(renderer.__getMatrix(matrix, NEVER));
+								renderer.applyBitmapData(blankBitmapData, false, false);
 								renderer.applyAlpha((color.a / 0xFF) * graphics.__owner.__worldAlpha);
 								renderer.applyColorTransform(tempColorTransform);
 								renderer.updateShader();

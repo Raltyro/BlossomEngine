@@ -16,7 +16,7 @@ import blossom.backend.util.AssetUtil;
 import blossom.backend.util.SoundUtil;
 import blossom.backend.Conductor;
 import blossom.BLCamera;
-import blossom.BLSprite;
+//import blossom.BLSprite;
 import blossom.BLState;
 #end
 

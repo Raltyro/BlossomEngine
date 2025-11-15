@@ -21,8 +21,8 @@ final class InternalCompileMacro {
 		Compiler.addMetadata('@:build($compileMacro.buildBitmapData())', 'openfl.display.BitmapData');
 		if (Context.defined('js') && Context.defined('html5')) Compiler.addMetadata('@:build($compileMacro.buildCanvasRenderer())', 'openfl.display.CanvasRenderer');
 		if (Context.defined('lime_cairo')) Compiler.addMetadata('@:build($compileMacro.buildCairoRenderer())', 'openfl.display.CairoRenderer');
-		Compiler.addMetadata('@:build($compileMacro.buildOpenGLRenderer())', 'openfl.display.OpenGLRenderer');
 		Compiler.addMetadata('@:build($compileMacro.buildDisplayObject())', 'openfl.display.DisplayObject');
+		if (Context.defined("cpp")) Compiler.addMetadata('@:build($compileMacro.buildContext3D())', 'openfl.display3D.Context3D');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxAnimation())', 'flixel.animation.FlxAnimation');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxTypedGroup())', 'flixel.group.FlxGroup.FlxTypedGroup');
 		Compiler.addMetadata('@:build($compileMacro.buildFlxSprite())', 'flixel.FlxSprite');
@@ -201,142 +201,107 @@ final class InternalCompileMacro {
 		return fields;
 	}
 
-	// fix innacruate EPSILON on pixel snapping auto something idfk
-	// might aswell just make it so it doesnt use Matrix _pool
-	// also make it so it supports more blendmodes
-	// and dont force sets depth test to false
-	public static macro function buildOpenGLRenderer():Array<Field> {
+	// fix possible memory leaks
+	public static macro function buildDisplayObject():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
-		fields.push({name: "hasKHRBlendAdvancedExt", access: [AStatic, APublic], pos: pos, kind: FVar(macro :Null<Bool>, macro null)});
+		fields.push({name: "__getWorldTransformObjects", access: [], pos: pos, kind: FVar(macro :Array<openfl.display.DisplayObject>)});
 		for (f in fields) switch (f.kind) {
-			case FFun(func): switch (f.name) {
-				case "__getMatrix":
+			case FFun(func): if (f.name == "set_filters") {
+					func.args = [{name: "value", type: macro :Array<openfl.filters.BitmapFilter>}];
 					func.expr = macro {
-						__matrix[0] = transform.a * __worldTransform.a + transform.b * __worldTransform.c;
-						__matrix[1] = transform.a * __worldTransform.b + transform.b * __worldTransform.d;
-						__matrix[2] = 0;
-						__matrix[3] = 0;
-						__matrix[4] = transform.c * __worldTransform.a + transform.d * __worldTransform.c;
-						__matrix[5] = transform.c * __worldTransform.b + transform.d * __worldTransform.d;
-						__matrix[6] = 0;
-						__matrix[7] = 0;
-						__matrix[8] = 0;
-						__matrix[9] = 0;
-						__matrix[10] = 1;
-						__matrix[11] = 0;
-						__matrix[12] = transform.tx * __worldTransform.a + transform.ty * __worldTransform.c + __worldTransform.tx;
-						__matrix[13] = transform.tx * __worldTransform.b + transform.ty * __worldTransform.d + __worldTransform.ty;
-						__matrix[14] = 0;
-						__matrix[15] = 1;
-
-						if (pixelSnapping == openfl.display.PixelSnapping.ALWAYS ||
-							(pixelSnapping == openfl.display.PixelSnapping.AUTO
-								&& __matrix[1] == 0 && __matrix[4] == 0
-								&& __matrix[0] < 1.0000001 && __matrix[0] > 0.9999999
-							)	&& __matrix[5] < 1.0000001 && __matrix[5] > 0.9999999
-						) {
-							__matrix[12] = Math.round(__matrix[12]);
-							__matrix[13] = Math.round(__matrix[13]);
+						if (__filters != value) {
+							__filters = value;
+							for (filter in __filters) filter.__renderDirty = true;
+							__setRenderDirty();
 						}
-
-						__matrix.append(__flipped ? __projectionFlipped : __projection);
-
-						for (i in 0...16) __values[i] = __matrix[i];
-						return __values;
+						return value;
 					}
-				case "__setBlendMode":
+				}
+				else if (f.name == "__getWorldTransform") {
 					func.expr = macro {
-						if (__overrideBlendMode != null) value = __overrideBlendMode;
-						if (__blendMode == value) return;
+						if (__transformDirty || __worldTransformInvalid) {
+							if (parent == null) __update(true, false);
+							else {
+								if (__getWorldTransformObjects == null) __getWorldTransformObjects = [];
+								else __getWorldTransformObjects.resize(0);
+								var current = this;
+								while (current != stage) {
+									__getWorldTransformObjects.push(current);
+									current = current.parent;
 
-						if (hasKHRBlendAdvancedExt) {
-							switch (__blendMode = value) {
-								case ADD: __context3D.setBlendFactors(ONE, ONE);
-								case MULTIPLY: __context3D.setBlendFactors(DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA);
-								case SCREEN: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_COLOR);
-								case SUBTRACT:
-									__context3D.setBlendFactors(ONE, ONE);
-									__context3D.__setGLBlendEquation(__gl.FUNC_REVERSE_SUBTRACT);
-									gl.blendEquationSeparate(__gl.FUNC_REVERSE_SUBTRACT, __gl.FUNC_ADD);
-								case INVERT: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA, ZERO, ONE);
-								case EXCLUDE: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_COLOR, ZERO, ONE);
-								case DARKEN: __context3D.__setGLBlendEquation(0x9297); // DARKEN_KHR
-								case DIFFERENCE: __context3D.__setGLBlendEquation(0x929E); // DIFFERENCE_KHR
-								case HARDLIGHT: __context3D.__setGLBlendEquation(0x929B); // HARDLIGHT_KHR
-								case LIGHTEN: __context3D.__setGLBlendEquation(0x9298); // LIGHTEN_KHR
-								case OVERLAY: __context3D.__setGLBlendEquation(0x9296); // OVERLAY_KHR
-								case SOFTLIGHT: __context3D.__setGLBlendEquation(0x929C); // SOFTLIGHT_KHR
-								case BURN: __context3D.__setGLBlendEquation(0x9299); // COLORBURN_KHR
-								case DODGE: __context3D.__setGLBlendEquation(0x929A); // COLORDODGE_KHR
-								default: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
+									if (current == null) break;
+								}
+
+								var i = __getWorldTransformObjects.length;
+								while (--i >= 0) {
+									current = __getWorldTransformObjects[i];
+									current.__update(true, false);
+								}
 							}
 						}
-						else {
-							switch (__blendMode = value) {
-								case ADD: __context3D.setBlendFactors(ONE, ONE);
-								case MULTIPLY: __context3D.setBlendFactors(DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA);
-								case SCREEN: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_COLOR);
-								case SUBTRACT:
-									__context3D.setBlendFactors(ONE, ONE);
-									__context3D.__setGLBlendEquation(__gl.FUNC_REVERSE_SUBTRACT);
-									gl.blendEquationSeparate(__gl.FUNC_REVERSE_SUBTRACT, __gl.FUNC_ADD);
-								case INVERT: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_ALPHA, ZERO, ONE);
-								case EXCLUDE: __context3D.setBlendFactorsSeparate(ONE_MINUS_DESTINATION_COLOR, ONE_MINUS_SOURCE_COLOR, ZERO, ONE);
-								case DARKEN: // TRANSPARENCY ISSUES
-									__context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
-									__context3D.__setGLBlendEquation(lime.graphics.opengl.GL.MIN);
-								case LIGHTEN:
-									__context3D.setBlendFactors(ONE, ONE);
-									__context3D.__setGLBlendEquation(lime.graphics.opengl.GL.MAX);
-								default: __context3D.setBlendFactors(ONE, ONE_MINUS_SOURCE_ALPHA);
-							}
-						}
+
+						return __worldTransform;
 					}
-				case "new":
-					switch (func.expr.expr) {
-						case EBlock(exprs):
-							exprs.push(macro
-								if (hasKHRBlendAdvancedExt == null) {
-									hasKHRBlendAdvancedExt = gl.getSupportedExtensions().contains("KHR_blend_equation_advanced");
-								}
-							);
-						default:
-					}
-				case "__render":
-					switch (func.expr.expr) {
-						case EBlock(exprs):
-							for (i => code in exprs) switch (code.expr) {
-								case ECall(expr, _): switch (expr.expr) {
-									case EField(expr, field, _):
-										if (field == "setDepthTest") {
-											exprs[i] = macro if (object.__drawableType == openfl.display._internal.IBitmapDrawableType.STAGE) ${code};
-											break;
-										}
-									default:
-								}
-								default:
-							}
-						default:
-					}
-			}
+				}
 			default:
 		}
 		return fields;
 	}
 
-	// i hate set_filters
-	public static macro function buildDisplayObject():Array<Field> {
-		final fields:Array<Field> = Context.getBuildFields();
-		for (f in fields) if (f.name == "set_filters") switch (f.kind) {
+	// fix drawToBitmapData memory leaks
+	public static macro function buildContext3D():Array<Field> {
+		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
+		fields.push({name: "__drawToBitmapDataArray", access: [], pos: pos, kind: FVar(macro :lime.utils.UInt8Array)});
+		for (f in fields) if (f.name == "drawToBitmapData") switch (f.kind) {
 			case FFun(func):
-				func.args = [{name: "value", type: macro :Array<openfl.filters.BitmapFilter>}];
 				func.expr = macro {
-					if (__filters != value) {
-						__filters = value;
-						for (filter in __filters) filter.__renderDirty = true;
-						__setRenderDirty();
+					if (destination == null) return;
+
+					var sourceRect = srcRect != null ? srcRect.__toLimeRectangle() : new lime.math.Rectangle(0, 0, backBufferWidth, backBufferHeight);
+					var destVector = destPoint != null ? destPoint.__toLimeVector2() : new lime.math.Vector2();
+
+					if (__stage.context3D == this)
+					{
+						if (__stage.window != null)
+						{
+							if (__stage3D != null)
+							{
+								destVector.setTo(Std.int(-__stage3D.x), Std.int(-__stage3D.y));
+							}
+
+							var image = __stage.window.readPixels();
+							destination.image.copyPixels(image, sourceRect, destVector);
+						}
 					}
-					return value;
+					else if (__backBufferTexture != null)
+					{
+						var cacheRenderToTexture = __state.renderToTexture;
+						setRenderToBackBuffer();
+
+						__flushGLFramebuffer();
+						__flushGLViewport();
+
+						// TODO: Read less pixels if srcRect is smaller
+
+						final byteLength = backBufferWidth * backBufferHeight * 4;
+						if (__drawToBitmapDataArray == null) __drawToBitmapDataArray = new lime.utils.UInt8Array(byteLength);
+						else if (__drawToBitmapDataArray.byteLength != byteLength) {
+							__drawToBitmapDataArray.buffer.getData().resize(byteLength);
+							Reflect.setField(__drawToBitmapDataArray.buffer, "length", byteLength);
+							Reflect.setField(__drawToBitmapDataArray, "length", byteLength);
+						}
+
+						gl.readPixels(0, 0, backBufferWidth, backBufferHeight, __backBufferTexture.__format, gl.UNSIGNED_BYTE, __drawToBitmapDataArray);
+
+						var image = new lime.graphics.Image(new lime.graphics.ImageBuffer(__drawToBitmapDataArray, backBufferWidth, backBufferHeight, 32, BGRA32));
+						destination.image.copyPixels(image, sourceRect, destVector);
+
+						if (cacheRenderToTexture != null)
+						{
+							setRenderToTexture(cacheRenderToTexture, __state.renderToTextureDepthStencil, __state.renderToTextureAntiAlias,
+								__state.renderToTextureSurfaceSelector);
+						}
+					}
 				}
 			default:
 		}
@@ -346,12 +311,6 @@ final class InternalCompileMacro {
 	// replace splice with swapAndPop instead in remove
 	public static macro function buildFlxTypedGroup():Array<Field> {
 		final fields:Array<Field> = Context.getBuildFields(), pos:Position = Context.currentPos();
-
-		var zIndicesName = null; // GOD DAMN IT SWORDCUBE
-		for (f in fields) if (f.name == "zIndexesAllowed" || f.name == "zIndicesAllowed") {
-			zIndicesName = f.name;
-			break;
-		}
 		for (f in fields) switch (f.kind) {
 			case FFun(func): switch (f.name) {
 				case "remove":
@@ -369,34 +328,6 @@ final class InternalCompileMacro {
 							members[index] = null;
 
 						onMemberRemove(basic);
-					}
-				case "draw":
-					if (zIndicesName == null) continue;
-					func.expr = macro {
-						final oldDefaultCameras = flixel.FlxCamera._defaultCameras;
-						if (_cameras != null) flixel.FlxCamera._defaultCameras = _cameras;
-						if (zIndexesAllowed) {
-							_drawQueue.resize(members.length);
-							var basic:FlxBasic = null, len:Int = 0;
-							for (i in 0...members.length) {
-								if ((basic = members[i]) != null && basic.exists && basic.visible) {
-									_drawQueue[len] = i;
-									len++;
-								}
-							}
-
-							_drawQueue.sort(_drawQueueSort);
-
-							for (i in 0...len) {
-								if ((basic = members[_drawQueue[i]]) != null && basic.exists && basic.visible) basic.draw();
-							}
-						}
-						else {
-							for (basic in members) {
-								if (basic != null && basic.exists && basic.visible) basic.draw();
-							}
-						}
-						flixel.FlxCamera._defaultCameras = oldDefaultCameras;
 					}
 			}
 			default:
@@ -580,7 +511,10 @@ final class InternalCompileMacro {
 						_matrix.translate(0, frame.sourceSize.y);
 					}
 
-					if (applyStageMatrix) _matrix.concat(library.matrix);
+					if (applyStageMatrix) {
+						_matrix.concat(library.matrix);
+						_matrix.translate(-library.matrix.tx, -library.matrix.ty);
+					}
 
 					_matrix.translate(-origin.x, -origin.y);
 
