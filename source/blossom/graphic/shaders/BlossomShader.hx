@@ -38,7 +38,7 @@ varying vec4 viewPosition;")
 		key = Paths.withoutExtension(key);
 
 		var ext = Paths.extension(path);
-		if (ext == "") path = Paths.fix(path, isFragment ? "frag" : "vert");
+		if (ext == "") path = Paths.defaultExtension(path, isFragment ? "frag" : "vert");
 		else isFragment = ext != "vert";
 
 		final cache = isFragment ? _fragmentCache : _vertexCache;

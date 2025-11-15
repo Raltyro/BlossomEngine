@@ -110,7 +110,7 @@ class BLGame extends flixel.FlxGame {
 
 		super.create(_);
 
-		addChildAt(statsCounter = new StatsCounter(3, 3), getChildIndex(_inputContainer) + 1);
+		//addChildAt(statsCounter = new StatsCounter(3, 3), getChildIndex(_inputContainer) + 1);
 	}
 
 	inline function setupCrashHandler() {

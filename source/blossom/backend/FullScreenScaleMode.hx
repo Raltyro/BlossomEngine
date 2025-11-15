@@ -21,6 +21,13 @@ class FullScreenScaleMode extends flixel.system.scaleModes.BaseScaleMode {
 	}
 
 	function set_enabled(value:Bool) {
+		if (enabled != (enabled = value)) return value;
+		if (value) {
+
+		}
+		else {
+			
+		}
 		return value;
 	}
 }

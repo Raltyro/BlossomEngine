@@ -1,7 +1,5 @@
 package blossom.sound;
 
-import haxe.Json;
-
 import openfl.media.Sound;
 import flixel.system.FlxAssets;
 import flixel.util.FlxSignal;
@@ -26,7 +24,8 @@ typedef MusicAsset = OneOfTwo<String, MusicData>;
 
 class Music extends FlxSound {
 	public static function getMusicData(asset:String):MusicData {
-		asset = Paths.fix(asset, Paths.EXT_SOUND);
+		asset = Paths.defaultExtension(asset, Paths.EXT_SOUND);
+
 		var raw:Dynamic = null, music:Sound = null, intro:Sound = null;
 		try {
 			final base = Paths.withoutExtension(asset), ext = Paths.extension(asset);
@@ -40,7 +39,7 @@ class Music extends FlxSound {
 				final metaPath = isFolder ? '$base/meta.json' : '$base-meta.json',
 					introPath = isFolder ? '$base/intro.$ext' : '$base-intro.$ext';
 
-				if (AssetUtil.textExists(metaPath)) raw = Json.parse(AssetUtil.getText(metaPath));
+				if (AssetUtil.textExists(metaPath)) raw = AssetUtil.getJson(metaPath);
 				if (AssetUtil.soundExists(introPath)) intro = AssetUtil.getMusic(introPath);
 			}
 		}

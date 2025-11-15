@@ -19,11 +19,8 @@ class Paths {
 	public static final EXT_IMAGE:String = "png";
 	public static final EXT_VIDEO:String = "mp4";
 
-	inline public static function fix(file:String, defaultExt:String):String return Path.extension(file) == "" ? '$file.$defaultExt' : file;
-
-	public static var currentLevel:Null<String> = null;
-	inline public static function setCurrentLevel(?name:String):Void
-		currentLevel = name == null ? null : name.toLowerCase();
+	inline public static function resolve(path:String, ?prefix:String)
+		return Path.normalize((Path.isAbsolute(path) || path.indexOf(":") != -1 || prefix == null) ? path : Path.addTrailingSlash(prefix) + path);
 
 	public static function stripLibrary(path:String):String
 		return path.substr(path.indexOf(":") + 1);
@@ -32,6 +29,10 @@ class Paths {
 		var idx = path.indexOf(":");
 		return if (idx == -1) "default"; else path.substr(0, idx);
 	}
+
+	public static var currentLevel:Null<String> = null;
+	inline public static function setCurrentLevel(?name:String):Void
+		currentLevel = name == null ? null : name.toLowerCase();
 
 	static function getPath(file:String, ?type:AssetType, ?library:String):String {
 		#if macro
@@ -125,14 +126,23 @@ class Paths {
 		return 'assets/fonts/$key';
 	}
 
-	inline public static function withoutExtension(x:String)
-		return Path.withoutExtension(x);
-
 	inline public static function extension(x:String)
 		return Path.extension(x);
 
-	public static function replaceExtension(x:String, ext:String)
+	inline public static function withoutExtension(x:String)
+		return Path.withoutExtension(x);
+
+	inline public static function directory(x:String)
+		return Path.directory(x);
+
+	inline public static function withoutDirectory(x:String)
+		return Path.withoutDirectory(x);
+
+	inline public static function replaceExtension(x:String, ext:String)
 		return '${Path.withoutExtension(x)}.$ext';
+
+	inline public static function defaultExtension(x:String, ext:String)
+		return if (Path.extension(x) == "") '$x.$ext'; else x;
 
 	public static function absolute(path:String):String {
 		final s = Path.isAbsolute(path) ? path : stripLibrary(path);

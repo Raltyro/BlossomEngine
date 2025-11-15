@@ -15,7 +15,7 @@ class TestState extends BLState {
 
 		var path = Paths.atlas("characters/GF_assets", "shared");
 		trace(path);
-		add(sprite = BLSprite.create(path));
+		add(sprite = new BLSprite(path));
 
 		sprite.anim.addBySymbol("idle", "GF Dancing Left", 24);
 

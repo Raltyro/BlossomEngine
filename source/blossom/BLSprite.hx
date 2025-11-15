@@ -45,14 +45,11 @@ typedef BLAnimData = {
 }
 
 class BLSprite extends flixel.FlxSprite {
-	public static function create(x = 0.0, y = 0.0, ?graphic:BLGraphicAsset, ?antialiasing:Bool, ?centerAxes:FlxAxes,
+	public static function setup(sprite:BLSprite, ?antialiasing:Bool, ?centerAxes:FlxAxes,
 			?scale:Array<Float>, ?scalePoint:FlxPoint,
 			?scrollFactor:Array<Float>, ?scrollFactorPoint:FlxPoint,
-			?zoomFactor:Array<Float>, ?zoomFactorPoint:FlxPoint,
-			?animations:Array<BLAnimData>):BLSprite
+			?zoomFactor:Array<Float>, ?zoomFactorPoint:FlxPoint):BLSprite
 	{
-		final sprite = new BLSprite(x, y, graphic, animations);
-
 		if (antialiasing != null) sprite.antialiasing = antialiasing;
 
 		if (scale != null) sprite.scale.set(scale[0], scale.length == 1 ? scale[0] : scale[1]);
@@ -281,7 +278,7 @@ class BLSprite extends flixel.FlxSprite {
 	}
 
 	inline function applyMatrixDrawing(matrix:FlxMatrix, camera:FlxCamera) {
-		_matrix.translate(-origin.x, -origin.y);
+		matrix.translate(-origin.x, -origin.y);
 
 		updateTrig();
 		matrix.rotateWithTrig(_cosFrameOffsetAngle, _sinFrameOffsetAngle);

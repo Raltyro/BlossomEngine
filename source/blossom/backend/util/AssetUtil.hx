@@ -1,6 +1,7 @@
 package blossom.backend.util;
 
 import haxe.io.Path;
+import haxe.xml.Access;
 
 import lime.app.Future;
 import lime.app.Promise;
@@ -12,12 +13,15 @@ import openfl.utils.AssetType;
 import openfl.utils.Assets;
 
 import flixel.graphics.frames.FlxAtlasFrames;
+import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 
 #if flixel_animate
 import animate.FlxAnimateFrames;
 #end
+
+import blossom.data.Ini;
 
 using StringTools;
 
@@ -30,14 +34,14 @@ final class AssetUtil {
 		#end
 	}
 
-	inline public static function exists(path:String) return Assets.exists(path);
+	inline public static function exists(path:String):Bool return Assets.exists(path);
 
 	// Sounds
 	public static var usedSounds:Array<String> = [];
 	private static var streamedSounds:Map<String, Array<Sound>> = [];
 
-	inline public static function getMusic(path:String) return getSound(path, true);
-	public static function getSound(path:String, streamed = false):Sound {
+	inline public static function getMusic(path:String):Null<Sound> return getSound(path, true);
+	public static function getSound(path:String, streamed = false):Null<Sound> {
 		var sound = Assets.cache.getSound(path);
 		if (sound != null) usedSounds.push(path);
 		else if (soundExists(path)) {
@@ -96,7 +100,7 @@ final class AssetUtil {
 	// Graphics
 	public static var usedGraphics:Array<String> = [];
 
-	public static function getBitmap(path:String, hardware = true, useCache = true):BitmapData {
+	public static function getBitmap(path:String, hardware = true, useCache = true):Null<BitmapData> {
 		var bitmap = Assets.cache.getBitmapData(path);
 		if (bitmap != null || (graphicExists(path) && (bitmap = Assets.getBitmapData(path, useCache, hardware)) != null) && useCache)
 			usedGraphics.push(path);
@@ -138,7 +142,7 @@ final class AssetUtil {
 		});
 	}
 
-	public static function getGraphic(path:String, persist = false, hardware = true):FlxGraphic {
+	public static function getGraphic(path:String, persist = false, hardware = true):Null<FlxGraphic> {
 		var graphic = FlxG.bitmap.get(path);
 		if (graphic != null) {
 			usedGraphics.push(path);
@@ -226,15 +230,152 @@ final class AssetUtil {
 	public static function graphicCached(path:String):Bool return FlxG.bitmap.get(path) != null;
 
 	// SparrowAtlas
+	public static function getSparrowFromXml(xml:Xml, path:String, ?mainGraphic:FlxGraphic):Null<FlxAtlasFrames> {
+		if (mainGraphic != null) {
+			if (path == null) path = mainGraphic.assetsKey;
+
+			final frames = FlxAtlasFrames.findFrame(mainGraphic);
+			if (frames != null) return frames;
+			else if (xml == null) {
+				final xmlPath = Paths.replaceExtension(path, "xml");
+				if (textExists(xmlPath)) xml = getXml(xmlPath);
+				else return null;
+			}
+		}
+		else if (xml == null || path == null) return null;
+		else {
+			final graphicPath = Paths.withoutExtension(path);
+			var mainFrames:FlxAtlasFrames;
+			if ((mainGraphic = FlxG.bitmap.get(graphicPath)) != null) {
+				if ((mainFrames = FlxAtlasFrames.findFrame(mainGraphic)) != null) return mainFrames;
+				else mainFrames = new FlxAtlasFrames(mainGraphic);
+			}
+
+			var dir = graphicPath + "/", i = 0;
+			if (textExists(dir + "0") || textExists((dir = graphicPath + "-") + "0")) do {
+				final access = new Access(getXml(dir + i + ".xml").firstElement());
+				if (!access.hasNode.SubTexture || !access.has.imagePath || (graphicPath = getSparrowGraphicPath(dir, access.att.imagePath)) == null) continue;
+
+				final frames = parseSparrowXml(access, new FlxAtlasFrames(getGraphic(graphicPath)));
+				if (mainFrames != null) mainFrames.addAtlas(frames);
+				else (mainGraphic = (mainFrames = frames).parent).key = graphicPath;
+			} while (textExists(dir + ++i));
+
+			return mainFrames;
+		}
+
+		final access = new Access(xml.firstElement());
+		if (!access.hasNode.SubTexture || mainGraphic == null && !access.has.imagePath) return null;
+
+		final graphicPath = getSparrowGraphicPath(path, access.att.imagePath);
+		if (graphicPath == null) return null;
+
+		return parseSparrowXml(access, new FlxAtlasFrames(getGraphic(graphicPath)));
+	}
+
+	public static function loadSparrowFromXml(xml:Xml, path:String, ?mainGraphic:FlxGraphic):Future<FlxAtlasFrames> {
+		if (mainGraphic != null) {
+			if (path == null) path = mainGraphic.assetsKey;
+
+			final frames = FlxAtlasFrames.findFrame(mainGraphic);
+			if (frames != null) return Future.withValue(frames);
+			else if (xml == null) {
+				final xmlPath = Paths.replaceExtension(path, "xml");
+				return if (textExists(xmlPath)) loadXml(Paths.replaceExtension(path, "xml")).then((xml) -> loadSparrowFromXml(xml, path, mainGraphic));
+					else Future.withValue(null);
+			}
+		}
+		else if (xml == null || path == null) return Future.withValue(null);
+		else {
+			final graphicPath = Paths.withoutExtension(path);
+			var mainFrames:FlxAtlasFrames;
+			if ((mainGraphic = FlxG.bitmap.get(graphicPath)) != null) {
+				if ((mainFrames = FlxAtlasFrames.findFrame(mainGraphic)) != null) return Future.withValue(mainFrames);
+				else mainFrames = new FlxAtlasFrames(mainGraphic);
+			}
+
+			var dir = graphicPath + "/", i = 0;
+			if (textExists(dir + "0") || textExists((dir = graphicPath + "-") + "0")) do {
+				final access = new Access(getXml(dir + i + ".xml").firstElement());
+				if (!access.hasNode.SubTexture || !access.has.imagePath || (graphicPath = getSparrowGraphicPath(dir, access.att.imagePath)) == null) continue;
+
+				final frames = parseSparrowXml(access, new FlxAtlasFrames(getGraphic(graphicPath)));
+				if (mainFrames != null) mainFrames.addAtlas(frames);
+				else (mainGraphic = (mainFrames = frames).parent).key = graphicPath;
+			} while (textExists(dir + ++i));
+
+			return mainFrames;
+		}
+
+		final access = new Access(xml.firstElement());
+		if (!access.hasNode.SubTexture || mainGraphic == null && !access.has.imagePath) return null;
+
+		final graphicPath = getSparrowGraphicPath(path, access.att.imagePath);
+		if (graphicPath == null) return null;
+
+		return loadGraphic(graphicPath).then((graphic) -> Future.withValue(parseSparrowXml(access, new FlxAtlasFrames(graphic))));
+	}
+
+	private static function getSparrowGraphicPath(path:String, imagePath:String):Null<String> {
+		return if (graphicExists(imagePath = Paths.resolve(imagePath, Paths.directory(path))) ||
+			graphicExists(imagePath = (Paths.extension(path).toLowerCase() == "xml" ? Paths.replaceExtension : Paths.defaultExtension)(path, Paths.EXT_IMAGE))
+		) imagePath; else null;
+	}
+
+	private static function parseSparrowXml(access:Access, frames:FlxAtlasFrames):FlxAtlasFrames {
+		for (node in access.nodes.SubTexture) {
+			final name = node.att.name, trimmed = node.has.frameX;
+			final pivot = FlxPoint.get((trimmed ? Std.parseInt(node.att.frameX) : 0) + (node.has.pivotX ? Std.parseInt(node.att.pivotX) : 0),
+				(trimmed ? Std.parseInt(node.att.frameY) : 0) + (node.has.pivotY ? Std.parseInt(node.att.pivotY) : 0));
+
+			final size = if (trimmed) FlxPoint.get(Std.parseInt(node.att.frameWidth), Std.parseInt(node.att.frameHeight));
+				else FlxPoint.get(Std.parseInt(node.has.w ? node.att.w : node.att.width), Std.parseInt(node.has.h ? node.att.h : node.att.height));
+
+			if (size.x < 1 || size.y < 1) {
+				var frame = frames.addEmptyFrame(FLxRect.get(pivot.x, pivot.y, Math.max(size.x, 1), Math.max(size.y, 1)));
+				frame.name = node.att.name;
+				frame.offset.set(-pivot.x, -pivot.y);
+
+				size.put();
+				pivot.put();
+
+				continue;
+			}
+
+			final rotated = node.has.rotated && node.att.rotated == "true";
+			final rect = FlxRect.get(Std.parseFloat(node.att.x), Std.parseFloat(node.att.y),
+				Std.parseFloat(node.has.w ? node.att.w : node.att.width), Std.parseFloat(node.has.h ? node.att.h : node.att.height));
+
+			var angle = ANGLE_0;
+			if (node.has.rotated && node.att.rotated == "true") angle = ANGLE_NEG_90;
+			else if (node.has.angle) {
+				if (node.att.angle == "90") angle = ANGLE_90;
+				else if (node.att.angle == "180") angle = ANGLE_180;
+				else if (node.att.angle == "270" || node.att.angle == "-90") angle = ANGLE_NEG_90;
+			}
+
+			if (angle == ANGLE_90 || angle == ANGLE_NEG_90 && !trimmed) size.set(size.y, size.x);
+
+			frames.addAtlasFrame(rect, size, pivot.negate(), name, angle, node.has.flipX && node.att.flipX == "true", node.has.flipY && node.att.flipY == "true");
+		}
+
+		return frames;
+	}
+
 	public static function getSparrowAtlas(asset:FlxGraphicAsset, persist = false, hardware = true):Null<FlxAtlasFrames> {
 		if (asset == null) return null;
 		else if (asset is BitmapData) throw "BitmapData is unsupported";
 
-		var path = asset is String ? asset : null, graphic:FlxGraphic;
-		if (path != null) graphic = getGraphic((Paths.extension(path).toLowerCase() == "xml" ? Paths.replaceExtension : Paths.fix)(path, Paths.EXT_IMAGE));
-		else path = (graphic = cast asset).assetsKey;
+		if (asset is String) return getSparrowFromXml(getXml(Paths.replaceExtension(cast asset, "xml")), cast asset);
+		else return getSparrowFromXml(null, null, cast asset);
+	}
 
-		return FlxAtlasFrames.fromSparrow(graphic, getText(Paths.replaceExtension(path, "xml")));
+	public static function loadSparrowAtlas(asset:FlxGraphicAsset, persist = false, hardware = true):Future<FlxAtlasFrames> {
+		if (asset == null) return null;
+		else if (asset is BitmapData) throw "BitmapData is unsupported";
+
+		if (asset is String) getXml(Paths.replaceExtension(cast asset, "xml")).then((xml) -> loadSparrowFromXml(xml, cast asset));
+		else return loadSparrowFromXml(null, null, cast asset);
 	}
 
 	// AnimateAtlas
@@ -273,6 +414,99 @@ final class AssetUtil {
 	public static function decacheText(path:String) Assets.cache.removeText(path);
 	public static function textExists(path:String):Bool return Assets.exists(path, TEXT);
 	public static function textCached(path:String):Bool return Assets.cache.hasText(path);
+
+	// Jsons
+	public static var jsons:Map<String, Dynamic> = [];
+
+	public static inline function parseJson(text:String):Dynamic return FlxG.assets.parseJson(text);
+
+	public static function getJson(path:String):Dynamic {
+		final key = Paths.stripLibrary(path).toLowerCase();
+		if (jsons.exists(key)) return jsons.get(path);
+		else if (!textExists(path)) return null;
+		
+		final json = parseJson(getText(path));
+		jsons.set(key, json);
+		return json;
+	}
+
+	public static function loadJson(path:String):Future<Dynamic> {
+		final key = Paths.stripLibrary(path).toLowerCase();
+		if (jsons.exists(key)) return jsons.get(path);
+		else if (!textExists(path)) return Future.withValue(null);
+
+		return loadText(path).then((text) -> {
+			final json = parseJson(text);
+			jsons.set(key, json);
+			return json;
+		});
+	}
+
+	public static function decacheJson(path:String) jsons.remove(Paths.stripLibrary(path).toLowerCase());
+
+	public static function jsonCached(path:String):Bool return jsons.exists(Paths.stripLibrary(path).toLowerCase());
+
+	// XML
+	public static var xmls:Map<String, Xml> = [];
+
+	public static inline function parseXml(text:String):Xml return FlxG.assets.parseXml(text);
+
+	public static function getXml(path:String):Xml {
+		final key = Paths.stripLibrary(path).toLowerCase();
+		if (xmls.exists(key)) return xmls.get(path);
+		else if (!textExists(path)) return null;
+		
+		final xml = parseXml(getText(path));
+		xmls.set(key, xml);
+		return xml;
+	}
+
+	public static function loadXml(path:String):Future<Xml> {
+		final key = Paths.stripLibrary(path).toLowerCase();
+		if (xmls.exists(key)) return xmls.get(path);
+		else if (!textExists(path)) return Future.withValue(null);
+
+		return loadText(path).then((text) -> {
+			final xml = parseXml(text);
+			xmls.set(key, xml);
+			return xml;
+		});
+	}
+
+	public static function decacheXml(path:String) xmls.remove(Paths.stripLibrary(path).toLowerCase());
+
+	public static function xmlCached(path:String):Bool return xmls.exists(Paths.stripLibrary(path).toLowerCase());
+
+	// Inis
+	public static var inis:Map<String, Ini> = [];
+
+	public static inline function parseIni(text:String):Ini return Ini.parse(text);
+
+	public static function getIni(path:String):Ini {
+		final key = Paths.stripLibrary(path).toLowerCase();
+		if (inis.exists(key)) return inis.get(path);
+		else if (!textExists(path)) return null;
+		
+		final ini = parseIni(getText(path));
+		inis.set(key, ini);
+		return ini;
+	}
+
+	public static function loadIni(path:String):Future<Ini> {
+		final key = Paths.stripLibrary(path).toLowerCase();
+		if (inis.exists(key)) return inis.get(path);
+		else if (!textExists(path)) return Future.withValue(null);
+
+		return loadText(path).then((text) -> {
+			final ini = parseIni(text);
+			inis.set(key, ini);
+			return ini;
+		});
+	}
+
+	public static function decacheIni(path:String) inis.remove(Paths.stripLibrary(path).toLowerCase());
+
+	public static function iniCached(path:String):Bool return inis.exists(Paths.stripLibrary(path).toLowerCase());
 
 	// Cache
 	public static var keyExclusions:Array<String> = [];
@@ -326,6 +560,10 @@ final class AssetUtil {
 		for (key in cache.sound.keys()) if (check(key)) decacheSound(key, true);
 		for (key in cache.text.keys()) if (check(key)) cache.removeText(key);
 		for (key in cache.bytes.keys()) if (check(key)) cache.removeBytes(key);
+
+		jsons.clear();
+		xmls.clear();
+		inis.clear();
 
 		usedGraphics = [];
 		usedSounds = [];

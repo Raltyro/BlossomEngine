@@ -81,7 +81,7 @@
 	<haxedef name="hscriptPos"/>
 
 	<section if="cpp">
-		<haxelib name="hxvlc" version="2.2.2" unless="NO_VIDEOS"/>
+		<haxelib name="hxvlc" unless="NO_VIDEOS"/>
 		<haxelib name="hxdiscord_rpc" version="1.3.0" unless="NO_DISCORD"/>
 	</section>
 

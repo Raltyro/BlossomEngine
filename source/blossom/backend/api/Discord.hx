@@ -146,7 +146,7 @@ class Discord {
 		_update(0);
 	}
 
-	/*public static function loadAvatarGraphic(?userId:String, ?avatar:String):Future<FlxGraphic> {
+	public static function loadAvatarGraphic(?userId:String, ?avatar:String):Future<FlxGraphic> {
 		if (userId == null) userId = Discord.userId;
 		if (avatar == null) avatar = Discord.avatar;
 
@@ -162,7 +162,7 @@ class Discord {
 		else if (userId == null || avatar == null) return cast Future.withError('userId or avatar is null');
 
 		return AssetUtil.loadHTTPGraphic(key, true);
-	}*/
+	}
 
 	private static function ready(request:RawConstPointer<DiscordUser>):Void {
 		var ptr:Star<DiscordUser> = ConstPointer.fromRaw(request).ptr;
