@@ -52,8 +52,8 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		rects.push(frame.frame.x); rects.push(frame.frame.y);
 		rects.push(frame.frame.width); rects.push(frame.frame.height);
 
-		transforms.push(matrix.a); transforms.push(matrix.b); transforms.push(matrix.c);
-		transforms.push(matrix.d); transforms.push(matrix.tx); transforms.push(matrix.ty);
+		this.transforms.push(matrix.a); this.transforms.push(matrix.b); this.transforms.push(matrix.c);
+		this.transforms.push(matrix.d); this.transforms.push(matrix.tx); this.transforms.push(matrix.ty);
 
 		var i = 0, transformsLength = transforms?.length ?? 0;
 		while (i < VERTICES_PER_QUAD) {
@@ -68,12 +68,9 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		if (rects.length == 0) return;
 
 		final shader = shader ?? graphics.shader;
-		bindToShader(shader);
+		bindToShader(camera, shader);
 		//shader.frameRect.value = untyped (rects).__array;
 
-		camera.canvas.graphics.overrideBlendMode(blend);
-		camera.canvas.graphics.beginShaderFill(shader);
-		camera.canvas.graphics.overrideDepthTest(depthCompareMode != ALWAYS, depthCompareMode);
 		camera.canvas.graphics.drawQuads(rects, null, transforms);
 		camera.canvas.graphics.endFill();
 

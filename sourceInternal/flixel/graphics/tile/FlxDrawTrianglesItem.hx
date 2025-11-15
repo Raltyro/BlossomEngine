@@ -223,12 +223,9 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		if (vertices.length == 0) return;
 
 		final shader = shader ?? graphics.shader;
-		bindToShader(shader);
+		bindToShader(camera, shader);
 		//shader.frameRect.value = untyped (uvtData).__array;
 
-		camera.canvas.graphics.overrideBlendMode(blend);
-		camera.canvas.graphics.beginShaderFill(shader);
-		camera.canvas.graphics.overrideDepthTest(depthCompareMode != ALWAYS, depthCompareMode);
 		camera.canvas.graphics.drawTriangles(vertices, indices, uvtData, culling);
 		camera.canvas.graphics.endFill();
 

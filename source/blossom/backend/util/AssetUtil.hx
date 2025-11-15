@@ -239,11 +239,11 @@ final class AssetUtil {
 	// Jsons
 	public static var jsons:Map<String, Dynamic> = [];
 
-	public static inline function parseJson(text:String):Dynamic return FlxG.assets.parseJson(text);
+	public static inline function parseJson(text:String):Dynamic return #if hxjson5 hxjson5.Json5.parse(text) #else FlxG.assets.parseJson(text) #end;
 
 	public static function getJson(path:String):Dynamic {
 		final key = Paths.stripLibrary(path).toLowerCase();
-		if (jsons.exists(key)) return jsons.get(path);
+		if (jsons.exists(key)) return jsons.get(key);
 		else if (!textExists(path)) return null;
 		
 		final json = parseJson(getText(path));
@@ -253,7 +253,7 @@ final class AssetUtil {
 
 	public static function loadJson(path:String):Future<Dynamic> {
 		final key = Paths.stripLibrary(path).toLowerCase();
-		if (jsons.exists(key)) return Future.withValue(jsons.get(path));
+		if (jsons.exists(key)) return Future.withValue(jsons.get(key));
 		else if (!textExists(path)) return Future.withValue(null);
 
 		return loadText(path).then((text) -> {
@@ -274,7 +274,7 @@ final class AssetUtil {
 
 	public static function getXml(path:String):Xml {
 		final key = Paths.stripLibrary(path).toLowerCase();
-		if (xmls.exists(key)) return xmls.get(path);
+		if (xmls.exists(key)) return xmls.get(key);
 		else if (!textExists(path)) return null;
 		
 		final xml = parseXml(getText(path));
@@ -284,7 +284,7 @@ final class AssetUtil {
 
 	public static function loadXml(path:String):Future<Xml> {
 		final key = Paths.stripLibrary(path).toLowerCase();
-		if (xmls.exists(key)) return Future.withValue(xmls.get(path));
+		if (xmls.exists(key)) return Future.withValue(xmls.get(key));
 		else if (!textExists(path)) return Future.withValue(null);
 
 		return loadText(path).then((text) -> {
@@ -305,7 +305,7 @@ final class AssetUtil {
 
 	public static function getIni(path:String):Ini {
 		final key = Paths.stripLibrary(path).toLowerCase();
-		if (inis.exists(key)) return inis.get(path);
+		if (inis.exists(key)) return inis.get(key);
 		else if (!textExists(path)) return null;
 		
 		final ini = parseIni(getText(path));
@@ -315,7 +315,7 @@ final class AssetUtil {
 
 	public static function loadIni(path:String):Future<Ini> {
 		final key = Paths.stripLibrary(path).toLowerCase();
-		if (inis.exists(key)) return Future.withValue(inis.get(path));
+		if (inis.exists(key)) return Future.withValue(inis.get(key));
 		else if (!textExists(path)) return Future.withValue(null);
 
 		return loadText(path).then((text) -> {

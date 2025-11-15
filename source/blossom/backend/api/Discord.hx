@@ -1,5 +1,7 @@
 package blossom.backend.api;
 
+import lime.app.Future;
+import lime.app.Promise;
 import flixel.graphics.FlxGraphic;
 import flixel.util.FlxSignal;
 
@@ -146,7 +148,7 @@ class Discord {
 		_update(0);
 	}
 
-	/*public static function loadAvatarGraphic(?userId:String, ?avatar:String):Future<FlxGraphic> {
+	public static function loadAvatarGraphic(?userId:String, ?avatar:String):Future<FlxGraphic> {
 		if (userId == null) userId = Discord.userId;
 		if (avatar == null) avatar = Discord.avatar;
 
@@ -162,7 +164,7 @@ class Discord {
 		else if (userId == null || avatar == null) return cast Future.withError('userId or avatar is null');
 
 		return AssetUtil.loadHTTPGraphic(key, true);
-	}*/
+	}
 
 	private static function ready(request:RawConstPointer<DiscordUser>):Void {
 		var ptr:Star<DiscordUser> = ConstPointer.fromRaw(request).ptr;
@@ -217,7 +219,8 @@ class Discord {
 	public static function clearTimestamp() {}
 	public static function shutdown() {}
 
-	//public static function loadAvatarGraphic():Future<FlxGraphic> return cast Future.withError('getAvatarGraphic is unsupported');
+	public static function loadAvatarGraphic(?userId:String, ?avatar:String):Future<FlxGraphic>
+		return cast Future.withError('loadAvatarGraphic is unsupported');
 
 	static function set_clientID(newID:String):String return clientID = newID;
 	static function set_details(v:String):String return details = v;

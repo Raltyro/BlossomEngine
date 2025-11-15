@@ -98,7 +98,7 @@ class FlxDrawBaseItem<T> {
 		}
 	}
 
-	inline function bindToShader(shader:FlxShader) {
+	inline function bindToShader(camera:FlxCamera, shader:FlxShader) {
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.wrap = wrapMode;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
@@ -109,6 +109,10 @@ class FlxDrawBaseItem<T> {
 		shader.alpha.value = colored ? null : alphas;
 		shader.colorMultiplier.value = colored ? colorMultipliers : null;
 		shader.colorOffset.value = hasColorOffsets ? colorOffsets : null;
+
+		camera.canvas.graphics.overrideBlendMode(blend);
+		camera.canvas.graphics.beginShaderFill(shader);
+		camera.canvas.graphics.overrideDepthTest(depthCompareMode != ALWAYS, depthCompareMode);
 	}
 }
 
