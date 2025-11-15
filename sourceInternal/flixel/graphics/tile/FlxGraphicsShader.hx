@@ -35,17 +35,25 @@ class FlxGraphicsShader extends GraphicsShader
 		uniform bool hasColorTransform;
 	")
 	@:glVertexBody("
-		openfl_Alphav = openfl_Alpha * alpha;
 		openfl_TextureCoordv = openfl_TextureCoord;
 
-		if (openfl_HasColorTransform) {
-			openfl_ColorMultiplierv = openfl_ColorMultiplier;
-			openfl_ColorOffsetv = openfl_ColorOffset / 255.0;
-		}
-
 		if (hasColorTransform) {
-			openfl_ColorOffsetv = colorOffset / 255.0;
-			openfl_ColorMultiplierv = colorMultiplier;
+			openfl_Alphav = openfl_Alpha * colorMultiplier.a;
+			if (openfl_HasColorTransform) {
+				openfl_ColorMultiplierv = openfl_ColorMultiplier * vec4(colorMultiplier.rgb, 1.0);
+				openfl_ColorOffsetv = (openfl_ColorOffset / 255.0 * colorMultiplier) + (colorOffset / 255.0);
+			}
+			else {
+				openfl_ColorMultiplierv = vec4(colorMultiplier.rgb, 1.0);
+				openfl_ColorOffsetv = colorOffset / 255.0;
+			}
+		}
+		else {
+			openfl_Alphav = openfl_Alpha * alpha;
+			if (openfl_HasColorTransform) {
+				openfl_ColorMultiplierv = openfl_ColorMultiplier;
+				openfl_ColorOffsetv = openfl_ColorOffset / 255.0;
+			}
 		}
 
 		//frameRectv = frameRect;
@@ -91,9 +99,7 @@ class FlxGraphicsShader extends GraphicsShader
 			else if (!openfl_HasColorTransform && !hasColorTransform) return color * openfl_Alphav;
 
 			color = vec4(color.rgb / color.a, color.a);
-
-			vec4 mult = vec4(openfl_ColorMultiplierv.rgb, 1.0);
-			color = clamp(openfl_ColorOffsetv + (color * mult), 0.0, 1.0);
+			color = clamp(openfl_ColorOffsetv + (color * openfl_ColorMultiplierv), 0.0, 1.0);
 
 			return vec4(color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
 		}

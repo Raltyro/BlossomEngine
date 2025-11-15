@@ -628,38 +628,41 @@ final class InternalCompileMacro {
 						return value;
 					};
 				case "startQuadBatch":
+					func.args.push({name: "wrapMode", type: macro :openfl.display3D.Context3DWrapMode, opt: true});
 					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
 					if (Context.defined("FLX_RENDER_TRIANGLE")) {
 						f.access.push(AInline);
 						func.expr = macro return startTrianglesBatch(graphic, smooth, colored, blend, hasColorOffsets, shader, depthCompareMode);
 					}
 					else func.expr = macro {
+						if (blend == null) blend = openfl.display.BlendMode.NORMAL;
+						if (wrapMode == null) wrapMode = openfl.display3D.Context3DWrapMode.CLAMP;
+						if (depthCompareMode == null) depthCompareMode = openfl.display3D.Context3DCompareMode.ALWAYS;
+
 						if (_currentDrawItem != null
 							&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TILES
 							&& _headTiles.graphics == graphic
 							&& _headTiles.colored == colored
 							&& _headTiles.hasColorOffsets == hasColorOffsets
+							&& _headTiles.blend == blend
 							&& _headTiles.antialiasing == smooth
 							&& _headTiles.shader == shader
 							&& _headTiles.depthCompareMode == depthCompareMode
 						)
 							return _headTiles;
 
-						final item = if (_storageTilesHead != null) {
-							final head = _storageTilesHead;
-							_storageTilesHead = _storageTilesHead.nextTyped;
-							head.reset();
-							head;
-						}
-						else
-							new flixel.graphics.tile.FlxDrawQuadsItem();
+						var item = _storageTilesHead;
+						if (item != null) _storageTilesHead = _storageTilesHead.nextTyped;
+						else item = new flixel.graphics.tile.FlxDrawQuadsItem();
 
 						item.graphics = graphic;
 						item.antialiasing = smooth;
 						item.colored = colored;
 						item.hasColorOffsets = hasColorOffsets;
+						item.blend = blend;
 						item.shader = shader;
 						item.depthCompareMode = depthCompareMode;
+						item.reset();
 
 						item.nextTyped = _headTiles;
 						_headTiles = item;
@@ -671,14 +674,20 @@ final class InternalCompileMacro {
 						return item;
 					}
 				case "startTrianglesBatch":
+					func.args.push({name: "wrapMode", type: macro :openfl.display3D.Context3DWrapMode, opt: true});
 					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
 					func.args.push({name: "culling", type: macro :openfl.display.TriangleCulling, opt: true});
 					func.expr = macro {
+						if (blend == null) blend = openfl.display.BlendMode.NORMAL;
+						if (wrapMode == null) wrapMode = openfl.display3D.Context3DWrapMode.CLAMP;
+						if (depthCompareMode == null) depthCompareMode = openfl.display3D.Context3DCompareMode.ALWAYS;
+
 						if (_currentDrawItem != null
 							&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TRIANGLES
 							&& _headTriangles.graphics == graphic
 							&& _headTriangles.antialiasing == smoothing
 							&& _headTriangles.colored == isColored
+							&& _headTriangles.blend == blend
 							&& _headTriangles.hasColorOffsets == hasColorOffsets
 							&& _headTriangles.shader == shader
 							&& _headTriangles.culling == culling
@@ -689,25 +698,27 @@ final class InternalCompileMacro {
 						return getNewDrawTrianglesItem(graphic, smoothing, isColored, blend, hasColorOffsets, shader, depthCompareMode, culling);
 					}
 				case "getNewDrawTrianglesItem":
+					func.args.push({name: "wrapMode", type: macro :openfl.display3D.Context3DWrapMode, opt: true});
 					func.args.push({name: "depthCompareMode", type: macro :openfl.display3D.Context3DCompareMode, opt: true});
 					func.args.push({name: "culling", type: macro :openfl.display.TriangleCulling, opt: true});
 					func.expr = macro {
-						final item = if (_storageTrianglesHead != null) {
-							final head = _storageTrianglesHead;
-							_storageTrianglesHead = _storageTrianglesHead.nextTyped;
-							head.reset();
-							head;
-						}
-						else
-							new flixel.graphics.tile.FlxDrawTrianglesItem();
+						if (blend == null) blend = openfl.display.BlendMode.NORMAL;
+						if (wrapMode == null) wrapMode = openfl.display3D.Context3DWrapMode.CLAMP;
+						if (depthCompareMode == null) depthCompareMode = openfl.display3D.Context3DCompareMode.ALWAYS;
+
+						var item = _storageTrianglesHead;
+						if (item != null) _storageTrianglesHead = _storageTrianglesHead.nextTyped;
+						else item = new flixel.graphics.tile.FlxDrawTrianglesItem();
 
 						item.graphics = graphic;
 						item.antialiasing = smoothing;
 						item.colored = isColored;
+						item.blend = blend;
 						item.hasColorOffsets = hasColorOffsets;
 						item.shader = shader;
 						item.culling = culling;
 						item.depthCompareMode = depthCompareMode;
+						item.reset();
 
 						item.nextTyped = _headTriangles;
 						_headTriangles = item;

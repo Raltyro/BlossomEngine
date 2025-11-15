@@ -313,14 +313,7 @@ class TextureBase extends EventDispatcher
 
 			if (__textureTarget == __context.gl.TEXTURE_CUBE_MAP) __context.__bindGLTextureCubeMap(__textureID);
 			else
-			{
 				__context.__bindGLTexture2D(__textureID);
-				if (state.mipfilter != MIPNONE)
-				{
-					gl.generateMipmap(__textureTarget);
-					state.mipmapGenerated = true;
-				}
-			}
 
 			var wrapModeS = 0, wrapModeT = 0;
 
@@ -371,7 +364,7 @@ class TextureBase extends EventDispatcher
 			gl.texParameterf(__textureTarget, 34049, state.lodBias); // GL_TEXTURE_LOD_BIAS
 
 			if (__samplerState == null) __samplerState = state.clone();
-			__samplerState.copyFrom(state);
+			else __samplerState.copyFrom(state);
 
 			return true;
 		}

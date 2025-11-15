@@ -9,7 +9,6 @@ import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
 import flixel.math.FlxMatrix;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
-import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxColor;
 import flixel.FlxCamera;
 
@@ -43,57 +42,37 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	public var indicesPosition:Int = 0;
 	public var colorsPosition:Int = 0;
 
-	public var shader:FlxShader;
-	public var culling:TriangleCulling;
+	public var culling:TriangleCulling = NONE;
 	public var vertices:DrawData<Float> = new DrawData<Float>();
 	public var indices:DrawData<Int> = new DrawData<Int>();
 	public var uvtData:DrawData<Float> = new DrawData<Float>();
 	public var colors:DrawData<Int> = new DrawData<Int>();
-
-	var angles:Array<Float> = [];
-	var alphas:Array<Float> = [];
-
-	var colorMultipliers:Array<Float> = [];
-	var colorOffsets:Array<Float> = [];
 
 	public function new() {
 		super();
 		type = TRIANGLES;
 	}
 
-	override public function reset() {
+	override function reset() {
 		baseReset();
 
 		//verticesPosition = 0;
 		//indicesPosition = 0;
 		//colorsPosition = 0;
 
-		culling = NONE;
 		vertices.length = 0;
 		indices.length = 0;
 		uvtData.length = 0;
 		colors.length = 0;
-
-		angles.resize(0);
-		alphas.resize(0);
-
-		colorMultipliers.resize(0);
-		colorOffsets.resize(0);
 	}
 
-	override public function dispose() {
+	override function dispose() {
 		baseDispose();
 
 		vertices = null;
 		indices = null;
 		uvtData = null;
 		colors = null;
-
-		angles = null;
-		alphas = null;
-
-		colorMultipliers = null;
-		colorOffsets = null;
 	}
 
 	public function addTriangles(vertices:DrawData<Float>, indices:DrawData<Int>, uvtData:DrawData<Float>, ?colors:DrawData<Int>, ?position:FlxPoint,
@@ -102,7 +81,9 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		if (position == null) position = point.set();
 		cameraBounds?.putWeak(); // unused
 
-		final verticesLength = Math.floor(vertices.length / 2) * 2, prevNumberOfVertices = this.numVertices;
+		final prevNumberOfVertices = this.numVertices,
+			verticesLength = Math.floor(vertices.length / 2) * 2,
+			indicesLength = Math.floor(indices.length / 3) * 3;
 
 		var i = 0;
 		while (i < verticesLength) {
@@ -114,56 +95,35 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		}
 		position.putWeak();
 
-		final indicesLength = Math.floor(indices.length / 3) * 3, colorsLength = colors != null ? colors.length : 0, alpha = transform?.alphaMultiplier ?? 1.0;
+		final colorsLength = colors?.length ?? 0;
+		var index = 0, color:FlxColor;
+		transform ??= FlxDrawBaseItem.colorIdentity;
+
 		i = 0;
+		while (i < indicesLength) {
+			//angles.push(0);
 
-		var index = 0, color:FlxColor = 0;
-		if (colored || hasColorOffsets) {
-			var redMultiplier = 1.0, greenMultiplier = 1.0, blueMultiplier = 1.0;
-			var redOffset = 1.0, greenOffset = 1.0, blueOffset = 1.0, alphaOffset = 1.0;
-
-			if (transform != null) {
-				redMultiplier = transform.redMultiplier;
-				greenMultiplier = transform.greenMultiplier;
-				blueMultiplier = transform.blueMultiplier;
-
-				redOffset = transform.redOffset;
-				greenOffset = transform.greenOffset;
-				blueOffset = transform.blueOffset;
-				alphaOffset = transform.alphaOffset;
-			}
-
-			while (i < indicesLength) {
-				if ((index = indices[i]) < colorsLength) {
-					colorMultipliers.push(redMultiplier * (color = colors[index]).redFloat);
-					colorMultipliers.push(greenMultiplier * color.greenFloat);
-					colorMultipliers.push(blueMultiplier * color.blueFloat);
-					colorMultipliers.push(color.alphaFloat);
+			if ((index = indices[i]) < colorsLength) {
+				color = colors[index];
+				if (colored) {
+					colorMultipliers.push(transform.redMultiplier * color.redFloat);
+					colorMultipliers.push(transform.greenMultiplier * color.greenFloat);
+					colorMultipliers.push(transform.blueMultiplier * color.blueFloat);
+					colorMultipliers.push(transform.alphaMultiplier * color.alphaFloat);
 				}
-				else {
-					colorMultipliers.push(redMultiplier);
-					colorMultipliers.push(greenMultiplier);
-					colorMultipliers.push(blueMultiplier);
-					colorMultipliers.push(1.0);
+				else
+					alphas.push(transform.alphaMultiplier * color.alphaFloat);
+
+				if (hasColorOffsets) {
+					colorOffsets.push(transform.redOffset);
+					colorOffsets.push(transform.greenOffset);
+					colorOffsets.push(transform.blueOffset);
+					colorOffsets.push(transform.alphaOffset);
 				}
-
-				colorOffsets.push(redOffset);
-				colorOffsets.push(greenOffset);
-				colorOffsets.push(blueOffset);
-				colorOffsets.push(alphaOffset);
-
-				angles.push(0);
-				alphas.push(alpha);
-
-				this.indices.push(prevNumberOfVertices + index);
-				i++;
 			}
-		}
-		else while (i < indicesLength) {
-			if ((index = indices[i]) < colorsLength) alphas.push(alpha * (color = colors[index]).alphaFloat);
-			else alphas.push(alpha);
+			else
+				addColorTransform(transform);
 
-			angles.push(0);
 			this.indices.push(prevNumberOfVertices + index);
 			i++;
 		}
@@ -175,7 +135,9 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		if (position == null) position = point.set();
 		cameraBounds?.putWeak(); // unused
 
-		final verticesLength = Math.floor(vertices.length / 2) * 2, prevNumberOfVertices = this.numVertices;
+		final prevNumberOfVertices = this.numVertices,
+			verticesLength = Math.floor(vertices.length / 2) * 2,
+			indicesLength = Math.floor(indices.length / 3) * 3;
 
 		var i = 0;
 		while (i < verticesLength) {
@@ -187,71 +149,43 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		}
 		position.putWeak();
 
-		final indicesLength = Math.floor(indices.length / 3) * 3, colorsLength = colors?.length ?? 0, transformsLength = transforms?.length ?? 0;
+		final colorsLength = colors?.length ?? 0, transformsLength = transforms?.length ?? 0;
+		var index = 0, color:FlxColor, transform:ColorTransform;
+
 		i = 0;
+		while (i < indicesLength) {
+			//angles.push(0);
 
-		if (colored || hasColorOffsets) {
-			var index = 0, color:FlxColor = 0, transform = null;
-			var redMultiplier = 1.0, greenMultiplier = 1.0, blueMultiplier = 1.0, redOffset = 1.0, greenOffset = 1.0, blueOffset = 1.0, alphaOffset = 1.0;
+			if ((index = indices[i]) < transformsLength) transform = transforms[index];
+			else transform = FlxDrawBaseItem.colorIdentity;
 
-			while (i < indicesLength) {
-				if ((index = indices[i]) < transformsLength) {
-					redMultiplier = (transform = transforms[index]).redMultiplier;
-					greenMultiplier = transform.greenMultiplier;
-					blueMultiplier = transform.blueMultiplier;
-					alphas.push(transform.alphaMultiplier);
-
-					redOffset = transform.redOffset;
-					greenOffset = transform.greenOffset;
-					blueOffset = transform.blueOffset;
-					alphaOffset = transform.alphaOffset;
+			if (index < colorsLength) {
+				color = colors[index];
+				if (colored) {
+					colorMultipliers.push(transform.redMultiplier * color.redFloat);
+					colorMultipliers.push(transform.greenMultiplier * color.greenFloat);
+					colorMultipliers.push(transform.blueMultiplier * color.blueFloat);
+					colorMultipliers.push(transform.alphaMultiplier * color.alphaFloat);
 				}
-				else {
-					redMultiplier = 1.0;
-					greenMultiplier = 1.0;
-					blueMultiplier = 1.0;
-					alphas.push(1.0);
+				else
+					alphas.push(transform.alphaMultiplier * color.alphaFloat);
 
-					redOffset = 1.0;
-					greenOffset = 1.0;
-					blueOffset = 1.0;
-					alphaOffset = 1.0;
+				if (hasColorOffsets) {
+					colorOffsets.push(transform.redOffset);
+					colorOffsets.push(transform.greenOffset);
+					colorOffsets.push(transform.blueOffset);
+					colorOffsets.push(transform.alphaOffset);
 				}
-
-				if (index < colorsLength) {
-					colorMultipliers.push(redMultiplier * (color = colors[index]).redFloat);
-					colorMultipliers.push(greenMultiplier * color.greenFloat);
-					colorMultipliers.push(blueMultiplier * color.blueFloat);
-					colorMultipliers.push(color.alphaFloat);
-				}
-				else {
-					colorMultipliers.push(redMultiplier);
-					colorMultipliers.push(greenMultiplier);
-					colorMultipliers.push(blueMultiplier);
-					colorMultipliers.push(1.0);
-				}
-
-				colorOffsets.push(redOffset);
-				colorOffsets.push(greenOffset);
-				colorOffsets.push(blueOffset);
-				colorOffsets.push(alphaOffset);
-
-				angles.push(0);
-
-				this.indices.push(prevNumberOfVertices + index);
-				i++;
 			}
-		}
-		else while (i < indicesLength) {
-			angles.push(0);
-			alphas.push(1.0);
-			this.indices.push(prevNumberOfVertices + indices[i]);
+			else
+				addColorTransform(transform);
+
+			this.indices.push(prevNumberOfVertices + index);
 			i++;
 		}
 	}
 
-	override public function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform)
-	{
+	override function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {
 		final prevNumberOfVertices = numVertices;
 
 		inline function addVertex(x:Float, y:Float) {
@@ -276,75 +210,25 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		indices.push(prevNumberOfVertices + 3);
 		indices.push(prevNumberOfVertices);
 
-		final alpha = transform?.alphaMultiplier ?? 1.0;
-		var i = 0;
-
-		if (colored || hasColorOffsets) {
-			var redMultiplier = 1.0, greenMultiplier = 1.0, blueMultiplier = 1.0;
-			var redOffset = 1.0, greenOffset = 1.0, blueOffset = 1.0, alphaOffset = 1.0;
-
-			if (transform != null) {
-				redMultiplier = transform.redMultiplier;
-				greenMultiplier = transform.greenMultiplier;
-				blueMultiplier = transform.blueMultiplier;
-
-				redOffset = transform.redOffset;
-				greenOffset = transform.greenOffset;
-				blueOffset = transform.blueOffset;
-				alphaOffset = transform.alphaOffset;
-			}
-
-			while (i < INDICES_PER_QUAD) {
-				colorMultipliers.push(redMultiplier);
-				colorMultipliers.push(greenMultiplier);
-				colorMultipliers.push(blueMultiplier);
-				colorMultipliers.push(1.0);
-
-				colorOffsets.push(redOffset);
-				colorOffsets.push(greenOffset);
-				colorOffsets.push(blueOffset);
-				colorOffsets.push(alphaOffset);
-
-				angles.push(frame.angle);
-				alphas.push(alpha);
-				i++;
-			}
-		}
-		else while (i < INDICES_PER_QUAD) {
-			angles.push(frame.angle);
-			alphas.push(alpha);
-			i++;
+		transform ??= FlxDrawBaseItem.colorIdentity;
+		var vertices = INDICES_PER_QUAD;
+		while (vertices-- > 0) {
+			//angles.push(frame.angle);
+			addColorTransform(transform);
 		}
 	}
 
-	override public function render(camera:FlxCamera) {
+	override function render(camera:FlxCamera) {
 		if (graphics.isDestroyed) throw 'Attempted to render an invalid FlxDrawTrianglesItem, did you destroy a cached sprite?';
 		if (vertices.length == 0) return;
 
-		final shader = shader != null ? shader : graphics.shader;
-		shader.bitmap.input = graphics.bitmap;
-		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
-		//shader.frameRect.value = @:privateAccess untyped (uvtData).__array;
-		//shader.frameAngle.value = angles;
-		shader.alpha.value = alphas;
-
-		if (colored || hasColorOffsets) {
-			setParameterValue(shader.hasColorTransform, true);
-			shader.colorMultiplier.value = colorMultipliers;
-			shader.colorOffset.value = colorOffsets;
-		}
-		else {
-			setParameterValue(shader.hasColorTransform, false);
-			shader.colorMultiplier.value = null;
-			shader.colorOffset.value = null;
-		}
-
-		setParameterValue(shader.hasTransform, true);
+		final shader = shader ?? graphics.shader;
+		bindToShader(shader);
+		//shader.frameRect.value = untyped (uvtData).__array;
 
 		camera.canvas.graphics.overrideBlendMode(blend);
 		camera.canvas.graphics.beginShaderFill(shader);
-		if (depthCompareMode == null) camera.canvas.graphics.overrideDepthTest(false, null);
-		else camera.canvas.graphics.overrideDepthTest(true, depthCompareMode);
+		camera.canvas.graphics.overrideDepthTest(depthCompareMode != ALWAYS, depthCompareMode);
 		camera.canvas.graphics.drawTriangles(vertices, indices, uvtData, culling);
 		camera.canvas.graphics.endFill();
 

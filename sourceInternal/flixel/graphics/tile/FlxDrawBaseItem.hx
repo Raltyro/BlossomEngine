@@ -3,38 +3,54 @@ package flixel.graphics.tile;
 import openfl.display.BlendMode;
 import openfl.display.ShaderParameter;
 import openfl.display3D.Context3DCompareMode;
+import openfl.display3D.Context3DWrapMode;
 import openfl.geom.ColorTransform;
-import openfl.Vector;
 
 import flixel.graphics.frames.FlxFrame;
 import flixel.math.FlxMatrix;
+import flixel.system.FlxAssets.FlxShader;
 import flixel.FlxCamera;
 
 class FlxDrawBaseItem<T> {
+	public static var colorIdentity:ColorTransform = new ColorTransform();
 	public static var drawCalls:Int = 0;
 
 	public var nextTyped:T;
 	public var next:FlxDrawBaseItem<T>;
 	public var type:FlxDrawItemType;
 
+	public var numVertices(get, never):Int;
+	public var numTriangles(get, never):Int;
+
+	public var shader:Null<FlxShader>;
 	public var graphics:FlxGraphic;
 	public var antialiasing:Bool = false;
 	public var colored:Bool = false;
 	public var hasColorOffsets:Bool = false;
-	public var blend:BlendMode;
-	public var depthCompareMode:Context3DCompareMode;
+	public var blend:BlendMode = NORMAL;
+	public var wrapMode:Context3DWrapMode = CLAMP;
+	public var depthCompareMode:Context3DCompareMode = ALWAYS;
 
-	public var numVertices(get, never):Int;
-	public var numTriangles(get, never):Int;
+	// colorMultipliers is alphas, it's there to not confuse with variable naming
+	// if colored, it'll use shader.colorMultiplier uniform, if not, shader.alpha uniform
+	var alphas:Array<Float>;
+	var colorMultipliers:Array<Float>;
+	var colorOffsets:Array<Float>;
+	//var angles:Array<Float> = [];
 
-	public function new() {}
+	public function new() {
+		colorMultipliers = alphas = [];
+	}
 
 	inline function baseReset() {
-		graphics = null;
-		antialiasing = false;
-		depthCompareMode = null;
 		nextTyped = null;
 		next = null;
+
+		//angles.resize(0);
+
+		colorMultipliers.resize(0);
+		if (colorOffsets != null) colorOffsets.resize(0);
+		else if (hasColorOffsets) colorOffsets = [];
 	}
 	public function reset() baseReset();
 
@@ -43,6 +59,12 @@ class FlxDrawBaseItem<T> {
 		next = null;
 		type = null;
 		nextTyped = null;
+
+		//angles = null;
+
+		alphas = null;
+		colorMultipliers = null;
+		colorOffsets = null;
 	}
 	public function dispose() baseDispose();
 
@@ -56,6 +78,37 @@ class FlxDrawBaseItem<T> {
 	inline function setParameterValue(parameter:ShaderParameter<Bool>, value:Bool) {
 		if (parameter.value == null) parameter.value = [value];
 		else parameter.value[0] = value;
+	}
+
+	inline function addColorTransform(transform:ColorTransform) {
+		if (colored) {
+			colorMultipliers.push(transform.redMultiplier);
+			colorMultipliers.push(transform.greenMultiplier);
+			colorMultipliers.push(transform.blueMultiplier);
+			colorMultipliers.push(transform.alphaMultiplier);
+		}
+		else
+			alphas.push(transform.alphaMultiplier);
+
+		if (hasColorOffsets) {
+			colorOffsets.push(transform.redOffset);
+			colorOffsets.push(transform.greenOffset);
+			colorOffsets.push(transform.blueOffset);
+			colorOffsets.push(transform.alphaOffset);
+		}
+	}
+
+	inline function bindToShader(shader:FlxShader) {
+		shader.bitmap.input = graphics.bitmap;
+		shader.bitmap.wrap = wrapMode;
+		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
+		//shader.frameAngle.value = angles;
+
+		setParameterValue(shader.hasTransform, true);
+		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
+		shader.alpha.value = colored ? null : alphas;
+		shader.colorMultiplier.value = colored ? colorMultipliers : null;
+		shader.colorOffset.value = hasColorOffsets ? colorOffsets : null;
 	}
 }
 

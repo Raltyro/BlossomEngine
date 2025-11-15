@@ -104,7 +104,7 @@
 	<haxedef name="openfl_dpi_aware"/>
 	<haxedef name="openfl_pool_events"/>
 	<haxedef name="openfl-enable-handle-error"/>
-	<!-- <haxedef name="openfl_no_custom_render_event"/> -->
+	<haxedef name="openfl_no_custom_render_event"/>
 
 	<!--<haxedef name="gl_stats"/>-->
 	<haxedef name="hscriptPos"/>
@@ -114,10 +114,9 @@
 	<haxedef name="FLX_NO_TOUCH" if="desktop"/>
 	<haxedef name="FLX_NO_DEBUG" unless="debug"/>
 
-	<haxedef name="NO_PRECOMPILED_HEADERS"/>
 	<!--<haxedef name="HXCPP_CLANG"/>-->
 	<haxedef name="HXCPP_MSVC"/>
-	<!--<haxedef name="HXCPP_GC_BIG_BLOCKS"/>-->
+	<haxedef name="HXCPP_GC_BIG_BLOCKS"/>
 	<haxedef name="HXCPP_CHECK_POINTER" />
 	<haxedef name="HXCPP_STACK_LINE" />
 	<haxedef name="HXCPP_STACK_TRACE" />

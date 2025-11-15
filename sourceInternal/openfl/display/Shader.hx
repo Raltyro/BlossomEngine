@@ -155,9 +155,9 @@ class Shader
 				if (name == "header" && isFragment) if (!StringTools.contains(pragma, "(location = 0)")) switch (glVersion) {
 					case "300 es", "330", "400", "410", "420", "430", "440", "450", "460":
 						#if desktop
-						return "layout (location = 0) out vec4 ofl_FragColor;\n" + pragma;
+						return "layout (location = 0) out vec4 fragColor;\n" + pragma;
 						#else
-						return "out vec4 ofl_FragColor;\n" + pragma;
+						return "out vec4 fragColor;\n" + pragma;
 						#end
 				}
 				
@@ -196,7 +196,7 @@ class Shader
 					result = varyingKeyword.replace(result, "out $1 $2");
 				}
 				result = texture2DKeyword.replace(result, "texture");
-				result = glFragColorKeyword.replace(result, "ofl_FragColor");
+				result = glFragColorKeyword.replace(result, "fragColor");
 				return result;
 
 			case "310 es", "320 es":
@@ -206,7 +206,7 @@ class Shader
 				#if desktop
 				return processGLSLText(source, "300 es", isFragment);
 				#else
-				return glFragColorKeyword.replace(result, "ofl_FragColor");
+				return glFragColorKeyword.replace(result, "fragColor");
 				#end
 
 			case "400", "410", "420", "430", "440", "450", "460":
