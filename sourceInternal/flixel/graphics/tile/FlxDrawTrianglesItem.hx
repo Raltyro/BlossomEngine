@@ -1,6 +1,5 @@
 package flixel.graphics.tile;
 
-import openfl.display.Graphics;
 import openfl.display.TriangleCulling;
 import openfl.geom.ColorTransform;
 
@@ -82,7 +81,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		cameraBounds?.putWeak(); // unused
 
 		final prevNumberOfVertices = this.numVertices,
-			verticesLength = Math.floor(vertices.length / 2) * 2,
+			verticesLength = (vertices.length >> 1) << 1,
 			indicesLength = Math.floor(indices.length / 3) * 3;
 
 		var i = 0;
@@ -136,7 +135,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		cameraBounds?.putWeak(); // unused
 
 		final prevNumberOfVertices = this.numVertices,
-			verticesLength = Math.floor(vertices.length / 2) * 2,
+			verticesLength = (vertices.length >> 1) << 1,
 			indicesLength = Math.floor(indices.length / 3) * 3;
 
 		var i = 0;
@@ -239,6 +238,6 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		FlxDrawBaseItem.drawCalls++;
 	}
 
-	override function get_numVertices():Int return Math.floor(vertices.length / 2);
+	override function get_numVertices():Int return vertices.length >> 1;
 	override function get_numTriangles():Int return Math.floor(indices.length / 3);
 }
