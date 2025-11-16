@@ -716,7 +716,7 @@ class FlxSound extends FlxBasic {
 		_paused = false;
 		_time = startTime;
 		_lastTime = FlxG.game.getTicks();
-		if (_channel == null || !_channel.__isValid || _source == null #if lime_cffi || _source.__backend.disposed || _source.__backend.handle == null #end)
+		if (_channel == null || !_channel.__isValid || _source == null #if lime_cffi || _source.__backend.disposed #end)
 			makeChannel();
 
 		if (_channel != null) {

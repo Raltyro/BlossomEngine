@@ -164,14 +164,14 @@ import lime.media.openal.AL;
 		#if lime_cffi
 		var backend = __source.__backend, i = 0;
 		if (backend.streamed) {
-			size = backend.bufferSizes[i = backend.bufferSizes.length - backend.queuedBuffers];
+			size = backend.bufferLengths[i = backend.bufferLengths.length - backend.queuedBuffers];
 			buf = backend.bufferDatas[i].buffer;
 			pos -= Math.floor(backend.bufferTimes[i] * buffer.sampleRate * buffer.channels * wordSize);
 			while (pos > size) {
-				if (++i >= backend.bufferSizes.length) return false;
+				if (++i >= backend.bufferLengths.length) return false;
 				pos -= size;
 				buf = backend.bufferDatas[i].buffer;
-				size = backend.bufferSizes[i];
+				size = backend.bufferLengths[i];
 			}
 		}
 		else
@@ -188,10 +188,10 @@ import lime.media.openal.AL;
 			if (c % 2 == 0) ((b > leftMax) ? (leftMax = b) : (if ((b = -b) > leftMin) (leftMin = b)));
 			else ((b > rightMax) ? (rightMax = b) : (if ((b = -b) > rightMin) (rightMin = b)));
 			if ((pos += wordSize) >= size) #if lime_cffi {
-				if (!backend.streamed || ++i >= backend.bufferSizes.length) break;
+				if (!backend.streamed || ++i >= backend.bufferLengths.length) break;
 				pos = 0;
 				buf = backend.bufferDatas[i].buffer;
-				size = backend.bufferSizes[i];
+				size = backend.bufferLengths[i];
 			}
 			#else break; #end
 
@@ -271,12 +271,9 @@ import lime.media.openal.AL;
 			if (__isValid)
 			{
 				#if lime
+				// TODO: implement SoundTransform.leftToRight, etc. with Native setAngles?
 				__source.gain = volume;
-
-				var position = __source.position;
-				position.x = pan;
-				position.z = -1 * Math.sqrt(1 - Math.pow(pan, 2));
-				__source.position = position;
+				__source.pan = pan;
 
 				return value;
 				#end

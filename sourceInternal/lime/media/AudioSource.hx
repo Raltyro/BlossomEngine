@@ -81,9 +81,12 @@ class AudioSource
 	public var position(get, set):Vector4;
 
 	/**
-		The estimated output latency, in miliseconds, for this `AudioSource`. If not possible to retrieve will return `0`.
+		The stereo pan of the audio source.
+	**/
+	public var pan(get, set):Float;
 
-		NOTE: This will return `0` if the source is not playing!
+	/**
+		The latency of the audio source.
 	**/
 	public var latency(get, never):Float;
 
@@ -128,7 +131,7 @@ class AudioSource
 	@:noCompletion inline private function init():Void
 	{
 		__backend.init();
-		activeSources.push(this);
+		if (!activeSources.contains(this)) activeSources.push(this);
 	}
 
 	/**
@@ -229,6 +232,16 @@ class AudioSource
 	@:noCompletion inline private function set_position(value:Vector4):Vector4
 	{
 		return __backend.setPosition(value);
+	}
+
+	@:noCompletion inline private function get_pan():Float
+	{
+		return __backend.getPan();
+	}
+
+	@:noCompletion inline private function set_pan(value:Float):Float
+	{
+		return __backend.setPan(value);
 	}
 
 	@:noCompletion inline private function get_latency():Float

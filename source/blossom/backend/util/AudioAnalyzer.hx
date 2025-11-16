@@ -92,13 +92,12 @@ final class AudioAnalyzer {
 	static var __windows:Array<Array<Float>> = [];
 	static var __twiddleReals:Array<Array<Float>> = [];
 	static var __twiddleImags:Array<Array<Float>> = [];
-	//#if (target.threaded)
-	//static var __mutex:Mutex = new Mutex();
-	//static var __freqCalculating:Int = 0;
-	//#else
-	static var __reals:Array<Float> = [];
-	static var __imags:Array<Float> = [];
-	//#end
+	static var __freqReals:Array<Array<Float>> = [];
+	static var __freqImags:Array<Array<Float>> = [];
+	#if (target.threaded)
+	static var __mutex:Mutex = new Mutex();
+	static var __freqCalculating:Int = 0;
+	#end
 
 	/**
 	 * Gets frequencies from the samples.
@@ -115,16 +114,13 @@ final class AudioAnalyzer {
 		var i = log - 1;
 		fftN = 1 << log;
 
-		//#if (target.threaded)
-		//__mutex.acquire();
-
-		//var __reals:Array<Float> = __freqReals[__freqCalculating], __imags:Array<Float> = __freqImags[__freqCalculating];
-		//if (__reals == null) {
-		//	__freqReals.push(__reals = []);
-		//	__freqImags.push(__imags = []);
-		//}
-		//__freqCalculating++;
-		//#end
+		#if (target.threaded) __mutex.acquire(); #end
+		var reals:Array<Float> = __freqReals[__freqCalculating], imags:Array<Float> = __freqImags[__freqCalculating];
+		if (reals == null) {
+			__freqReals.push(reals = []);
+			__freqImags.push(imags = []);
+		}
+		__freqCalculating++;
 
 		var reverseIndices:Array<Int> = __reverseIndices[i];
 		var windows:Array<Float> = __windows[i];
@@ -157,11 +153,11 @@ final class AudioAnalyzer {
 			__twiddleImags[i] = twiddleImags;
 		}
 
-		//#if (target.threaded) __mutex.release(); #end
+		#if (target.threaded) __mutex.release(); #end
 
-		if (fftN > __reals.length) {
-			__reals.resize(fftN);
-			__imags.resize(fftN);
+		if (fftN > reals.length) {
+			reals.resize(fftN);
+			imags.resize(fftN);
 		}
 
 		if (frequencies == null) frequencies = [];
@@ -170,9 +166,9 @@ final class AudioAnalyzer {
 		i = samples.length;
 		while (i > 0) {
 			i--;
-			if (useWindowing) __reals[reverseIndices[i]] = samples[i] * windows[i];
-			else __reals[reverseIndices[i]] = samples[i];
-			__imags[i] = 0;
+			if (useWindowing) reals[reverseIndices[i]] = samples[i] * windows[i];
+			else reals[reverseIndices[i]] = samples[i];
+			imags[i] = 0;
 		}
 
 		var size = 1, n = fftN, half = 1, k, i0, i1, t, tr:Float, ti:Float;
@@ -185,12 +181,12 @@ final class AudioAnalyzer {
 					i1 = (i0 = i + k) + half;
 					t = (k * n) % fftN;
 
-					tr = __reals[i1] * twiddleReals[t] - __imags[i1] * twiddleImags[t];
-					ti = __reals[i1] * twiddleImags[t] + __imags[i1] * twiddleReals[t];
-					__reals[i1] = __reals[i0] - tr;
-					__imags[i1] = __imags[i0] - ti;
-					__reals[i0] += tr;
-					__imags[i0] += ti;
+					tr = reals[i1] * twiddleReals[t] - imags[i1] * twiddleImags[t];
+					ti = reals[i1] * twiddleImags[t] + imags[i1] * twiddleReals[t];
+					reals[i1] = reals[i0] - tr;
+					imags[i1] = imags[i0] - ti;
+					reals[i0] += tr;
+					imags[i0] += ti;
 
 					k++;
 				}
@@ -203,15 +199,13 @@ final class AudioAnalyzer {
 		i = 1 << (log - 1);
 		while (i > 1) {
 			i--;
-			frequencies[i] = 2 * Math.sqrt(__reals[i] * __reals[i] + __imags[i] * __imags[i]) * tr;
+			frequencies[i] = 2 * Math.sqrt(reals[i] * reals[i] + imags[i] * imags[i]) * tr;
 		}
-		frequencies[0] = Math.sqrt(__reals[0] * __reals[0] + __imags[0] * __imags[0]) * tr;
+		frequencies[0] = Math.sqrt(reals[0] * reals[0] + imags[0] * imags[0]) * tr;
 
-		//#if (target.threaded)
-		//__mutex.acquire();
-		//__freqCalculating--;
-		//__mutex.release();
-		//#end
+		#if (target.threaded) __mutex.acquire(); #end
+		__freqCalculating--;
+		#if (target.threaded) __mutex.release(); #end
 
 		return frequencies;
 	}
@@ -476,16 +470,16 @@ final class AudioAnalyzer {
 		// TODO: Wrap it with try until i figured it out an effective way to do this...
 		// So... sometimes it just uses the decoder even if it looks good?? please help
 		var n = Math.floor((endPos - startPos) * __toBits);
-		var i = backend.bufferSizes.length - backend.queuedBuffers - 1, time:Float;
-		while (++i < backend.bufferSizes.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
-			var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferSizes[i], c = 0;
+		var i = backend.bufferLengths.length - backend.queuedBuffers - 1, time:Float;
+		while (++i < backend.bufferLengths.length) if (startPos >= (time = backend.bufferTimes[i] * 1000)) {
+			var pos = Math.floor((startPos - time) * __toBits), buf = backend.bufferDatas[i].buffer, size = backend.bufferLengths[i], c = 0;
 			while (pos >= size) {
-				if (++i >= backend.bufferSizes.length) break;
+				if (++i >= backend.bufferLengths.length) break;
 				pos -= size;
 				buf = backend.bufferDatas[i].buffer;
-				size = backend.bufferSizes[i];
+				size = backend.bufferLengths[i];
 			}
-			if (i >= backend.bufferSizes.length) break;
+			if (i >= backend.bufferLengths.length) break;
 			if ((pos -= pos % __sampleSize) < 0) pos = 0;
 			n -= pos % __sampleSize;
 
@@ -493,10 +487,10 @@ final class AudioAnalyzer {
 				callback(getByte(buf, pos, __wordSize), c);
 				if (++c > buffer.channels) c = 0;
 				if ((pos += __wordSize) >= size) {
-					if (++i >= backend.bufferSizes.length) break;
+					if (++i >= backend.bufferLengths.length) break;
 					pos = 0;
 					buf = backend.bufferDatas[i].buffer;
-					size = backend.bufferSizes[i];
+					size = backend.bufferLengths[i];
 				}
 				n -= __wordSize;
 			}
@@ -554,7 +548,6 @@ final class AudioAnalyzer {
 					}
 				}
 				else {
-					trace(pos, __bufferLastSize, __buffer?.length ?? -1);
 					while (pos < __bufferLastSize) {
 						callback(getByte(__buffer, pos, __wordSize), c);
 						if (++c > buffer.channels) c = 0;
